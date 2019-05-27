@@ -15,35 +15,53 @@
  * #define KEY_LEN 9    //  Implementar Aonde for Usado
  * #define DATA_LEN 80  //  Implementar Aonde for Usado
  */
+#ifndef LinkedList_Def
+#define LinkedList_Def
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 typedef	struct LinkedListHead {
     int size;
     LinkedListNode* initialNode;
-
-    // void* add(char* key, void* data);
-    // void* remove(char* key);
-    // LinkedListNode* get(char* key);
-    // void* destroy();
 } LinkedListHead;
 
 typedef	struct LinkedListNode {
     char*   key;
+    int     length;
     void*   data;
     LinkedListNode* next;
-    // void* destroy();
 } LinkedListNode;
+
+typedef struct LinkedListOps {
+    int*            (*initHead)     (LinkedListHead*);
+    int*            (*initNode)     (LinkedListHead*);
+    int*            (*add)          (LinkedListHead*, char* key, void* data);
+    int*            (*remove)       (LinkedListHead*, char* key);
+    LinkedListNode* (*get)          (LinkedListHead*, char* key);
+    LinkedListNode* (*getFirst)     (LinkedListHead*);
+    int*            (*destroyHead)  (LinkedListHead*);
+    int*            (*destroyNode)  (LinkedListNode*);
+} LinkedListOps;
 
 LinkedListHead* initList();
 LinkedListNode* initNode(char* key, void* data);
-void destroyHead(LinkedListHead* head);
-void destroyNode(LinkedListNode* node);
-
-void addNode(LinkedListHead* head, char* key, void* data);
-void removeNode(LinkedListHead* head, char* key);
+int  destroyHead(LinkedListHead* head);
+int  destroyNode(LinkedListNode* node);
+int  addNode(LinkedListHead* head, char* key, void* data);
+int  removeNode(LinkedListHead* head, char* key);
 LinkedListNode* getNode(LinkedListHead* head, char* key);
+LinkedListNode* getFirst(LinkedListHead* head);
 
-#define addNode_Macro(key, data) ( addNode(head, key, data) )
-#define removeNode_Macro(key) ( removeNode(head, key, data) )
-#define getNode_Macro(key) ( addNode(head, key, data) )
-#define destroyHead_Macro(key) ( destroyHead(head) )
-#define destroyNode_Macro(key) ( destroyNode(node) )
+LinkedListOps llOps = {
+    .initHead   =   initList,
+    .initNode   =   initNode,
+    .add        =   addNode,
+    .remove     =   removeNode,
+    .get        =   getNode,
+    .getFirst   =   getFirst,
+    .destroyHead=   destroyHead,
+    .destroyNode=   destroyNode
+};
+#endif

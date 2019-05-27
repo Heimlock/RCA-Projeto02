@@ -16,92 +16,133 @@
  *  Função que Inicializa a Comunicação via Socket
  *  Argumentos:
  *      @port       ==  Numero da Porta
+ *  Retornos:
+ *      > 0         ==  Erro
+ *      = 0         ==  Sucesso
  */
-void    init_Socket(int *localSocketDesc, struct sockaddr_in *local, int port ) {
-   if (((*localSocketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-       perror("socket()");
-       exit(1);
+int     init_Socket(commFacade_t* commData, int port ) {
+   if (((commData->localSocketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+       perror("[init_Socket] | socket()");
+       return -1;
    }
-   
-   local->sin_family      = AF_INET;
-   local->sin_port        = htons(port);
-   local->sin_addr.s_addr = INADDR_ANY;
-
-   if (bind((*localSocketDesc), (struct sockaddr*)&(*local), sizeof(*local)) < 0) {
-       perror("bind()");
-       exit(1);
+   commData->local.sin_family      = AF_INET;
+   commData->local.sin_port        = htons(port);
+   commData->local.sin_addr.s_addr = INADDR_ANY;
+   if (bind((commData->localSocketDesc), (struct sockaddr*)&(commData->local), sizeof(commData->local)) < 0) {
+       perror("[init_Socket] | bind()");
+       return -2;
    }
-
-    if (listen((*localSocketDesc), CONNECTION_QUEUE) == -1) {
-        perror("listen()");
-        exit(1);
+    if (listen((commData->localSocketDesc), CONNECTION_QUEUE) == -1) {
+        perror("[init_Socket] | listen()");
+        return -3;
     }
-
-   fprintf( stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(local->sin_port));
+   fprintf(stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(commData->local.sin_port));
    fflush(stdout);
+   return 0;
 }
 
 /*
  *  Função que Finaliza a Comunicação via Socket
  */
-void    close_Socket(int *localSocketDesc) {
-    close(*localSocketDesc);
-    fprintf( stdout,"[%d] | Local Socket has been Terminated!\n", getpid());
+void    close_Socket(commFacade_t* commData) {
+    close(commData->localSocketDesc);
+    fprintf(stdout,"[%d] | Local Socket has been Terminated!\n", getpid());
+    fflush(stdout);
+}
+
+/*
+ *  Função que Finaliza a Comunicação via Socket
+ */
+void    close_Remote(commFacade_t* commData) {
+    close(commData->remoteSocketDesc);
+    fprintf(stdout,"[%d] | Remote Socket has been Terminated!\n", getpid());
     fflush(stdout);
 }
 
 /*
  *  Função que envia os dados via socket
+ *  Argumentos:
+ *      @commData   ==  Communication Facade
+ *      @data       ==  Dado
+ *      @size       ==  Tamanho do Dado
+ *  Retornos:
+ *      > 0         ==  Erro
+ *      < 0         ==  Numero de Bytes Enviados
  */
-size_t  sendData(int *remoteSocketDesc, void *response, size_t size) {
+size_t  sendData(commFacade_t* commData, void *data, size_t size) {
     size_t numbytes;
-
-    //  send: Socket Remoto, Response, Tam Esperado, Flags
-    if((numbytes = send((*remoteSocketDesc), response, size, 0)) < 0) {
+    //  send: Socket Remoto, data, Tam Esperado, Flags
+    if((numbytes = send((commData->remoteSocketDesc), data, size, 0)) < 0) {
         perror("send()");
-        exit(1);
+        return -1;
     }
-
     return numbytes;
 }
 
 /*
  *  Função que recebe os dados via socket
+ *  Argumentos:
+ *      @commData   ==  Communication Facade
+ *      @data       ==  Dado
+ *      @size       ==  Tamanho do Dado
+ *  Retornos:
+ *      > 0         ==  Erro
+ *      < 0         ==  Numero de Bytes Recebidos
  */
-size_t  receiveData( int *remoteSocketDesc, void *command, size_t size) {
+size_t  receiveData(commFacade_t* commData, void *data, size_t size) {
     size_t numbytes;
-
-    //  recv: Socket Remoto, command, Tam Esperado, Flags
-    if((numbytes = recv((*remoteSocketDesc), command, size, 0)) < 0) {
+    //  recv: Socket Remoto, data, Tam Esperado, Flags
+    if((numbytes = recv((commData->remoteSocketDesc), data, size, 0)) < 0) {
         perror("recv()");
         exit(1);
     }
-
     return numbytes;
 }
 
 /*
  *  Função que aceita uma conexão TCP
+ *  Argumentos:
+ *      @commData   ==  Communication Facade
+ *  Retornos:
+ *      > 0         ==  Erro
+ *      = 0         ==  Sucesso
  */
-void	acceptConnection( struct  sockaddr_in  *remote, int *remoteSocketDesc, int *localSocketDesc) {
-    socklen_t remoteAddrlen = sizeof(*remote);
-
-    if (((*remoteSocketDesc) = accept((*localSocketDesc), (struct sockaddr *)&(*remote), &remoteAddrlen)) == -1) {
+int     acceptConnection(commFacade_t* commData) {
+    socklen_t remoteAddrlen = sizeof(commData->remote);
+    if (((commData->remoteSocketDesc) = accept((commData->localSocketDesc), (struct sockaddr *)&(commData->remote), &remoteAddrlen)) == -1) {
         perror("accept()");
-        exit(1);
+        return -1;
     }
-
     fprintf( stdout, "\n\n========================================\n");
     fprintf( stdout, "[%d] | Connection Accepted\n", getpid());
-    fprintf( stdout, "[%d] | Connected with %s:%d\n", getpid(), inet_ntoa(remote->sin_addr), ntohs(remote->sin_port) );
+    fprintf( stdout, "[%d] | Connected with %s:%d\n", getpid(), inet_ntoa(commData->remote.sin_addr), ntohs(commData->remote.sin_port) );
     fflush(stdout);
+    return 0;
 }
 
 /*
- *  Função que Finaliza a Comunicação via Socket
+ *  Função que realiza a conexão TCP com o servidor
+ *  Argumentos:
+ *      @commData   ==  Communication Facade
+ *      @addr       ==  Remote Address
+ *      @port       ==  Remote Port
+ *  Retornos:
+ *      > 0         ==  Erro
+ *      = 0         ==  Sucesso
  */
-void    close_Remote( int *remoteSocketDesc ) {
-    close(*remoteSocketDesc);
-    fprintf( stdout,"[%d] | Remote Socket has been Terminated!\n", getpid());
-    fflush(stdout);
+int     connectRemote(struct commFacade_t *comm_ops, char *addr, int port) {
+    struct hostent *hostnm;
+    hostnm = gethostbyname(addr);
+    if (hostnm == (struct hostent *) 0) {
+        perror("[connectRemote] | gethostbyname()");
+        return -1;
+    }
+    comm_ops->remote.sin_family      = AF_INET;
+    comm_ops->remote.sin_port        = htons(port);
+    comm_ops->remote.sin_addr.s_addr = *((unsigned long *)hostnm->h_addr);
+    if (connect(comm_ops->localSocketDesc, (struct sockaddr *)&comm_ops->remote, sizeof(comm_ops->remote)) < 0) {
+        perror("[connectRemote] | connect()");
+        return -2;
+    }
+    printf("[%d] | Connected with Server\n", getpid());
 }

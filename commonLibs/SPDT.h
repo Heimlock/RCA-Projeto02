@@ -11,11 +11,20 @@
  *  (Simple Protocol for Data Transfer)
  */
 
+#ifndef SPDT_Def
+#define SPDT_Def
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "TCP.h"
+
 typedef enum ActionType {
-    //  0x00 ate 0x7F -- Sem Payload
-    NewClient = 0x00,
-    //  0x7F ate 0xFF -- Com Payload
-    newMessage = 0x7F,
+    LogIn        = 0x00,
+    LogOut       = 0x01,
+    RequestClient= 0x02,
+    SendText     = 0x03,
+    SendFile     = 0x04,
 } ActionType;
 
 typedef struct SPDT_Command {
@@ -25,5 +34,6 @@ typedef struct SPDT_Command {
 } SPDT;
 
 SPDT_Command* newCommand(ActionType type, int length, void* data);
-void sendCommand(SPDT_Command* command);
+int sendCommand(commFacade_t* commData, SPDT_Command command);
 SPDT_Command* receiveCommand();
+#endif
