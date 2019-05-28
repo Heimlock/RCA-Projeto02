@@ -24,7 +24,5 @@ typedef struct File_t {
 
 void  disk2Memory();
 void  memory2Disk();
-void  sendFile();
-void  receiveFile();
 #endif
 

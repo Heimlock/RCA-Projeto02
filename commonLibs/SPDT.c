@@ -24,49 +24,6 @@ SPDT_Command* newCommand(ActionType type, int length, void* data) {
 }
 
 /*
- *  Função que envia um SPDT_Command via socket
- *  Argumentos:
- *      @command    ==  SPDT_Command
- *  Retornos:
- *      > 0         ==  Erro
- *      < 0         ==  Numero de Bytes Enviados
- */
-size_t  sendCommand(commFacade_t* commData, SPDT_Command command) {
-    void*   dataOut = command2bytes(*command);
-    return sendData(commData, dataOut, (3+comman.length));
-}
-
-/*
- *  Função que recebe um SPDT_Command via socket
- *  Argumentos:
- *      @commData   ==  Communication Facade
- *  Retornos:
- *     NULL         ==  Erro
- *     SPDT_Command*==  Ponteiro para um SPDT_Command
- */
-SPDT_Command* receiveCommand(commFacade_t* commData) {
-    void*   header = malloc(3*sizeof(char));
-    void*   data;
-    SPDT_Command* command;
-    if(receiveData(commData, header, 3*sizeof(char)) > 0) {
-        command = bytes2commandHeader(header);
-        if(command->length > 0) {   
-            data    = malloc(command->length);
-            if(receiveData(commData, data, command->length) > 0) {
-                command->data = data;
-            } else {
-                perror("[receiveCommand] | Receive Data.");
-                return NULL;
-            }
-        }
-    } else {
-        perror("[receiveCommand] | Receive Header.");
-        return NULL;
-    }
-    return command;
-}
-
-/*
  *  Função que Converte um SPDT_Command em Bytes
  *  Argumentos:
  *      @command    ==  SPDT_Command
