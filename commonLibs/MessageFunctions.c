@@ -40,7 +40,7 @@ char*   message2Bytes(Message_t message) {
 
 Message_t* bytes2Message(char* data) {
     Message_t* newMsg;
-    int     offset = 0;
+    int     offset;
     offset  = 0;
     memcpy(newMsg.data,  data + offset, UserId_Len);
     offset += UserId_Len;

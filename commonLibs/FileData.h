@@ -14,6 +14,8 @@
 #ifndef File_Def
 #define File_Def
 
+#define FileName_Len    9
+
 typedef struct File_t {
     char*   senderId;
     int     nameLength;
@@ -22,7 +24,11 @@ typedef struct File_t {
     void*   data;
 } File_t;
 
-void  disk2Memory();
-void  memory2Disk();
+char* file2Bytes(File_t file);
+File_t* bytes2File(char* data);
+void printFile(File_t file);
+
+File_t*  disk2Memory(char* filePath, char* userId);
+int memory2Disk(File_t file);
 #endif
 

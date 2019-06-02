@@ -18,7 +18,7 @@
 
 
 /*
- *  Função que envia um SPDT_Command via socket
+ *  Funcao que envia um SPDT_Command via socket
  *  Argumentos:
  *      @commData   ==  Communication Facade
  *      @command    ==  SPDT_Command
@@ -32,7 +32,7 @@ int sendCommand(commFacade_t* commData, SPDT_Command command) {
 }
 
 /*
- *  Função que recebe um SPDT_Command via socket
+ *  Funcao que recebe um SPDT_Command via socket
  *  Argumentos:
  *      @commData   ==  Communication Facade
  *  Retornos:
@@ -61,13 +61,49 @@ SPDT_Command* receiveCommand(commFacade_t* commData) {
     return command;
 }
 
+
+/*
+ *  Funcao que recebe um Tipo Abstrato via socket
+ *  Argumentos:
+ *      @commData    ==  Communication Facade
+ *      @expectedType==  Tipo Abstrato a Receber
+ *  Retornos:
+ *     NULL          ==  Erro
+ *     void*         ==  Ponteiro para o Tipo Abstrato
+ */
+void*   receiveStruct(commFacade_t* commData, ActionType expectedType) {
+    SPDT_Command* dataReceived = receiveCommand(commData);
+    void*   outputData;
+
+    switch (dataReceived.type) {
+    case RequestClient:
+        outputData = bytes2User(dataReceived.data);
+        break;
+    case SendText:
+        outputData = bytes2Message(dataReceived.data);
+        break;
+    case SendFile:
+        outputData = bytes2File(dataReceived.data);
+        break;
+    default:
+        perror("Not a Valid Type!\n");
+        outputData = NULL;
+        break;
+    }
+
+    if(expectedType != dataReceived.type) {
+        perror("Type not Expected!\n Expected: %d, Received: %d\n", expectedType, dataReceived.type);
+    }
+    return outputData;
+}
+
 /*
  *  UserData Related
  */
 
 
 /*
- *  Função que envia um User_t via socket
+ *  Funcao que envia um User_t via socket
  *  Argumentos:
  *      @commData   ==  Communication Facade
  *      @user       ==  User_t
@@ -77,39 +113,48 @@ SPDT_Command* receiveCommand(commFacade_t* commData) {
  */
 int sendUser(commFacade_t* commData, User_t user) {
     void*   dataOut = user2Bytes(user);
-    return sendData(commData, dataOut, UserData_Len);
+    SPDT_Command* userCommand = newCommand(ActionType.sendUser, UserData_Len, dataOut);
+    return sendCommand(commData, *userCommand);
 }
-
-/*
- *  Função que recebe um User_t via socket
- *  Argumentos:
- *      @commData   ==  Communication Facade
- *  Retornos:
- *     NULL         ==  Erro
- *     User_t*      ==  Ponteiro para um User_t
- */
-User_t* receiveUser(commFacade_t* commData) {
-    void*   dataIn = malloc(UserData_Len);
-    User_t* user;
-    if(receiveData(commData, dataIn, UserData_Len) > 0) {
-        user = bytes2User(dataIn);
-    } else {
-        perror("[receiveUser] | Receive User.");
-        return NULL;
-    }
-    return user;
-}
-
 
 /*
  *  MessageData Related
  */
-int sendMessage(commFacade_t* commData, Message_t message);
-Message_t* receiveMessage(commFacade_t* commData);
 
+
+/*
+ *  Funcao que envia um Message_t via socket
+ *  Argumentos:
+ *      @commData   ==  Communication Facade
+ *      @message    ==  Message_t
+ *  Retornos:
+ *      > 0         ==  Erro
+ *      < 0         ==  Numero de Bytes Enviados
+ */
+int sendMessage(commFacade_t* commData, Message_t message) {
+    void*   dataOut = message2Bytes(message);
+    int messageLength = SENDERID_LEN + 2 + message.length;
+    SPDT_Command* msgCommand = newCommand(ActionType.sendMessage, messageLength, dataOut);
+    return sendCommand(commData, *msgCommand);
+}
 
 /*
  *  FileData Related
  */
-int sendFile(commFacade_t* commData, File_t file);
-File_t* receiveFile(commFacade_t* commData);
+
+
+/*
+ *  Funcao que envia um File_t via socket
+ *  Argumentos:
+ *      @commData   ==  Communication Facade
+ *      @file       ==  File_t
+ *  Retornos:
+ *      > 0         ==  Erro
+ *      < 0         ==  Numero de Bytes Enviados
+ */
+int sendFile(commFacade_t* commData, File_t file) {
+    void*   dataOut = file2Bytes(file);
+    int     fileLength = SENDERID_LEN + 2 + file.nameLength + 2 + file.length;
+    SPDT_Command* fileCommand = newCommand(ActionType.sendMessage, fileLength, dataOut);
+    return sendCommand(commData, *fileCommand);
+}

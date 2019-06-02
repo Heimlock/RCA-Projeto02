@@ -10,10 +10,6 @@
  *  Biblioteca de Recursos Referentes as Mensagens
  */
 
-/*
- *  #define SENDERID_LEN 9  //  Implementar Aonde for Usado  
- */
-
 #ifndef Message_Def
 #define Message_Def
 
