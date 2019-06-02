@@ -27,6 +27,7 @@ LinkedListHead* initList() {
     //  Init Vars
     head->size = 0;
     head->initialNode = NULL;
+    return head;
 }
 
 /*
@@ -40,12 +41,13 @@ LinkedListNode* initNode(char* key, void* data) {
     memcpy(node->key, key, KEY_LEN);
     memcpy(node->data, data, DATA_LEN);
     node->next = NULL;
+    return node;
 }
 
 /*
  *  Função que Desaloca Corretamente um LinkedListHead
  */
-LinkedListHead* destroyHead(LinkedListHead* head) {
+void destroyHead(LinkedListHead* head) {
     LinkedListNode* node;
     node = getFirst(head);
     do {
@@ -58,7 +60,7 @@ LinkedListHead* destroyHead(LinkedListHead* head) {
 /*
  *  Função que Desaloca Corretamente um LinkedListNode
  */
-LinkedListNode* destroyNode(LinkedListNode* node) {
+void destroyNode(LinkedListNode* node) {
     free(node->data);
     free(node);
 }
@@ -74,16 +76,17 @@ LinkedListNode* destroyNode(LinkedListNode* node) {
  *      = 0         ==  Successo
  */
 int addNode(LinkedListHead* head, char* key, void* data) {
-    LinkedListNode* node, last;
+    LinkedListNode* node;
+    LinkedListNode** last;
     last = &(head->initialNode);
     node = head->initialNode;
     do {
         if(node == NULL) {
             head->size++;
-            last->next = initNode(key, data);
+            (*last)->next = initNode(key, data);
             return 0;
         } else {
-            last = node;
+            (*last) = node;
             node = node->next;
         }
     } while(node != NULL);
@@ -100,22 +103,24 @@ int addNode(LinkedListHead* head, char* key, void* data) {
  *      = 0         ==  Successo
  */
 int removeNode(LinkedListHead* head, char* key) {
-    LinkedListNode* node, last;
+    LinkedListNode*  node;
+    LinkedListNode** last;
     int running = 1;
     if(head->initialNode == NULL) {
         perror("[removeNode] | Initial Node is Null.");
         return -1;
     } else {
         node = head->initialNode;
+        last = &(head->initialNode);
         do {
             if(strcmp(node->key, key) == 0) {
-                last->next = node->next;
-                node->destroy();
+                (*last)->next = node->next;
+                llOps.destroyNode(node);
                 head->size--;
                 //  Success
                 return 0;
-            } else if (node->next != null) {
-                last = node;
+            } else if (node->next != NULL) {
+                (*last) = node;
                 node = node->next;
             } else {
                 running = 0;
@@ -146,7 +151,7 @@ LinkedListNode* getNode(LinkedListHead* head, char* key) {
         do {
             if(strcmp(node->key, key) == 0) {
                 return node;
-            } else if (node->next != null) {
+            } else if (node->next != NULL) {
                 node = node->next;
             } else {
                 running = 0;
@@ -166,7 +171,6 @@ LinkedListNode* getNode(LinkedListHead* head, char* key) {
  *      Node*       ==  LinkedListNode procurado
  */
 LinkedListNode* getFirst(LinkedListHead* head) {
-    LinkedListNode* node;
     if(head->initialNode == NULL) {
         perror("Initial Node is Null.");
         return NULL;

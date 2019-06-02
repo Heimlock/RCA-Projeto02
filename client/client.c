@@ -10,7 +10,13 @@
  *	 Desenvolvimento Lógico Referente ao Cliente
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "./client.h"
+
 int main(int argc, char const *argv[]) {
-    /* code */
+    fprintf(stdout, "Hello from Client!\n");
+    fflush(stdout);
     return 0;
 }

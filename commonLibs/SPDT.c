@@ -14,13 +14,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include "SPDT.h"
 
 SPDT_Command* newCommand(ActionType type, int length, void* data) {
     SPDT_Command* command = (SPDT_Command*) malloc(sizeof(SPDT_Command));
-    command->type    = type;
-    command->length  = length;
-    command->data    = data;
+    command->type   = type;
+    command->length = length;
+    command->value  = data;
+    return command;
 }
 
 /*
@@ -33,19 +35,19 @@ char*   command2bytes(SPDT_Command command) {
     char*   dataOut = (char*) malloc(dataLen);
     char*   dataAux = (char*) malloc(command.length);
 
-    memset((*dataOut), 0, dataLen);
-    memset((*dataAux), 0, command.length);
+    memset(dataOut, 0, dataLen);
+    memset(dataAux, 0, command.length);
 
     dataOut[0]    =   (char)command.type;
 
     dataOut[1]    =   (char)(command.length / 255);
     dataOut[2]    =   (char)(command.length % 255);
 
-    memcpy(dataAux, command.data, command.length);
-    for(i = 0; i < command.length; i++) {
+    memcpy(dataAux, &command.value, command.length);
+    for(int i = 0; i < command.length; i++) {
         dataOut[(3+i)] = (char)dataAux[i];
     }
-    free(auxData);
+    free(dataAux);
     return dataOut;
 }
 
@@ -55,17 +57,17 @@ char*   command2bytes(SPDT_Command command) {
  *      @command    ==  SPDT_Command
  */
 SPDT_Command* bytes2command(char* data) {
-    SPDT_Command* command;
+    SPDT_Command* command = (SPDT_Command*) malloc(sizeof(SPDT_Command));
 
-    command.type    =   (ActionType)input[0];
-    command.length  =   (255 * (int)input[1]);
-    command.length +=   (int)input[2];
+    command->type    =   (ActionType)data[0];
+    command->length  =   (255 * (int)data[1]);
+    command->length +=   (int)data[2];
 
-    if(command.length != 0) {
-        command.data    =   malloc(command.length);
-        memcpy(command.data, (data + (3 * sizeof(char))), command.length);
+    if(command->length != 0) {
+        command->value    =   malloc(command->length);
+        memcpy(&command->value, (data + (3 * sizeof(char))), command->length);
     } else {
-        command.data    =   NULL;
+        command->value    =   NULL;
     }
     return command;
 }
@@ -77,10 +79,10 @@ SPDT_Command* bytes2command(char* data) {
  *      @command    ==  SPDT_Command
  */
 SPDT_Command* bytes2commandHeader(char* data) {
-    SPDT_Command* command;
-    command.type    =   (ActionType)input[0];
-    command.length  =   (255 * (int)input[1]);
-    command.length +=   (int)input[2];
-    command.data    =   NULL;
+    SPDT_Command* command = (SPDT_Command*) malloc(sizeof(SPDT_Command));
+    command->type    =   (ActionType)data[0];
+    command->length  =   (255 * (int)data[1]);
+    command->length +=   (int)data[2];
+    command->value   =   NULL;
     return command;
 }

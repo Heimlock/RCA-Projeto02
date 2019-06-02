@@ -30,23 +30,32 @@ char*   message2Bytes(Message_t message) {
     int     offset = 0;
     void*   dataOut = malloc(dataSize);
     offset  = 0;
-    memcpy(dataOut + offset, message.data,   UserId_Len);
+
+    memcpy(dataOut + offset, message.senderId,   UserId_Len);
     offset += UserId_Len;
-    memcpy(dataOut + offset, message.length, sizeof(int));
+
+    memcpy(dataOut + offset, &message.length, sizeof(int));
     offset += sizeof(int);
+
     memcpy(dataOut + offset, message.data,   message.length);
     return dataOut;
 }
 
 Message_t* bytes2Message(char* data) {
-    Message_t* newMsg;
+    Message_t* newMsg = (Message_t*) malloc(sizeof(Message_t));
+
     int     offset;
     offset  = 0;
-    memcpy(newMsg.data,  data + offset, UserId_Len);
+
+    memcpy(newMsg->senderId,  data + offset, UserId_Len);
     offset += UserId_Len;
-    memcpy(newMsg.length,data + offset, sizeof(int));
+
+    memcpy(&newMsg->length,data + offset, sizeof(int));
     offset += sizeof(int);
-    memcpy(newMsg.data,  data + offset, newMsg.length);
+
+    newMsg->data = malloc(newMsg->length);
+    memcpy(newMsg->data,  data + offset, newMsg->length);
+
     #ifdef DEBUG
         printMsg(*newMsg);
     #endif
@@ -56,6 +65,6 @@ Message_t* bytes2Message(char* data) {
 void printMsg(Message_t message) {
     fprintf(stdout, "[%d] | Sender Id: %s\n", getpid(), message.senderId);
     fprintf(stdout, "[%d] | Length...: %d\n", getpid(), message.length);
-    fprintf(stdout, "[%d] | Data.....: %s\n", getpid(), message.data);
+    fprintf(stdout, "[%d] | Data.....: %s\n", getpid(), (char*) message.data);
     fflush(stdout);
 }

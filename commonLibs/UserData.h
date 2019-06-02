@@ -12,6 +12,11 @@
 
 #ifndef User_Def
 #define User_Def
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include <netinet/in.h>
 
 #define UserId_Len      9
@@ -25,13 +30,13 @@ typedef enum UserState {
 
 typedef struct User_t {
     char*       id;
-    sockaddr_in addr;
-    UserState   state;
+    struct  sockaddr_in addr;
+    enum    UserState   state;
 } User_t;
 
-User_t newUser(char* id, sockaddr_in addr, UserState state);
+User_t* newUser(char* id, struct sockaddr_in addr, enum UserState state);
 char*  user2Bytes(User_t user);
-User_t bytes2User(char* data);
+User_t* bytes2User(char* data);
 void printUser(User_t user);
 char* getState(int stateCode);
 #endif

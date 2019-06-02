@@ -19,26 +19,26 @@
  *  SPDT Related
  */
 #include "./SPDT.h"
-int sendCommand(commFacade_t* commData, SPDT_Command command);
-SPDT_Command* receiveCommand(commFacade_t* commData);
-void*   receiveStruct(commFacade_t* commData, ActionType expectedType);
+int sendCommand(struct commFacade_t* commData, struct SPDT_Command command);
+struct SPDT_Command* receiveCommand(struct commFacade_t* commData);
+void*   receiveStruct(struct commFacade_t* commData, enum ActionType expectedType);
 
 /*
  *  UserData Related
  */
 #include "./UserData.h"
-int sendUser(commFacade_t* commData, User_t user);
+int sendUser(struct commFacade_t* commData, struct User_t user);
 
 /*
  *  MessageData Related
  */
 #include "./MessageData.h"
-int sendMessage(commFacade_t* commData, Message_t message);
+int sendMessage(struct commFacade_t* commData, struct Message_t message);
 
 /*
  *  FileData Related
  */
 #include "./FileData.h"
-int sendFile(commFacade_t* commData, File_t file);
+int sendFile(struct commFacade_t* commData, struct File_t file);
 
 #endif

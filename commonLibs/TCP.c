@@ -145,4 +145,5 @@ int     connectRemote(struct commFacade_t *comm_ops, char *addr, int port) {
         return -2;
     }
     printf("[%d] | Connected with Server\n", getpid());
+    return 0;
 }

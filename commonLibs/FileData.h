@@ -14,6 +14,11 @@
 #ifndef File_Def
 #define File_Def
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #define FileName_Len    9
 
 typedef struct File_t {

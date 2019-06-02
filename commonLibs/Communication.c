@@ -26,29 +26,29 @@
  *      > 0         ==  Erro
  *      < 0         ==  Numero de Bytes Enviados
  */
-int sendCommand(commFacade_t* commData, SPDT_Command command) {
-    void*   dataOut = command2bytes(*command);
-    return sendData(commData, dataOut, (3+comman.length));
+int sendCommand(struct commFacade_t* commData, struct SPDT_Command command) {
+    void*   dataOut = command2bytes(command);
+    return sendData(commData, dataOut, (3+command.length));
 }
 
 /*
  *  Funcao que recebe um SPDT_Command via socket
  *  Argumentos:
- *      @commData   ==  Communication Facade
+ *     @commData   ==  Communication Facade
  *  Retornos:
  *     NULL         ==  Erro
  *     SPDT_Command*==  Ponteiro para um SPDT_Command
  */
-SPDT_Command* receiveCommand(commFacade_t* commData) {
+struct SPDT_Command* receiveCommand(struct commFacade_t* commData) {
     void*   header = malloc(3*sizeof(char));
     void*   data;
-    SPDT_Command* command;
+    struct SPDT_Command* command;
     if(receiveData(commData, header, 3*sizeof(char)) > 0) {
         command = bytes2commandHeader(header);
         if(command->length > 0) {   
             data    = malloc(command->length);
             if(receiveData(commData, data, command->length) > 0) {
-                command->data = data;
+                command->value = data;
             } else {
                 perror("[receiveCommand] | Receive Data.");
                 return NULL;
@@ -71,19 +71,19 @@ SPDT_Command* receiveCommand(commFacade_t* commData) {
  *     NULL          ==  Erro
  *     void*         ==  Ponteiro para o Tipo Abstrato
  */
-void*   receiveStruct(commFacade_t* commData, ActionType expectedType) {
-    SPDT_Command* dataReceived = receiveCommand(commData);
+void*   receiveStruct(struct commFacade_t* commData, enum ActionType expectedType) {
+    struct SPDT_Command* dataReceived = receiveCommand(commData);
     void*   outputData;
 
-    switch (dataReceived.type) {
+    switch (dataReceived->type) {
     case RequestClient:
-        outputData = bytes2User(dataReceived.data);
+        outputData = (void*) bytes2User(dataReceived->value);
         break;
     case SendText:
-        outputData = bytes2Message(dataReceived.data);
+        outputData = (void*) bytes2Message(dataReceived->value);
         break;
     case SendFile:
-        outputData = bytes2File(dataReceived.data);
+        outputData = (void*) bytes2File(dataReceived->value);
         break;
     default:
         perror("Not a Valid Type!\n");
@@ -91,8 +91,9 @@ void*   receiveStruct(commFacade_t* commData, ActionType expectedType) {
         break;
     }
 
-    if(expectedType != dataReceived.type) {
-        perror("Type not Expected!\n Expected: %d, Received: %d\n", expectedType, dataReceived.type);
+    if(expectedType != dataReceived->type) {
+        fprintf(stderr, "Type not Expected!\n Expected: %d, Received: %d\n", expectedType, dataReceived->type);
+        fflush(stderr);
     }
     return outputData;
 }
@@ -111,9 +112,9 @@ void*   receiveStruct(commFacade_t* commData, ActionType expectedType) {
  *      > 0         ==  Erro
  *      < 0         ==  Numero de Bytes Enviados
  */
-int sendUser(commFacade_t* commData, User_t user) {
+int sendUser(struct commFacade_t* commData, struct User_t user) {
     void*   dataOut = user2Bytes(user);
-    SPDT_Command* userCommand = newCommand(ActionType.sendUser, UserData_Len, dataOut);
+    struct SPDT_Command* userCommand = newCommand(RequestClient, UserData_Len, dataOut);
     return sendCommand(commData, *userCommand);
 }
 
@@ -131,10 +132,10 @@ int sendUser(commFacade_t* commData, User_t user) {
  *      > 0         ==  Erro
  *      < 0         ==  Numero de Bytes Enviados
  */
-int sendMessage(commFacade_t* commData, Message_t message) {
+int sendMessage(struct commFacade_t* commData, struct Message_t message) {
     void*   dataOut = message2Bytes(message);
-    int messageLength = SENDERID_LEN + 2 + message.length;
-    SPDT_Command* msgCommand = newCommand(ActionType.sendMessage, messageLength, dataOut);
+    int messageLength = UserId_Len + 2 + message.length;
+    struct SPDT_Command* msgCommand = newCommand(SendText, messageLength, dataOut);
     return sendCommand(commData, *msgCommand);
 }
 
@@ -152,9 +153,9 @@ int sendMessage(commFacade_t* commData, Message_t message) {
  *      > 0         ==  Erro
  *      < 0         ==  Numero de Bytes Enviados
  */
-int sendFile(commFacade_t* commData, File_t file) {
+int sendFile(struct commFacade_t* commData, struct File_t file) {
     void*   dataOut = file2Bytes(file);
-    int     fileLength = SENDERID_LEN + 2 + file.nameLength + 2 + file.length;
-    SPDT_Command* fileCommand = newCommand(ActionType.sendMessage, fileLength, dataOut);
+    int     fileLength = UserId_Len + 2 + file.nameLength + 2 + file.length;
+    struct SPDT_Command* fileCommand = newCommand(SendFile, fileLength, dataOut);
     return sendCommand(commData, *fileCommand);
 }

@@ -35,8 +35,8 @@ typedef struct commFacade_t {
 
 typedef struct commOps_t {
     int     (*init)         (commFacade_t*, int);
-    int     (*close)        (commFacade_t*);
-    int     (*closeRemote)  (commFacade_t*);
+    void    (*close)        (commFacade_t*);
+    void    (*closeRemote)  (commFacade_t*);
 
     size_t  (*send)         (commFacade_t*, void *, size_t);
     size_t  (*receive)      (commFacade_t*, void *, size_t);
@@ -48,13 +48,14 @@ typedef struct commOps_t {
 
 int     init_Socket(commFacade_t* commData, int port );
 void    close_Socket(commFacade_t* commData);
-int     close_Remote(commFacade_t* commData);
+void    close_Remote(commFacade_t* commData);
 size_t  sendData(commFacade_t* commData, void *data, size_t size);
 size_t  receiveData(commFacade_t* commData, void *data, size_t size);
 int	    acceptConnection(commFacade_t* commData);
 int     connectRemote(commFacade_t* commData, char *addr, int port);
 
-commOps_t commOps = {
+#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+static struct commOps_t commOps = {
     .init       =init_Socket,
     .close      =close_Socket,
     .closeRemote=close_Remote,
@@ -62,5 +63,5 @@ commOps_t commOps = {
     .receive    =receiveData,
     .accept     =acceptConnection,
     .connect    =connectRemote,
-}
+};
 #endif

@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "TCP.h"
 
 typedef enum ActionType {
     LogIn        = 0x00,
@@ -28,10 +27,10 @@ typedef enum ActionType {
 } ActionType;
 
 typedef struct SPDT_Command {
-    ActionType type;
+    enum ActionType type;
     int length;
     void* value;
-} SPDT;
+} SPDT_Command;
 
 SPDT_Command* newCommand(ActionType type, int length, void* data);
 char*   command2bytes(SPDT_Command command);

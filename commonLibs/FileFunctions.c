@@ -25,11 +25,11 @@ char* file2Bytes(File_t file) {
     offset  = 0;
     memcpy(dataOut + offset, file.senderId, UserId_Len);
     offset += UserId_Len;
-    memcpy(dataOut + offset, file.nameLength, sizeof(int));
+    memcpy(dataOut + offset, &file.nameLength, sizeof(int));
     offset += sizeof(int);
     memcpy(dataOut + offset, file.name,   file.nameLength);
     offset += file.nameLength;
-    memcpy(dataOut + offset, file.length, sizeof(int));
+    memcpy(dataOut + offset, &file.length, sizeof(int));
     offset += sizeof(int);
     memcpy(dataOut + offset, file.data,   file.length);
 
@@ -37,19 +37,26 @@ char* file2Bytes(File_t file) {
 }
 
 File_t* bytes2File(char* data) {
-    File_t* newFile;
+    File_t* newFile = (File_t*) malloc(sizeof(File_t));
     int     offset;
 
     offset = 0;
-    memcpy(newFile.senderId, data + offset, UserId_Len);
+    newFile->senderId = (char*) malloc(UserId_Len);
+    memcpy(newFile->senderId, data + offset, UserId_Len);
     offset += UserId_Len;
-    memcpy(newFile.nameLength, data + offset, sizeof(int));
+
+    memcpy(&newFile->nameLength, data + offset, sizeof(int));
     offset += sizeof(int);
-    memcpy(newFile.name, data + offset, newFile.nameLength);
-    offset += newFile.nameLength;
-    memcpy(newFile.length, data + offset, sizeof(int));
+
+    newFile->name = (char*) malloc(newFile->nameLength);
+    memcpy(newFile->name, data + offset, newFile->nameLength);
+    offset += newFile->nameLength;
+
+    memcpy(&newFile->length, data + offset, sizeof(int));
     offset += sizeof(int);
-    memcpy(newFile.data, data + offset, newFile.length);
+
+    newFile->data = malloc(newFile->length);
+    memcpy(newFile->data, data + offset, newFile->length);
 
     #ifdef DEBUG
         printFile(*newFile);
@@ -75,19 +82,19 @@ void printFile(File_t file) {
  *      File_t*     ==  Ponteiro do File_t
  */
 File_t*  disk2Memory(char* filePath, char* userId) {
-    File_t newFile = malloc(sizeof(File_t));
+    File_t* newFile = (File_t*) malloc(sizeof(File_t));
 
     //  SendId
-    newFile.senderId = (char *)malloc(UserId_Len);
-    memcpy(newFile.senderId, userId, UserId_Len);
+    newFile->senderId = (char *)malloc(UserId_Len);
+    memcpy(newFile->senderId, userId, UserId_Len);
 
     //  File Name
-    newFile.nameLength = FileName_Len;
-    newFile.name = (char *)malloc(newFile.nameLength);
-    memcpy(newFile.name, basename(filePath), newFile.nameLength);
+    newFile->nameLength = FileName_Len;
+    newFile->name = (char *)malloc(newFile->nameLength);
+    memcpy(newFile->name, basename(filePath), newFile->nameLength);
 
     //  Open File
-    FILE *fp = fopen(argv[1], "rb");
+    FILE *fp = fopen(newFile->name, "rb");
     if (fp == NULL) {
         perror("Can't open file");
         return NULL;
@@ -95,12 +102,12 @@ File_t*  disk2Memory(char* filePath, char* userId) {
 
     //  File Size Discover
     fseek(fp, 0L, SEEK_END);
-    newFile.length = ftell(fp);
+    newFile->length = ftell(fp);
     rewind(fp);
 
     //  File Data
-    newFile.data = malloc(newFile.length);
-    if(fread(newFile.data, newFile.length, 1, fp) != newFile.length) {
+    newFile->data = malloc(newFile->length);
+    if(fread(newFile->data, newFile->length, 1, fp) != newFile->length) {
         perror("Can't Read File");
         return NULL;
     }
