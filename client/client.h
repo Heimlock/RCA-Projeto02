@@ -9,3 +9,7 @@
  *
  *	 Biblioteca de Recursos Referentes ao Cliente
  */
+
+#include "../commonLibs/LinkedList.h"
+
+static LinkedListHead messages;

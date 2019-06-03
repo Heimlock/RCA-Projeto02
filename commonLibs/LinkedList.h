@@ -15,35 +15,57 @@
  * #define KEY_LEN 9    //  Implementar Aonde for Usado
  * #define DATA_LEN 80  //  Implementar Aonde for Usado
  */
+#ifndef LinkedList_Def
+#define LinkedList_Def
 
-typedef	struct LinkedListHead {
-    int size;
-    LinkedListNode* initialNode;
+#define KEY_LEN 9
+#define DATA_LEN 80
 
-    // void* add(char* key, void* data);
-    // void* remove(char* key);
-    // LinkedListNode* get(char* key);
-    // void* destroy();
-} LinkedListHead;
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 typedef	struct LinkedListNode {
     char*   key;
+    int     length;
     void*   data;
-    LinkedListNode* next;
-    // void* destroy();
+    struct LinkedListNode* next;
 } LinkedListNode;
 
-LinkedListHead* initList();
-LinkedListNode* initNode(char* key, void* data);
-void destroyHead(LinkedListHead* head);
-void destroyNode(LinkedListNode* node);
+typedef	struct LinkedListHead {
+    int size;
+    struct LinkedListNode* initialNode;
+} LinkedListHead;
 
-void addNode(LinkedListHead* head, char* key, void* data);
-void removeNode(LinkedListHead* head, char* key);
-LinkedListNode* getNode(LinkedListHead* head, char* key);
+typedef struct LinkedListOps {
+    int* (*initHead) (struct LinkedListHead*);
+    int* (*initNode) (struct LinkedListHead*);
+    int* (*add) (struct LinkedListHead*, char* key, void* data);
+    int* (*remove) (struct LinkedListHead*, char* key);
+    struct LinkedListNode* (*get) (struct LinkedListHead*, char* key);
+    struct LinkedListNode* (*getFirst) (struct LinkedListHead*);
+    void (*destroyHead) (struct LinkedListHead*);
+    void (*destroyNode) (struct LinkedListNode*);
+} LinkedListOps;
 
-#define addNode_Macro(key, data) ( addNode(head, key, data) )
-#define removeNode_Macro(key) ( removeNode(head, key, data) )
-#define getNode_Macro(key) ( addNode(head, key, data) )
-#define destroyHead_Macro(key) ( destroyHead(head) )
-#define destroyNode_Macro(key) ( destroyNode(node) )
+struct LinkedListHead* initList();
+struct LinkedListNode* initNode(char* key, void* data);
+void  destroyHead(struct LinkedListHead* head);
+void  destroyNode(struct LinkedListNode* node);
+int  addNode(struct LinkedListHead* head, char* key, void* data);
+int  removeNode(struct LinkedListHead* head, char* key);
+struct LinkedListNode* getNode(struct LinkedListHead* head, char* key);
+struct LinkedListNode* getFirst(struct LinkedListHead* head);
+
+#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+static struct LinkedListOps llOps = {
+    .initHead   =   initList,
+    .initNode   =   initNode,
+    .add        =   addNode,
+    .remove     =   removeNode,
+    .get        =   getNode,
+    .getFirst   =   getFirst,
+    .destroyHead=   destroyHead,
+    .destroyNode=   destroyNode
+};
+#endif
