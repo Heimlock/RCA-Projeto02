@@ -5,6 +5,7 @@
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
+ *      Bruno Pereira Bannwart        RA: 15171572
  *		Felipe Moreira Ferreira       RA: 16116469
  *
  *  Biblioteca de Recursos Referentes as Threads
@@ -13,6 +14,7 @@
 #ifndef Thread_Def
 #define Thread_Def
 
+#include <stdio.h>
 #include <pthread.h>
 
 void* waitResponse(void* function, void* args);
