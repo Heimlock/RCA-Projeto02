@@ -109,9 +109,11 @@ File_t*  disk2Memory(char* filePath, char* userId) {
     newFile->data = malloc(newFile->length);
     if(fread(newFile->data, newFile->length, 1, fp) != newFile->length) {
         perror("Can't Read File");
+        fclose(fp);
         return NULL;
     }
 
+    fclose(fp);
     #ifdef  DEBUG
         printFile(*newFile);
     #endif
@@ -134,7 +136,9 @@ int memory2Disk(File_t file) {
     }
     if (fwrite(file.data, file.length, 1, fp) != 1) {
         perror("Write File Error\n");
+        fclose(fp);
         return -2;
     }
+    fclose(fp);
     return 0;
 }
