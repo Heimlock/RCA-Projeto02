@@ -14,7 +14,6 @@
 #ifndef Thread_Def
 #define Thread_Def
 
-#include <stdio.h>
 #include <pthread.h>
 
 void* waitResponse(void* function, void* args);

@@ -11,6 +11,11 @@
  *  Desenvolvimento de Recursos Referentes as Threads
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
 #include "./ThreadManager.h"
 
 /*
@@ -142,7 +147,7 @@ int mutexLock(pthread_mutex_t *mutex) {
 int mutexTryLock(pthread_mutex_t *mutex) {
     int rtnValue;
     if (rtnValue = pthread_mutex_trylock(mutex) < 0) {
-        if(rtnValue < 0) {
+        if(rtnValue != EBUSY) {
             fprintf(stderr, "[%d] | Error! Mutex couldn't perform a TryLock.\n", getpid());
             fflush(stderr);
             perror("pthread_mutex_trylock");
@@ -162,7 +167,7 @@ int mutexTryLock(pthread_mutex_t *mutex) {
 void mutexUnlock(pthread_mutex_t *mutex) {
     int rtnValue;
     if (rtnValue = pthread_mutex_unlock(mutex) < 0) {
-        if(rtnValue < 0) {
+        if(rtnValue != EBUSY) {
             fprintf(stderr, "[%d] | Error! Mutex couldn't be Unlocked.\n", getpid());
             fflush(stderr);
             perror("pthread_mutex_unlock");
