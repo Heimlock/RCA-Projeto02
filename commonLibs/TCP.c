@@ -22,19 +22,23 @@
  */
 int     init_Socket(commFacade_t* commData, int port ) {
    if (((commData->localSocketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-       perror("[init_Socket] | socket()");
-       return -1;
+        perror("[init_Socket] | socket()");
+        return -1;
+   }
+   if (setsockopt((commData->localSocketDesc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+        perror("[init_Socket] | setsockopt(SO_REUSEADDR) failed");
+        return -2;
    }
    commData->local.sin_family      = AF_INET;
    commData->local.sin_port        = htons(port);
    commData->local.sin_addr.s_addr = INADDR_ANY;
    if (bind((commData->localSocketDesc), (struct sockaddr*)&(commData->local), sizeof(commData->local)) < 0) {
        perror("[init_Socket] | bind()");
-       return -2;
+       return -3;
    }
     if (listen((commData->localSocketDesc), CONNECTION_QUEUE) == -1) {
         perror("[init_Socket] | listen()");
-        return -3;
+        return -4;
     }
    fprintf(stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(commData->local.sin_port));
    fflush(stdout);

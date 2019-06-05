@@ -64,4 +64,10 @@ static struct commOps_t commOps = {
     .accept     =acceptConnection,
     .connect    =connectRemote,
 };
+
+#ifdef  DEBUG
+    static int enable = 1;
+#else
+    static int enable = 0;
+#endif
 #endif

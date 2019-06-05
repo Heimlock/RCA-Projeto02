@@ -10,7 +10,14 @@
  *	 Desenvolvimento Lógico Referente ao Servidor
  */
 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "./server.h"
+
 int main(int argc, char const *argv[]) {
-    /* code */
+    fprintf(stdout, "Hello from Server!\n");
+    fflush(stdout);
     return 0;
 }
