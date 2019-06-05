@@ -24,16 +24,20 @@ SRC_SERVER	= ./commonLibs/*.c ./server/*.c
 
 all: clean BUILD_SERVER BUILD_CLIENT clean
 
-BUILD_SERVER:
+BUILD_SERVER: clean
 	$(CMP) -c $(FLAGS) $(LIB_SERVER)
 	$(CMP) -c $(FLAGS) $(SRC_SERVER)
 	$(CMP) -o $(SERVER) $(OBJECTS) $(FLAGS)
+	@rm -Rf ./server/*.o ./server/*.gch
+	@rm -Rf *.o *.gch ./commonLibs/*.o ./commonLibs/*.gch
 	@echo
 
-BUILD_CLIENT:
+BUILD_CLIENT: clean
 	$(CMP) -c $(FLAGS) $(LIB_CLIENT)
 	$(CMP) -c $(FLAGS) $(SRC_CLIENT)
 	$(CMP) -o $(ClIENT) $(OBJECTS) $(FLAGS)
+	@rm -Rf ./client/*.o ./client/*.gch
+	@rm -Rf *.o *.gch ./commonLibs/*.o ./commonLibs/*.gch
 	@echo
 
 clean:
