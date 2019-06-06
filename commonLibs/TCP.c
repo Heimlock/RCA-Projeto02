@@ -13,14 +13,45 @@
 #include "./TCP.h"
 
 /*
- *  Função que Inicializa a Comunicação via Socket
+ *  Função que Inicializa a Comunicação via Socket (Cliente)
  *  Argumentos:
  *      @port       ==  Numero da Porta
  *  Retornos:
  *      > 0         ==  Erro
  *      = 0         ==  Sucesso
  */
-int     init_Socket(commFacade_t* commData, int port ) {
+int     init_Client(commFacade_t* commData, int port ) {
+   if (((commData->localSocketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("[init_Socket] | socket()");
+        return -1;
+   }
+   if (setsockopt((commData->localSocketDesc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+        perror("[init_Socket] | setsockopt(SO_REUSEADDR) failed");
+        return -2;
+   }
+   commData->local.sin_family      = AF_INET;
+   commData->local.sin_port        = htons(port);
+   commData->local.sin_addr.s_addr = INADDR_ANY;
+   if (bind((commData->localSocketDesc), (struct sockaddr*)&(commData->local), sizeof(commData->local)) < 0) {
+       perror("[init_Socket] | bind()");
+       return -3;
+   }
+   
+   fprintf(stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(commData->local.sin_port));
+   fflush(stdout);
+   return 0;
+}
+
+/*
+ *  Função que Inicializa a Comunicação via Socket (Servidor)
+ *  Argumentos:
+ *      @port       ==  Numero da Porta
+ *  Retornos:
+ *      > 0         ==  Erro
+ *      = 0         ==  Sucesso
+ */
+
+int     init_Server(commFacade_t* commData, int port ) {
    if (((commData->localSocketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("[init_Socket] | socket()");
         return -1;
