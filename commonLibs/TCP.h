@@ -34,7 +34,8 @@ typedef struct commFacade_t {
 } commFacade_t;
 
 typedef struct commOps_t {
-    int     (*init)         (commFacade_t*, int);
+    int     (*initClient)   (commFacade_t*, int);
+    int	    (*initServer)   (commFacade_t*, int);
     void    (*close)        (commFacade_t*);
     void    (*closeRemote)  (commFacade_t*);
 

@@ -1,4 +1,4 @@
-
+﻿
 /*
  *		Redes de Computadores A
  *      Projeto 02 - WhatsAp2p, 
@@ -27,7 +27,7 @@ int main(int argc, char const *argv[]) {
         exit(1);
     }
 
-    commOps.init(&commData, 0);    
+    commOps.initClient(&commData, 0);    
     commOps.connect(&commData, argv[2], atoi(argv[3]));
 
     fprintf(stdout, "[%d] | logIn.\n", getpid());
