@@ -51,8 +51,8 @@ int     init_Client(commFacade_t* commData, int port );
 int     init_Server(commFacade_t* commData, int port );
 void    close_Socket(commFacade_t* commData);
 void    close_Remote(commFacade_t* commData);
-size_t  sendData(commFacade_t* commData, void *data, size_t size);
-size_t  receiveData(commFacade_t* commData, void *data, size_t size);
+int     sendData(commFacade_t* commData, void *data, size_t size);
+int     receiveData(commFacade_t* commData, void *data, size_t size);
 int	    acceptConnection(commFacade_t* commData);
 int     connectRemote(commFacade_t* commData, char *addr, int port);
 

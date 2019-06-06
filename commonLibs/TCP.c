@@ -104,10 +104,10 @@ void    close_Remote(commFacade_t* commData) {
  *      > 0         ==  Erro
  *      < 0         ==  Numero de Bytes Enviados
  */
-size_t  sendData(commFacade_t* commData, void *data, size_t size) {
-    size_t numbytes;
+int  sendData(commFacade_t* commData, void *data, size_t size) {
+    int numbytes;
     //  send: Socket Remoto, data, Tam Esperado, Flags
-    if((numbytes = send((commData->remoteSocketDesc), data, size, 0)) < 0) {
+    if(numbytes = send((commData->remoteSocketDesc), data, size, 0) < 0) {
         perror("send()");
         return -1;
     }
@@ -124,8 +124,8 @@ size_t  sendData(commFacade_t* commData, void *data, size_t size) {
  *      > 0         ==  Erro
  *      < 0         ==  Numero de Bytes Recebidos
  */
-size_t  receiveData(commFacade_t* commData, void *data, size_t size) {
-    size_t numbytes;
+int  receiveData(commFacade_t* commData, void *data, size_t size) {
+    int numbytes;
     //  recv: Socket Remoto, data, Tam Esperado, Flags
     if((numbytes = recv((commData->remoteSocketDesc), data, size, 0)) < 0) {
         perror("recv()");
