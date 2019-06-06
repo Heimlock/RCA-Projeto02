@@ -17,14 +17,14 @@
 #include "./server.h"
 
 int main(int argc, char const *argv[]) {
-    fprintf(stdout, "[%d] | Init server!\n", getpid());
+    fprintf(stdout, "[%d] | Central Server Initialized!\n", getpid());
     fflush(stdout);
 
     if(argc != 2){
         exit(1);
     }
 
-    commOps.init(&commData, atoi(argv[1]));    
+    commOps.initServer(&commData, atoi(argv[1]));    
     initSharedData();
 
     do{

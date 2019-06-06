@@ -17,28 +17,24 @@
 #include "./client.h"
 
 int main(int argc, char const *argv[]) {
-    fprintf(stdout, "[%d] | Init client!\n", getpid());
+    fprintf(stdout, "[%d] | Client Module Initialized!\n", getpid());
     fflush(stdout);
-
-    char enderecoIP[10] = "localhost";
-    int porta = 4000;
-    char id[2] = "1";
 
     struct SPDT_Command *command;
     struct User_t *user;
 
-   /* if(argc != 4){      //./client id ip port
+   if(argc != 4){      //./client id ip port
         exit(1);
-    }*/
+    }
 
-    commOps.init(&commClient, 3000);    
-    commOps.connect(&commClient, enderecoIP, porta);
+    commOps.init(&commData, 0);    
+    commOps.connect(&commData, argv[2], atoi(argv[3]));
 
-    fprintf(stdout, "[%d] | logIn!\n", getpid());
+    fprintf(stdout, "[%d] | logIn.\n", getpid());
     fflush(stdout);
-    command = newCommand(LogIn, sizeof(id), id);
+    command = newCommand(LogIn, sizeof(argv[1]), argv[1]);
     
-    if(sendCommand(&commClient, (*command)) < 0){
+    if(sendCommand(&commData, (*command)) < 0){
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);
         exit(1);
@@ -46,31 +42,31 @@ int main(int argc, char const *argv[]) {
 
     sleep(1000);
 
-    fprintf(stdout, "[%d] | requestUser!\n", getpid());
+    fprintf(stdout, "[%d] | requestClient.\n", getpid());
     fflush(stdout);
-    command = newCommand(RequestClient, sizeof(id), id);
+    command = newCommand(RequestClient, sizeof(argv[1]), argv[1]);
 
-    if(sendCommand(&commClient, (*command)) < 0){
+    if(sendCommand(&commData, (*command)) < 0){
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);
         exit(2);
     } 
 
-    user  = (User_t *) receiveStruct(&commClient, RequestClient);
+    user  = (User_t *) receiveStruct(&commData, RequestClient);
     fprintf("Telefone: %s\n", user->id);
 
     sleep(1000);
 
-    fprintf(stdout, "[%d] | logOut!\n", getpid());
+    fprintf(stdout, "[%d] | logOut.\n", getpid());
     fflush(stdout);
-    command = newCommand(LogOut, sizeof(id), id);
+    command = newCommand(LogOut, sizeof(argv[1]), argv[1]);
 
-    if(sendCommand(&commClient, (*command)) < 0){
+    if(sendCommand(&commData, (*command)) < 0){
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);
         exit(3);
     }
 
-    commOps.close(&commClient);
+    commOps.close(&commData);
     return 0;
 }

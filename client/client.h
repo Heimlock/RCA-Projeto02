@@ -17,10 +17,10 @@
 
 #ifndef VARS_INIT
 #define VARS_INIT
-    struct commFacade_t   commClient;
+    struct commFacade_t   commData;
     struct LinkedListHead messages;
 
 #else
-    extern struct commFacade_t   commClient;
+    extern struct commFacade_t   commData;
     extern struct LinkedListHead messages;
 #endif

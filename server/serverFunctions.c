@@ -52,7 +52,7 @@ void *attendClient(void *arg){
             case LogOut:    logOut(commDataLocal, command);
 							break;
             
-            case RequestClient: requestUser(commDataLocal, command);
+            case RequestClient: requestClient(commDataLocal, command);
 								break; 
 
             default:   break;
@@ -150,7 +150,7 @@ void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_
     }
 }
 
-void	requestUser(struct commFacade_t communication_data, struct SPDT_Command *request_user) {
+void	requestClient(struct commFacade_t communication_data, struct SPDT_Command *request_user) {
 	struct User_t *user;
 	struct LinkedListNode *auxUser;
 		

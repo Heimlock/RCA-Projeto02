@@ -39,4 +39,4 @@
 
  void   logIn(struct commFacade_t, struct SPDT_Command *);
  void   logOut(struct commFacade_t, struct SPDT_Command *);
- void   requestUser(struct commFacade_t, struct SPDT_Command *);
+ void   requestClient(struct commFacade_t, struct SPDT_Command *);
