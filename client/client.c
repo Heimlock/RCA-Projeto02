@@ -47,7 +47,9 @@ int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | logIn.\n", getpid());
     fflush(stdout);
     command = newCommand(LogIn, 4 * sizeof(char), value);
-    
+
+    printCommand(getpid(), *command);
+
     if(sendCommand(&commData, (*command)) < 0){
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);

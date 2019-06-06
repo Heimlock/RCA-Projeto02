@@ -86,3 +86,16 @@ SPDT_Command* bytes2commandHeader(char* data) {
     command->value   =   NULL;
     return command;
 }
+
+void printCommand(int id, SPDT_Command command) {
+    fprintf(stdout,"[%.4d] | Command -- Type: %d\n", id, command.type);
+    fflush(stdout);
+    fprintf(stdout,"[%.4d] | Command -- Length: %d\n", id, command.length);
+    fflush(stdout);
+
+    char* auxValue = command.value;
+    for( int i = 0; i< command.length; i++ ) {
+        fprintf(stdout,"[%.4d] | Command -- Value[%d]: 0x%02hhX\n", id, i, auxValue[i]);
+        fflush(stdout);
+    }
+}

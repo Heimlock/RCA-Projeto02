@@ -107,7 +107,7 @@ void    close_Remote(commFacade_t* commData) {
 int  sendData(commFacade_t* commData, void *data, size_t size) {
     int numbytes;
     //  send: Socket Remoto, data, Tam Esperado, Flags
-    if(numbytes = send((commData->remoteSocketDesc), data, size, 0) < 0) {
+    if(numbytes = send((commData->localSocketDesc), data, size, 0) < 0) {
         perror("send()");
         return -1;
     }
@@ -127,10 +127,14 @@ int  sendData(commFacade_t* commData, void *data, size_t size) {
 int  receiveData(commFacade_t* commData, void *data, size_t size) {
     int numbytes;
     //  recv: Socket Remoto, data, Tam Esperado, Flags
-    if((numbytes = recv((commData->remoteSocketDesc), data, size, 0)) < 0) {
+    if(numbytes = recv((commData->remoteSocketDesc), data, size, 0) < 0) {
         perror("recv()");
         exit(1);
     }
+    #ifdef DEBUG
+        fprintf(stdout,"[receiveData] | size: %d, numbytes: %d\n", size, numbytes);
+        fflush(stdout);
+    #endif
     return numbytes;
 }
 
