@@ -5,11 +5,24 @@
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
+ *      Bruno Pereira Bannwart        RA: 15171572
  *		Felipe Moreira Ferreira       RA: 16116469
  *
  *	 Biblioteca de Recursos Referentes ao Cliente
  */
 
+#include "../commonLibs/Communication.h"
 #include "../commonLibs/LinkedList.h"
+#include "../commonLibs/ThreadManager.h"
 
-static LinkedListHead messages;
+#ifndef VARS_INIT
+#define VARS_INIT
+    struct commFacade_t   local;
+    struct commFacade_t   remote;
+    struct LinkedListHead messages;
+
+#else
+    extern struct commFacade_t   local;
+    extern struct commFacade_t   remote;
+    extern struct LinkedListHead messages;
+#endif

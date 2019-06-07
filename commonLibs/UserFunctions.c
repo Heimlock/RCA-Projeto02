@@ -45,7 +45,7 @@ User_t* bytes2User(char* data) {
     memcpy(&newUser->addr, data + 9, sizeof(struct sockaddr_in));
     memcpy(&newUser->state, data + 25, 1 * sizeof(char));
     #ifdef DEBUG
-        printUser(newUser);
+        printUser(*newUser);
     #endif
     return newUser;
 }

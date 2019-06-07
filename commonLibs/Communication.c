@@ -28,6 +28,9 @@
  */
 int sendCommand(struct commFacade_t* commData, struct SPDT_Command command) {
     void*   dataOut = command2bytes(command);
+    #ifdef DEBUG
+        printBytes(getpid(), dataOut, (3+command.length));
+    #endif
     return sendData(commData, dataOut, (3+command.length));
 }
 
@@ -40,24 +43,46 @@ int sendCommand(struct commFacade_t* commData, struct SPDT_Command command) {
  *     SPDT_Command*==  Ponteiro para um SPDT_Command
  */
 struct SPDT_Command* receiveCommand(struct commFacade_t* commData) {
+    int     type;
+    int     length;
     void*   header = malloc(3*sizeof(char));
-    void*   data;
+    void*   value;
+    void*   commandData;
     struct SPDT_Command* command;
-    if(receiveData(commData, header, 3*sizeof(char)) > 0) {
-        command = bytes2commandHeader(header);
-        if(command->length > 0) {   
-            data    = malloc(command->length);
-            if(receiveData(commData, data, command->length) > 0) {
-                command->value = data;
+    struct SPDT_Command* auxCommand;
+
+    if(-1 != receiveData(commData, &header, 3*sizeof(char))) {
+	auxCommand = bytes2commandHeader(header);
+        fprintf(stdout, "Type: %d, Length: %d\n", auxCommand->type, auxCommand->length);
+        fflush(stdout);
+        if(auxCommand->length > 0) {
+            fprintf(stdout, "Init Receive Data\n");
+            fflush(stdout);
+
+            value = malloc(auxCommand->length * sizeof(char));
+            commandData    = malloc((3 * sizeof(char)) + auxCommand->length);
+            memcpy(header, commandData, (3 * sizeof(char)));
+            fprintf(stdout, "Receive Data\n");
+            fflush(stdout);
+            if(-1 != receiveData(commData, &value, auxCommand->length)) {
+                printBytes(getpid(), value, auxCommand->length);
+                memcpy(value, ((3 * sizeof(char)) + commandData), auxCommand->length);
+                command = bytes2command(commandData);
+                free(value);
             } else {
-                perror("[receiveCommand] | Receive Data.");
+                perror("[receiveCommand] | Receive Data");
                 return NULL;
             }
+            free(header);
+            free(commandData);
         }
     } else {
-        perror("[receiveCommand] | Receive Header.");
+        perror("[receiveCommand] | Receive Header");
         return NULL;
     }
+    #ifdef DEBUG
+	printCommand(*command);
+    #endif
     return command;
 }
 
@@ -158,4 +183,12 @@ int sendFile(struct commFacade_t* commData, struct File_t file) {
     int     fileLength = UserId_Len + 2 + file.nameLength + 2 + file.length;
     struct SPDT_Command* fileCommand = newCommand(SendFile, fileLength, dataOut);
     return sendCommand(commData, *fileCommand);
+}
+
+void printBytes(int id, void *bytes, int length) {
+    char* auxValue = bytes;
+    for( int i = 0; i< length; i++ ) {
+        fprintf(stdout,"[%.4d] | Value[%d]: 0x%02hhX\n", id, i, auxValue[i]);
+        fflush(stdout);
+    }
 }
