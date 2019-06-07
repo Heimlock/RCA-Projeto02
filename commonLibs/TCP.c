@@ -21,25 +21,30 @@
  *      = 0         ==  Sucesso
  */
 int     init_Client(commFacade_t* commData, int port ) {
-   if (((commData->localSocketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+    int socket_len;
+
+    if (((commData->socketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("[init_Socket] | socket()");
         return -1;
-   }
-   if (setsockopt((commData->localSocketDesc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+    }
+    if (setsockopt((commData->socketDesc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
         perror("[init_Socket] | setsockopt(SO_REUSEADDR) failed");
         return -2;
-   }
-   commData->local.sin_family      = AF_INET;
-   commData->local.sin_port        = htons(port);
-   commData->local.sin_addr.s_addr = INADDR_ANY;
-   if (bind((commData->localSocketDesc), (struct sockaddr*)&(commData->local), sizeof(commData->local)) < 0) {
-       perror("[init_Socket] | bind()");
-       return -3;
-   }
-   
-   fprintf(stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(commData->local.sin_port));
-   fflush(stdout);
-   return 0;
+    }
+    commData->socketAddr.sin_family      = AF_INET;
+    commData->socketAddr.sin_port        = htons(port);
+    commData->socketAddr.sin_addr.s_addr = INADDR_ANY;
+    if (bind((commData->socketDesc), (struct sockaddr*)&(commData->socketAddr), sizeof(commData->socketAddr)) < 0) {
+        perror("[init_Socket] | bind()");
+        return -3;
+    }
+
+    socket_len   =   sizeof(commData->socketAddr);
+    getsockname(commData->socketDesc, (struct sockaddr *)&(commData->socketAddr), (socklen_t *)&socket_len);
+
+    fprintf(stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(commData->socketAddr.sin_port));
+    fflush(stdout);
+    return 0;
 }
 
 /*
@@ -52,26 +57,26 @@ int     init_Client(commFacade_t* commData, int port ) {
  */
 
 int     init_Server(commFacade_t* commData, int port ) {
-   if (((commData->localSocketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+    if (((commData->socketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("[init_Socket] | socket()");
         return -1;
-   }
-   if (setsockopt((commData->localSocketDesc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+    }
+    if (setsockopt((commData->socketDesc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
         perror("[init_Socket] | setsockopt(SO_REUSEADDR) failed");
         return -2;
-   }
-   commData->local.sin_family      = AF_INET;
-   commData->local.sin_port        = htons(port);
-   commData->local.sin_addr.s_addr = INADDR_ANY;
-   if (bind((commData->localSocketDesc), (struct sockaddr*)&(commData->local), sizeof(commData->local)) < 0) {
-       perror("[init_Socket] | bind()");
-       return -3;
-   }
-    if (listen((commData->localSocketDesc), CONNECTION_QUEUE) == -1) {
+    }
+    commData->socketAddr.sin_family      = AF_INET;
+    commData->socketAddr.sin_port        = htons(port);
+    commData->socketAddr.sin_addr.s_addr = INADDR_ANY;
+    if (bind((commData->socketDesc), (struct sockaddr*)&(commData->socketAddr), sizeof(commData->socketAddr)) < 0) {
+        perror("[init_Socket] | bind()");
+        return -3;
+    }
+    if (listen((commData->socketDesc), CONNECTION_QUEUE) == -1) {
         perror("[init_Socket] | listen()");
         return -4;
     }
-   fprintf(stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(commData->local.sin_port));
+   fprintf(stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(commData->socketAddr.sin_port));
    fflush(stdout);
    return 0;
 }
@@ -80,18 +85,8 @@ int     init_Server(commFacade_t* commData, int port ) {
  *  Função que Finaliza a Comunicação via Socket
  */
 void    close_Socket(commFacade_t* commData) {
-    close(commData->localSocketDesc);
-    fprintf(stdout,"[%d] | Local Socket has been Terminated!\n", getpid());
-    fflush(stdout);
-}
-
-/*
- *  Função que Finaliza a Comunicação via Socket
- */
-void    close_Remote(commFacade_t* commData) {
-    close(commData->remoteSocketDesc);
-    fprintf(stdout,"[%d] | Remote Socket has been Terminated!\n", getpid());
-    fflush(stdout);
+   fprintf(stdout,"[%d] | Socket at Port %d has been Terminated!\n", getpid(), ntohs(commData->socketAddr.sin_port));
+    close(commData->socketDesc);
 }
 
 /*
@@ -107,7 +102,7 @@ void    close_Remote(commFacade_t* commData) {
 int  sendData(commFacade_t* commData, void *data, size_t size) {
     int numbytes;
     //  send: Socket Remoto, data, Tam Esperado, Flags
-    if(numbytes = send((commData->localSocketDesc), data, size, 0) < 0) {
+    if(numbytes = send((commData->socketDesc), data, size, 0) < 0) {
         perror("send()");
         return -1;
     }
@@ -118,18 +113,18 @@ int  sendData(commFacade_t* commData, void *data, size_t size) {
  *  Função que recebe os dados via socket
  *  Argumentos:
  *      @commData   ==  Communication Facade
- *      @data       ==  Dado
+ *      @data       ==  Ponteiro do Dado
  *      @size       ==  Tamanho do Dado
  *  Retornos:
- *      > 0         ==  Erro
+ *      -1          ==  Erro
  *      < 0         ==  Numero de Bytes Recebidos
  */
-int  receiveData(commFacade_t* commData, void *data, size_t size) {
+int  receiveData(commFacade_t* commData, void **data, size_t size) {
     int numbytes;
     //  recv: Socket Remoto, data, Tam Esperado, Flags
-    if(numbytes = recv((commData->remoteSocketDesc), data, size, 0) < 0) {
+    if(-1 == (numbytes = recv((commData->socketDesc), *data, size, 0))) {
         perror("recv()");
-        exit(1);
+        return -1;
     }
     #ifdef DEBUG
         fprintf(stdout,"[receiveData] | size: %d, numbytes: %d\n", size, numbytes);
@@ -141,20 +136,21 @@ int  receiveData(commFacade_t* commData, void *data, size_t size) {
 /*
  *  Função que aceita uma conexão TCP
  *  Argumentos:
- *      @commData   ==  Communication Facade
+ *      @local      ==  Local Communication Facade
+ *      @remote     ==  Remote Communication Facade
  *  Retornos:
  *      > 0         ==  Erro
  *      = 0         ==  Sucesso
  */
-int     acceptConnection(commFacade_t* commData) {
-    socklen_t remoteAddrlen = sizeof(commData->remote);
-    if (((commData->remoteSocketDesc) = accept((commData->localSocketDesc), (struct sockaddr *)&(commData->remote), &remoteAddrlen)) == -1) {
+int     acceptConnection(commFacade_t* local, commFacade_t* remote) {
+    socklen_t remoteAddrlen = sizeof(remote->socketAddr);
+    if (((remote->socketDesc) = accept((local->socketDesc), (struct sockaddr *)&(remote->socketAddr), &remoteAddrlen)) == -1) {
         perror("accept()");
         return -1;
     }
     fprintf( stdout, "\n\n========================================\n");
     fprintf( stdout, "[%d] | Connection Accepted\n", getpid());
-    fprintf( stdout, "[%d] | Connected with %s:%d\n", getpid(), inet_ntoa(commData->remote.sin_addr), ntohs(commData->remote.sin_port) );
+    fprintf( stdout, "[%d] | Connected with %s:%d\n", getpid(), inet_ntoa(remote->socketAddr.sin_addr), ntohs(remote->socketAddr.sin_port) );
     fflush(stdout);
     return 0;
 }
@@ -169,20 +165,20 @@ int     acceptConnection(commFacade_t* commData) {
  *      > 0         ==  Erro
  *      = 0         ==  Sucesso
  */
-int     connectRemote(struct commFacade_t *comm_ops, char *addr, int port) {
+int     connectRemote(commFacade_t* local, commFacade_t* remote, char *addr, int port) {
     struct hostent *hostnm;
     hostnm = gethostbyname(addr);
     if (hostnm == (struct hostent *) 0) {
         perror("[connectRemote] | gethostbyname()");
         return -1;
     }
-    comm_ops->remote.sin_family      = AF_INET;
-    comm_ops->remote.sin_port        = htons(port);
-    comm_ops->remote.sin_addr.s_addr = *((unsigned long *)hostnm->h_addr);
-    if (connect(comm_ops->localSocketDesc, (struct sockaddr *)&comm_ops->remote, sizeof(comm_ops->remote)) < 0) {
+    remote->socketAddr.sin_family      = AF_INET;
+    remote->socketAddr.sin_port        = htons(port);
+    remote->socketAddr.sin_addr.s_addr = *((unsigned long *)hostnm->h_addr);
+    if (connect(local->socketDesc, (struct sockaddr *)&remote->socketAddr, sizeof(remote->socketAddr)) < 0) {
         perror("[connectRemote] | connect()");
         return -2;
     }
-    printf("[%d] | Connected with Server\n", getpid());
+    fprintf( stdout, "[%d] | Connected with %s:%d\n", getpid(), inet_ntoa(remote->socketAddr.sin_addr), ntohs(remote->socketAddr.sin_port) );
     return 0;
 }

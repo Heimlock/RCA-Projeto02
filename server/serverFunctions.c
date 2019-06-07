@@ -13,36 +13,37 @@
  #include "./server.h"
 
 void newConnection() {
-    commOps.accept(&commData);
+    commOps.accept(&local, &remote);
 
-    if(allowNewConnections){
+    if(allowNewConnections) {
         fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
         fflush(stdout);
-    
-        childCount++;
 
-        if(noResponse(attendClient, childCount) < 0){
+        childCount++;
+        //  Bloquear Mutex -- Remote
+        if(noResponse(attendClient, childCount) < 0) {
             fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
             fflush(stderr);
             perror("logIn");
         }
-
-    } else{
-        commOps.close(&commData);
+    } else {
+        commOps.close(&remote);
     }
 }
 
 void *attendClient(void *arg) {
 	int threadId =  (int)arg;
     struct SPDT_Command  *command;
-	struct commFacade_t  commDataLocal;
+	struct commFacade_t  innerRemote;
 
     fprintf(stdout, "[%.4d] | Attend Client Init\n", threadId);
     fflush(stdout);
 
-	memcpy(&commDataLocal, &commData, sizeof(commFacade_t));    //criar CommFacade localmente
+	memcpy(&innerRemote, &remote, sizeof(commFacade_t));    //criar CommFacade localmente
 
-    command = receiveCommand(&commData);    //Command: ActionType, length, Value
+    //  Liberar Mutex   -- Remote
+
+    command = receiveCommand(&innerRemote);    //Command: ActionType, length, Value
 
     if(command == NULL) {
         fprintf(stderr, "[%.4d] | Error! Command is NULL.\n", threadId);
@@ -50,13 +51,13 @@ void *attendClient(void *arg) {
     } else {
         switch(command->type) {
             case LogIn:
-                logIn(commDataLocal, command);
+                logIn(innerRemote, command);
                 break;
             case LogOut:
-                logOut(commDataLocal, command);
+                logOut(innerRemote, command);
                 break;
             case RequestClient:
-                requestClient(commDataLocal, command);
+                requestClient(innerRemote, command);
                 break; 
             default:
                 fprintf(stderr, "[%.4d] | Error! Not a Valid Type. Type = %d\n", threadId, command->type);
@@ -64,7 +65,7 @@ void *attendClient(void *arg) {
                 break;
         }
     }
-    close_Remote(&commData);
+    close_Socket(&innerRemote);
 	threadExit(NULL);
 }
 
@@ -85,7 +86,7 @@ void exitServer() {
         if(childCount == 0) {
             fprintf(stdout, "[%d] | Exiting Server\n", getpid());
             fflush(stdout);
-            commOps.close(&commData);
+            commOps.close(&local);
             done = 1;
         }
     } while(!done);
@@ -111,7 +112,7 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         if(auxUser != NULL) {
             //TODO Usuario cadastrado na fila (Editar Usuario)
         } else {    //  Cadastrar novo usuario
-            user = newUser((char*) log_in->value, communication_data.remote, Online);
+            user = newUser((char*) log_in->value, communication_data.socketAddr, Online);
 			if(addNode(&users, user->id, user) < 0) {
 				fprintf(stderr, "[%d] | Error! Couldn't add new user.\n", getpid());
 				fflush(stderr);

@@ -24,7 +24,7 @@ int main(int argc, char const *argv[]) {
         exit(1);
     }
 
-    commOps.initServer(&commData, atoi(argv[1]));    
+    commOps.initServer(&local, atoi(argv[1]));    
     initSharedData();
 
     do{

@@ -43,19 +43,19 @@ struct SPDT_Command* receiveCommand(struct commFacade_t* commData) {
     void*   header = malloc(3*sizeof(char));
     void*   data;
     struct SPDT_Command* command;
-    if(receiveData(commData, header, 3*sizeof(char)) > 0) {
+    if(-1 != receiveData(commData, &header, 3*sizeof(char))) {
         command = bytes2commandHeader(header);
         if(command->length > 0) {   
             data    = malloc(command->length);
-            if(receiveData(commData, data, command->length) > 0) {
+            if(-1 != receiveData(commData, &data, command->length)) {
                 command->value = data;
             } else {
-                perror("[receiveCommand] | Receive Data.");
+                perror("[receiveCommand] | Receive Data");
                 return NULL;
             }
         }
     } else {
-        perror("[receiveCommand] | Receive Header.");
+        perror("[receiveCommand] | Receive Header");
         return NULL;
     }
     return command;
@@ -158,4 +158,12 @@ int sendFile(struct commFacade_t* commData, struct File_t file) {
     int     fileLength = UserId_Len + 2 + file.nameLength + 2 + file.length;
     struct SPDT_Command* fileCommand = newCommand(SendFile, fileLength, dataOut);
     return sendCommand(commData, *fileCommand);
+}
+
+void printBytes(int id, void *bytes, int length) {
+    char* auxValue = bytes;
+    for( int i = 0; i< length; i++ ) {
+        fprintf(stdout,"[%.4d] | Value[%d]: 0x%02hhX\n", id, i, auxValue[i]);
+        fflush(stdout);
+    }
 }

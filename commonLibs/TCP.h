@@ -27,41 +27,36 @@
 #include <netdb.h>
 
 typedef struct commFacade_t {
-    int     localSocketDesc;
-    int     remoteSocketDesc;
-    struct  sockaddr_in  local;
-    struct  sockaddr_in  remote;
+    int     socketDesc;
+    struct  sockaddr_in  socketAddr;
 } commFacade_t;
 
 typedef struct commOps_t {
     int     (*initClient)   (commFacade_t*, int);
     int	    (*initServer)   (commFacade_t*, int);
     void    (*close)        (commFacade_t*);
-    void    (*closeRemote)  (commFacade_t*);
 
     size_t  (*send)         (commFacade_t*, void *, size_t);
-    size_t  (*receive)      (commFacade_t*, void *, size_t);
+    size_t  (*receive)      (commFacade_t*, void **, size_t);
 
-    int     (*accept)       (commFacade_t*);
-    int     (*connect)      (commFacade_t*, char *, int);
+    int     (*accept)       (commFacade_t*, commFacade_t*);
+    int     (*connect)      (commFacade_t*, commFacade_t*, char*, int);
 } commOps_t;
 
 
 int     init_Client(commFacade_t* commData, int port );
 int     init_Server(commFacade_t* commData, int port );
 void    close_Socket(commFacade_t* commData);
-void    close_Remote(commFacade_t* commData);
 int     sendData(commFacade_t* commData, void *data, size_t size);
-int     receiveData(commFacade_t* commData, void *data, size_t size);
-int	    acceptConnection(commFacade_t* commData);
-int     connectRemote(commFacade_t* commData, char *addr, int port);
+int     receiveData(commFacade_t* commData, void **data, size_t size);
+int	    acceptConnection(commFacade_t* local, commFacade_t* remote);
+int     connectRemote(commFacade_t* local, commFacade_t* remote, char *addr, int port);
 
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
 static struct commOps_t commOps = {
     .initClient =init_Client,
     .initServer =init_Server,
     .close      =close_Socket,
-    .closeRemote=close_Remote,
     .send       =sendData,
     .receive    =receiveData,
     .accept     =acceptConnection,

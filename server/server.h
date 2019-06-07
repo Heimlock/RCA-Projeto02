@@ -17,14 +17,16 @@
  
  #ifndef VARS_INIT
  #define VARS_INIT
-    struct commFacade_t  commData;
+    struct commFacade_t  local;
+    struct commFacade_t  remote;
     struct LinkedListHead  *users;
     int    acceptNewConnections;
     int    allowNewConnections;
     int    childCount;
 
  #else
-    extern struct   commFacade_t        commData;
+    extern struct   commFacade_t        local;
+    extern struct   commFacade_t        remote;
     extern struct   LinkedListHead        *users;
     extern int      acceptNewConnections;
     extern int      allowNewConnections;

@@ -41,4 +41,8 @@ int sendMessage(struct commFacade_t* commData, struct Message_t message);
 #include "./FileData.h"
 int sendFile(struct commFacade_t* commData, struct File_t file);
 
+/*
+ *  Auxiliary
+ */
+void printBytes(int id, void *bytes, int length);
 #endif
