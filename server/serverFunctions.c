@@ -47,7 +47,7 @@ void *attendClient(void *arg) {
 	memcpy(&innerRemote, &remote, sizeof(commFacade_t));
     mutexUnlock(mutex_remote);
 
-    command = receiveCommand(&innerRemote);
+    receiveCommand(&innerRemote, &command);
 
     if(command == NULL) {
         fprintf(stderr, "[%.4d] | Error! Command is NULL.\n", threadId);
@@ -119,6 +119,8 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
     #ifdef  DEBUG
         fprintf(stdout, "[%d] | LogIn Function Init\n", getpid());
         fflush(stdout);
+
+        printCommand(getpid(), *log_in);
     #endif
 
     if(log_in->value != NULL) {

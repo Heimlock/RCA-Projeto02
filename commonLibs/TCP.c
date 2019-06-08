@@ -126,10 +126,6 @@ int  receiveData(commFacade_t* commData, void **data, size_t size) {
         perror("recv()");
         return -1;
     }
-    #ifdef DEBUG
-        fprintf(stdout,"[receiveData] | size: %d, numbytes: %d\n", size, numbytes);
-        fflush(stdout);
-    #endif
     return numbytes;
 }
 

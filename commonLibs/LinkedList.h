@@ -58,6 +58,7 @@ struct LinkedListNode* getNode(struct LinkedListHead* head, char* key);
 struct LinkedListNode* getFirst(struct LinkedListHead* head);
 
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct LinkedListOps llOps = {
     .initHead   =   initList,
     .initNode   =   initNode,
