@@ -13,7 +13,7 @@
  #include "./client.h"
 
  void connectToServer(char *id){
-    char ip[9] = "localhost";
+    char ip[10] = "localhost";
     int port = 5000, connection = 1, command_type;
     User_t *user;
 
