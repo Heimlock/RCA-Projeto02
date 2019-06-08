@@ -53,6 +53,7 @@ int	    acceptConnection(commFacade_t* local, commFacade_t* remote);
 int     connectRemote(commFacade_t* local, commFacade_t* remote, char *addr, int port);
 
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct commOps_t commOps = {
     .initClient =init_Client,
     .initServer =init_Server,

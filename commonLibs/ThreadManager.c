@@ -29,14 +29,14 @@
  */
 void* waitResponse(void* function, void* args) {
     pthread_t thread;
-    void** retValue;
+    void** retValue = NULL;
     if (pthread_create(&thread, NULL, function, args)) {
         fprintf(stderr, "[%d] | Error! Thread couldn't be Created.\n", getpid());
         fflush(stderr);
         perror("pthread_create");
         return NULL;
     }
-    if (pthread_join(thread, retValue) != 0) {
+    if ((pthread_join(thread, retValue)) != 0) {
         perror("Error Joining a Thread.");
         fprintf(stderr, "[%d] | Error! Thread couldn't be Joined.\n", getpid());
         fflush(stderr);
@@ -63,7 +63,7 @@ int noResponse(void* function, void* args) {
         perror("pthread_create");
         return -1;
     }
-    if (pthread_detach(thread) < 0) {
+    if ((pthread_detach(thread)) < 0) {
         fprintf(stderr, "[%d] | Error! Thread couldn't be Detached.\n", getpid());
         fflush(stderr);
         perror("pthread_detach");
@@ -89,7 +89,7 @@ void threadExit(void* rtnValue) {
  */
 pthread_mutex_t* mutexInit() {
     pthread_mutex_t* newMutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
-    if (pthread_mutex_init(newMutex, NULL) < 0) {
+    if ((pthread_mutex_init(newMutex, NULL)) < 0) {
         fprintf(stderr, "[%d] | Error! Mutex couldn't be Created.\n", getpid());
         fflush(stderr);
         perror("pthread_mutex_init");
@@ -108,7 +108,7 @@ pthread_mutex_t* mutexInit() {
  */
 int mutexDestroy(pthread_mutex_t* mutex) {
     int rtnValue;
-    if (rtnValue = pthread_mutex_destroy(mutex) < 0) {
+    if ((rtnValue = pthread_mutex_destroy(mutex)) < 0) {
         fprintf(stderr, "[%d] | Error! Mutex couldn't be Destroyed.\n", getpid());
         fflush(stderr);
         perror("pthread_mutex_destroy");
@@ -126,7 +126,7 @@ int mutexDestroy(pthread_mutex_t* mutex) {
  */
 int mutexLock(pthread_mutex_t *mutex) {
     int rtnValue;
-    if (rtnValue = pthread_mutex_lock(mutex) < 0) {
+    if ((rtnValue = pthread_mutex_lock(mutex)) < 0) {
         fprintf(stderr, "[%d] | Error! Mutex couldn't be Locked.\n", getpid());
         fflush(stderr);
         perror("pthread_mutex_lock");
@@ -146,7 +146,7 @@ int mutexLock(pthread_mutex_t *mutex) {
  */
 int mutexTryLock(pthread_mutex_t *mutex) {
     int rtnValue;
-    if (rtnValue = pthread_mutex_trylock(mutex) < 0) {
+    if ((rtnValue = pthread_mutex_trylock(mutex)) < 0) {
         if(rtnValue != EBUSY) {
             fprintf(stderr, "[%d] | Error! Mutex couldn't perform a TryLock.\n", getpid());
             fflush(stderr);
@@ -164,9 +164,9 @@ int mutexTryLock(pthread_mutex_t *mutex) {
  *      > 0         ==  Erro
  *      = 0         ==  Sucesso
  */
-void mutexUnlock(pthread_mutex_t *mutex) {
+int mutexUnlock(pthread_mutex_t *mutex) {
     int rtnValue;
-    if (rtnValue = pthread_mutex_unlock(mutex) < 0) {
+    if ((rtnValue = pthread_mutex_unlock(mutex)) < 0) {
         if(rtnValue != EBUSY) {
             fprintf(stderr, "[%d] | Error! Mutex couldn't be Unlocked.\n", getpid());
             fflush(stderr);

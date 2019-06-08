@@ -20,7 +20,7 @@
  */
 #include "./SPDT.h"
 int sendCommand(struct commFacade_t* commData, struct SPDT_Command command);
-struct SPDT_Command* receiveCommand(struct commFacade_t* commData);
+void receiveCommand(struct commFacade_t* commData, struct SPDT_Command** command);
 void*   receiveStruct(struct commFacade_t* commData, enum ActionType expectedType);
 
 /*

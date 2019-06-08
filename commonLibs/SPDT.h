@@ -33,7 +33,9 @@ typedef struct SPDT_Command {
 } SPDT_Command;
 
 SPDT_Command* newCommand(ActionType type, int length, void* data);
+void    destroyCommand(SPDT_Command* command);
 char*   command2bytes(SPDT_Command command);
-SPDT_Command* bytes2command(char* data);
-SPDT_Command* bytes2commandHeader(char* data);
+void    bytes2command(char* data, SPDT_Command**  command);
+void    bytes2commandHeader(char* data, SPDT_Command**  command);
+void    printCommand(int id, SPDT_Command command);
 #endif
