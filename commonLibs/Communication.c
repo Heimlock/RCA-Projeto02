@@ -29,6 +29,8 @@
 int sendCommand(struct commFacade_t* commData, struct SPDT_Command command) {
     void*   dataOut = command2bytes(command);
     #ifdef DEBUG
+        fprintf(stdout, "[sendCommand] | Type: %d, Length: %d\n", command.type, command.length);
+        fflush(stdout);
         printBytes(getpid(), dataOut, (3+command.length));
     #endif
     return sendData(commData, dataOut, (3+command.length));
@@ -42,48 +44,41 @@ int sendCommand(struct commFacade_t* commData, struct SPDT_Command command) {
  *     NULL         ==  Erro
  *     SPDT_Command*==  Ponteiro para um SPDT_Command
  */
-struct SPDT_Command* receiveCommand(struct commFacade_t* commData) {
+void receiveCommand(struct commFacade_t* commData, struct SPDT_Command** command) {
     int     type;
     int     length;
+    int     offset;
     void*   header = malloc(3*sizeof(char));
     void*   value;
     void*   commandData;
-    struct SPDT_Command* command;
     struct SPDT_Command* auxCommand;
 
     if(-1 != receiveData(commData, &header, 3*sizeof(char))) {
-	auxCommand = bytes2commandHeader(header);
-        fprintf(stdout, "Type: %d, Length: %d\n", auxCommand->type, auxCommand->length);
-        fflush(stdout);
+	    bytes2commandHeader(header, &auxCommand);
         if(auxCommand->length > 0) {
-            fprintf(stdout, "Init Receive Data\n");
-            fflush(stdout);
-
             value = malloc(auxCommand->length * sizeof(char));
             commandData    = malloc((3 * sizeof(char)) + auxCommand->length);
-            memcpy(header, commandData, (3 * sizeof(char)));
-            fprintf(stdout, "Receive Data\n");
-            fflush(stdout);
             if(-1 != receiveData(commData, &value, auxCommand->length)) {
-                printBytes(getpid(), value, auxCommand->length);
-                memcpy(value, ((3 * sizeof(char)) + commandData), auxCommand->length);
-                command = bytes2command(commandData);
+                offset = 0;
+                memcpy(commandData, header, (3 * sizeof(char)));
+                offset = (3 * sizeof(char));
+                memcpy((commandData + offset), value, auxCommand->length);
+                bytes2command(commandData, command);
                 free(value);
             } else {
                 perror("[receiveCommand] | Receive Data");
-                return NULL;
+                (*command) = NULL;
             }
             free(header);
             free(commandData);
         }
     } else {
         perror("[receiveCommand] | Receive Header");
-        return NULL;
+        (*command) = NULL;
     }
     #ifdef DEBUG
-	printCommand(*command);
+	    printCommand(getpid(), **command);
     #endif
-    return command;
 }
 
 
@@ -97,7 +92,8 @@ struct SPDT_Command* receiveCommand(struct commFacade_t* commData) {
  *     void*         ==  Ponteiro para o Tipo Abstrato
  */
 void*   receiveStruct(struct commFacade_t* commData, enum ActionType expectedType) {
-    struct SPDT_Command* dataReceived = receiveCommand(commData);
+    struct SPDT_Command* dataReceived;
+    receiveCommand(commData, &dataReceived);
     void*   outputData;
 
     switch (dataReceived->type) {

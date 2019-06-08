@@ -47,7 +47,7 @@ void *attendClient(void *arg) {
 	memcpy(&innerRemote, &remote, sizeof(commFacade_t));
     mutexUnlock(mutex_remote);
 
-    command = receiveCommand(&innerRemote);
+    receiveCommand(&innerRemote, &command);
 
     if(command == NULL) {
         fprintf(stderr, "[%.4d] | Error! Command is NULL.\n", threadId);
@@ -119,8 +119,11 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
     #ifdef  DEBUG
         fprintf(stdout, "[%d] | LogIn Function Init\n", getpid());
         fflush(stdout);
+
+        printCommand(getpid(), *log_in);
     #endif
 
+    mutexLock(mutex_list_users);
     if(log_in->value != NULL) {
         auxUser = getNode(&users, (char *) log_in->value);
         if(auxUser != NULL) {
@@ -144,11 +147,13 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         fflush(stderr);
         perror("logIn");
     }
+    mutexUnlock(mutex_list_users);
 }
 
 void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_out) {
     struct  LinkedListNode *auxUser;
 
+    mutexLock(mutex_list_users);
     if(log_out->value != NULL){
         auxUser = getNode(&users, (char *) log_out->value);
         if(auxUser != NULL) {
@@ -163,12 +168,14 @@ void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_
         fflush(stderr);
         perror("logOut");
     }
+    mutexUnlock(mutex_list_users);
 }
 
 void	requestClient(struct commFacade_t communication_data, struct SPDT_Command *request_user) {
 	struct User_t *user;
 	struct LinkedListNode *auxUser;
 
+    mutexLock(mutex_list_users);
 	if(request_user->value != NULL) {
 		auxUser = getNode(&users, (char*) request_user->value);
         if(auxUser != NULL) {
@@ -200,4 +207,5 @@ void	requestClient(struct commFacade_t communication_data, struct SPDT_Command *
         fflush(stderr);
         perror("requestClient");
 	}
+    mutexUnlock(mutex_list_users);
 }

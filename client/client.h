@@ -22,6 +22,7 @@
     struct LinkedListHead   messages;
     pthread_mutex_t  *mutex_list_messages;
     pthread_mutex_t  *mutex_remote;
+    int whatsappCount;
 
 #else
     extern struct commFacade_t      local;
@@ -29,7 +30,7 @@
     extern struct LinkedListHead    messages;
     extern pthread_mutex_t  *mutex_list_messages;
     extern pthread_mutex_t  *mutex_remote;
-
+    extern int whatsappCount;
 #endif
 
 void    connectToServer(char *);
@@ -38,7 +39,9 @@ User_t* requestClient();
 void    logOut();
 
 void    connectToClient(struct User_t *);
+void    *whatsapp(void *);
 void    receiveFromCLient(struct commFacade_t);
 void    sendToClient(struct commFacade_t);
 
+void    readMessage();
 void    initSharedData();
