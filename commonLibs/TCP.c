@@ -102,7 +102,7 @@ void    close_Socket(commFacade_t* commData) {
 int  sendData(commFacade_t* commData, void *data, size_t size) {
     int numbytes;
     //  send: Socket Remoto, data, Tam Esperado, Flags
-    if(numbytes = send((commData->socketDesc), data, size, 0) < 0) {
+    if((numbytes = send((commData->socketDesc), data, size, 0)) < 0) {
         perror("send()");
         return -1;
     }

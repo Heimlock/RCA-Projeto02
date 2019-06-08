@@ -13,18 +13,23 @@
  #include "./server.h"
 
 void newConnection() {
-    commOps.accept(&local, &remote);
+    if((commOps.accept(&local, &remote)) < 0){
+        fprintf(stderr, "[%.4d] | Error! Server couldn't accept connection.\n", getpid());
+        fflush(stderr);
+        perror("newConnection");
+        exit(-4);
+    }
 
     if(allowNewConnections) {
         fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
         fflush(stdout);
 
         childCount++;
-        //  Bloquear Mutex -- Remote
+        mutexLock(mutex_remote);
         if(noResponse(attendClient, childCount) < 0) {
             fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
             fflush(stderr);
-            perror("logIn");
+            perror("newConnection");
         }
     } else {
         commOps.close(&remote);
@@ -39,11 +44,10 @@ void *attendClient(void *arg) {
     fprintf(stdout, "[%.4d] | Attend Client Init\n", threadId);
     fflush(stdout);
 
-	memcpy(&innerRemote, &remote, sizeof(commFacade_t));    //criar CommFacade localmente
+	memcpy(&innerRemote, &remote, sizeof(commFacade_t));
+    mutexUnlock(mutex_remote);
 
-    //  Liberar Mutex   -- Remote
-
-    command = receiveCommand(&innerRemote);    //Command: ActionType, length, Value
+    command = receiveCommand(&innerRemote);
 
     if(command == NULL) {
         fprintf(stderr, "[%.4d] | Error! Command is NULL.\n", threadId);
@@ -96,6 +100,16 @@ void  initSharedData() {
 	allowNewConnections = 1;
 	childCount  = 0;
     acceptNewConnections = 1;
+
+    mutex_remote = mutexInit();
+    mutex_list_users = mutexInit();
+
+    if(mutex_remote == NULL || mutex_list_users == NULL){
+        mutexDestroy(mutex_remote);
+        mutexDestroy(mutex_list_users);
+        commOps.close(&local);
+        exit(-3);
+    }
 }
 
 void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in) {
@@ -107,20 +121,26 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         fflush(stdout);
     #endif
 
-    if(log_in->value != NULL) { //ID do usuario recebido pelo comando (Telefone)
+    if(log_in->value != NULL) {
         auxUser = getNode(&users, (char *) log_in->value);
         if(auxUser != NULL) {
             //TODO Usuario cadastrado na fila (Editar Usuario)
-        } else {    //  Cadastrar novo usuario
+        } else {
             user = newUser((char*) log_in->value, communication_data.socketAddr, Online);
-			if(addNode(&users, user->id, user) < 0) {
-				fprintf(stderr, "[%d] | Error! Couldn't add new user.\n", getpid());
+			if(user != NULL){
+                if((addNode(&users, user->id, user)) < 0) {
+				    fprintf(stderr, "[%d] | Error! Couldn't add new user.\n", getpid());
+				    fflush(stderr);
+				    perror("logIn");
+                }
+            } else{
+                fprintf(stderr, "[%d] | Couln't create new user.\n", getpid());
 				fflush(stderr);
 				perror("logIn");
-			}
+            }
         }
     } else {
-        fprintf(stderr, "[%d] | Error! User couldn't log in.\n", getpid());
+        fprintf(stderr, "[%d] | Error! Client ID not received.\n", getpid());
         fflush(stderr);
         perror("logIn");
     }
@@ -150,17 +170,23 @@ void	requestClient(struct commFacade_t communication_data, struct SPDT_Command *
 	struct LinkedListNode *auxUser;
 
 	if(request_user->value != NULL) {
-		auxUser = getNode(&users, (char*) request_user->value);     //Recuperar usuario pelo ID
+		auxUser = getNode(&users, (char*) request_user->value);
         if(auxUser != NULL) {
             user = (User_t *) auxUser->data;
-            if(user->state == Online) {  //Enviar usuario Online
-                if(sendUser(&communication_data, (*user)) < 0) {
-                    fprintf(stderr, "[%d] | Error! Failed to send user requested.\n", getpid());
+            if(user != NULL){
+                if(user->state == Online) { 
+                    if((sendUser(&communication_data, (*user))) < 0) {
+                        fprintf(stderr, "[%d] | Error! Failed to send user requested.\n", getpid());
+                        fflush(stderr);
+                        perror("requestClient");
+                    }
+                } else {
+                    fprintf(stderr, "[%d] | Error! User not online.\n", getpid());
                     fflush(stderr);
                     perror("requestClient");
                 }
-            } else {
-                fprintf(stderr, "[%d] | Error! User not online.\n", getpid());
+            } else{
+                fprintf(stderr, "[%d] | Error! Coundn't get user data.\n", getpid());
                 fflush(stderr);
                 perror("requestClient");
             }

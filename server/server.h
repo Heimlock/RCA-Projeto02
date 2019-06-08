@@ -20,6 +20,8 @@
     struct commFacade_t  local;
     struct commFacade_t  remote;
     struct LinkedListHead  *users;
+    pthread_mutex_t  *mutex_list_users;
+    pthread_mutex_t  *mutex_remote;
     int    acceptNewConnections;
     int    allowNewConnections;
     int    childCount;
@@ -28,6 +30,8 @@
     extern struct   commFacade_t        local;
     extern struct   commFacade_t        remote;
     extern struct   LinkedListHead        *users;
+    extern pthread_mutex_t *mutex_list_users;
+    extern pthread_mutex_t *mutex_remote;
     extern int      acceptNewConnections;
     extern int      allowNewConnections;
     extern int      childCount;

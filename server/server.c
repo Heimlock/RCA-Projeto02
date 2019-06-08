@@ -21,10 +21,18 @@ int main(int argc, char const *argv[]) {
     fflush(stdout);
 
     if(argc != 2){
-        exit(1);
+        fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
+        fprintf(stderr, "[%d] | Usage: ./server <port> \n", getpid());
+        fflush(stderr);
+        exit(-1);
     }
 
-    commOps.initServer(&local, atoi(argv[1]));    
+    if((commOps.initServer(&local, atoi(argv[1]))) < 0){
+        fprintf(stderr, "[%d] | Error! Init Socket Server!\n", getpid());
+        fflush(stderr);
+        exit(-2);    
+    }
+
     initSharedData();
 
     do{

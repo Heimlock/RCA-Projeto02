@@ -30,6 +30,6 @@ int mutexLock(pthread_mutex_t *mutex);
 
 int mutexTryLock(pthread_mutex_t *mutex);
 
-void mutexUnlock(pthread_mutex_t *mutex);
+int mutexUnlock(pthread_mutex_t *mutex);
 
 #endif
