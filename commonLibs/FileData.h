@@ -30,10 +30,10 @@ typedef struct File_t {
 } File_t;
 
 char* file2Bytes(File_t file);
-File_t* bytes2File(char* data);
+void bytes2File(File_t** newFile, char* data);
 void printFile(File_t file);
 
-File_t*  disk2Memory(char* filePath, char* userId);
+void disk2Memory(File_t** newFile, char* filePath, char* userId);
 int memory2Disk(File_t file);
 #endif
 

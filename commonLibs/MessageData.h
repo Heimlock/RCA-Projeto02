@@ -19,8 +19,8 @@ typedef struct Message_t {
     void*   data;
 } Message_t;
 
-Message_t* newMessage(char* senderId, int length, void* data);
+void    newMessage(Message_t**  message, char* senderId, int length, void* data);
 char*   message2Bytes(Message_t message);
-Message_t* bytes2Message(char* data);
-void printMsg(Message_t message);
+void    bytes2Message(Message_t**  message, char* data);
+void    printMsg(Message_t message);
 #endif

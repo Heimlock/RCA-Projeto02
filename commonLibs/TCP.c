@@ -85,7 +85,8 @@ int     init_Server(commFacade_t* commData, int port ) {
  *  Função que Finaliza a Comunicação via Socket
  */
 void    close_Socket(commFacade_t* commData) {
-   fprintf(stdout,"[%d] | Socket at Port %d has been Terminated!\n", getpid(), ntohs(commData->socketAddr.sin_port));
+    fprintf(stdout,"[%d] | Socket at Port %d has been Terminated!\n", getpid(), ntohs(commData->socketAddr.sin_port));
+    fflush(stdout);
     close(commData->socketDesc);
 }
 
