@@ -19,6 +19,10 @@
 #define VARS_INIT
     struct commFacade_t     local;
     struct commFacade_t     remote;
+
+    struct commFacade_t     localPeer;
+    struct commFacade_t     remotePeer;
+
     struct LinkedListHead   *messages;
     pthread_mutex_t  *mutex_list_messages;
     pthread_mutex_t  *mutex_remote;
@@ -27,6 +31,10 @@
 #else
     extern struct commFacade_t      local;
     extern struct commFacade_t      remote;
+
+    extern struct commFacade_t      localPeer;
+    extern struct commFacade_t      remotePeer;
+
     extern struct LinkedListHead    messages;
     extern pthread_mutex_t  *mutex_list_messages;
     extern pthread_mutex_t  *mutex_remote;

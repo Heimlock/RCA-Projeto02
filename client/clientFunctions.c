@@ -31,21 +31,25 @@
 
         fprintf(stdout, "[%.4d] | LogIn (0) LogOut (1) RequestClient (2)\n", getpid());
         fflush(stdout);
-        scanf("%d", &command_type);
+        fscanf(stdin, "%d", &command_type);
+        fflush(stdin);
 
         switch(command_type){
             case LogIn:     logIn(id);
                             commOps.close(&remote);
+                            commOps.close(&local);
                             break;
 
             case LogOut:    logOut(id);
                             commOps.close(&remote);
+                            commOps.close(&local);
                             connection = 0;
                             break;
             
             case RequestClient: user = requestClient();
-                                commOps.close(&remote);
                                 connectToClient(user, id);
+                                commOps.close(&remote);
+                                commOps.close(&local);
                                 free(user);
                                 break;
 
@@ -54,10 +58,24 @@
                         break;
         }
 
-        if(connection == 1){
-            fprintf(stdout, "[%.4d] | Connect with server again?\n");
-            scanf("%d", &connection);
+        fprintf(stdout, "[%.4d] | Connect with server again?\n", getpid());
+        fflush(stdout);
+        fscanf(stdin, "%d", &connection);
+
+        if(connect == 1){
+            if((commOps.initClient(&local, 0)) < 0) {
+            fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
+            fflush(stderr);
+            exit(-2);
+            }
         }
+        else{
+            break;
+        }    
+    }
+
+    if(whatsappCount == 0){
+
     }
  }
 
@@ -129,7 +147,13 @@
     ip = inet_ntoa(user->addr.sin_addr);
     port = (int) user->addr.sin_port;
 
-    if((commOps.connect(&local, &remote, ip, port)) < 0){
+    if((commOps.initClient(&localPeer, 0)) < 0) {
+        fprintf(stderr, "[%d] | Error! Init Socket Client Peer!\n", getpid());
+        fflush(stderr);
+        exit(-2);
+    }
+
+    if((commOps.connect(&localPeer, &remotePeer, ip, port)) < 0){
         fprintf(stderr, "[%.4d] | Error! Client couldn't connect to user.\n", getpid());
         fflush(stderr);
         perror("connectToClient");
@@ -143,22 +167,31 @@
         fflush(stderr);
         perror("connectToClient");
     }
+
+    mutexLock(mutex_remote);
+    commOps.close(&remotePeer);
+    commOps.close(&localPeer);
+    mutexUnlock(mutex_remote);
  }
 
  void *whatsapp(void *args){
     char *whatsappID =  (char *) args;
+    struct commFacade_t  innerLocal;
 	struct commFacade_t  innerRemote;
     int operation;
 
     fprintf(stdout, "[%.4d] | Whatsapp peer 2 peer init\n", whatsappCount);
     fflush(stdout);
 
-	memcpy(&innerRemote, &remote, sizeof(commFacade_t));
+    memcpy(&innerLocal, &localPeer, sizeof(commFacade_t));
+	memcpy(&innerRemote, &remotePeer, sizeof(commFacade_t));
     mutexUnlock(mutex_remote);
 
     while(1){
         fprintf(stdout, "[%.4d] | Receive (0) Send (1) Read(2)\n");
-        scanf("%d", &operation);
+        fflush(stdout);
+        fscanf(stdin, "%d", &operation);
+        fflush(stdin);
 
         switch(operation){
             case 0: receiveFromClient(innerRemote);
@@ -176,7 +209,9 @@
         }
     }
     
-    close_Socket(&innerRemote);
+    commOps.close(&innerRemote);
+    commOps.close(&innerLocal);
+    whatsappCount--;
 	threadExit(NULL);
  }
 
@@ -189,7 +224,8 @@
 
     fprintf(stdout, "[%.4d] | Message: \n", getpid());
     fflush(stdout);
-    scanf("%s", mymessage);
+    fscanf(stdin, "%s", mymessage);
+    fflush(stdin);
 
     newMessage(&message, id, 10*sizeof(char), mymessage);
 
@@ -205,6 +241,7 @@
 
  void receiveFromClient(struct commFacade_t threadCommunication){
     fprintf(stdout, "[.4d] | Receive from User.\n", getpid());
+    fflush(stdout);
 
     struct Message_t *message;
 
@@ -251,8 +288,6 @@
             free(message);
         }
     }
-
-    free(message);
  }
 
  void  initSharedData() {
