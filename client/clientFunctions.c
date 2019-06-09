@@ -12,10 +12,14 @@
 
  #include "./client.h"
 
- void connectToServer(char *id){
-    char ip[9] = "localhost";
-    int port = 5000, connection = 1, command_type;
+ void connectToServer(char *ip, int port){
+    int connection = 1, command_type;
+    char id[10];
     User_t *user;
+
+    fprintf(stdout, "[%.4d] | Write your cellphone number.\n", getpid());
+    fflush(stdout);
+    scanf("%s", id);
 
     while(connection){
         if((commOps.connect(&local, &remote, ip, port)) < 0){
@@ -41,7 +45,8 @@
             
             case RequestClient: user = requestClient();
                                 commOps.close(&remote);
-                                //connectToClient(user, id);
+                                connectToClient(user, id);
+                                free(user);
                                 break;
 
             default:    fprintf(stdout, "[%.4d] | Command invalid.\n", getpid());
@@ -61,7 +66,7 @@
     fflush(stdout);
     struct SPDT_Command *command;
 
-     newCommand(&command, LogIn, 9*sizeof(char), id);
+    newCommand(&command, LogIn, 9*sizeof(char), id);
 
     if((sendCommand(&local, (*command))) < 0) {
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
@@ -93,7 +98,7 @@
     struct User_t *user;
     char cellphone[9];
 
-    fprintf(stdout, "[%.4d] | User cellphone?\n", getpid());
+    fprintf(stdout, "[%.4d] | User cellphone number?\n", getpid());
     scanf("%s", cellphone);
 
     newCommand(&command, RequestClient, 9*sizeof(char), cellphone);
@@ -117,9 +122,14 @@
     return user;
  }
 
- /*
  void connectToClient(struct User_t *user, char *id){
-    if((commOps.connect(&local, &remote, user->addr.sin_addr, user->addr.sin_ports)) < 0){
+    char *ip; 
+    int port;
+
+    ip = inet_ntoa(user->addr.sin_addr);
+    port = (int) user->addr.sin_port;
+
+    if((commOps.connect(&local, &remote, ip, port)) < 0){
         fprintf(stderr, "[%.4d] | Error! Client couldn't connect to user.\n", getpid());
         fflush(stderr);
         perror("connectToClient");
@@ -128,7 +138,7 @@
 
     whatsappCount++;
     mutexLock(mutex_remote);
-    if((waitResponse(whatsapp, whatsappCount)) == NULL) {
+    if((waitResponse(whatsapp, id)) == NULL) {
         fprintf(stderr, "[%.4d] | Error! Failed whatsapp.\n", getpid());
         fflush(stderr);
         perror("connectToClient");
@@ -136,11 +146,11 @@
  }
 
  void *whatsapp(void *args){
-    int whatsappID =  (int)arg;
+    char *whatsappID =  (char *) args;
 	struct commFacade_t  innerRemote;
     int operation;
 
-    fprintf(stdout, "[%.4d] | Whatsapp peer 2 peer init\n", threadId);
+    fprintf(stdout, "[%.4d] | Whatsapp peer 2 peer init\n", whatsappCount);
     fflush(stdout);
 
 	memcpy(&innerRemote, &remote, sizeof(commFacade_t));
@@ -154,7 +164,7 @@
             case 0: receiveFromClient(innerRemote);
                     break;
 
-            case 1: sendToClient(innerRemote);
+            case 1: sendToClient(innerRemote, whatsappID);
                     break;
 
             case 2: readMessage();
@@ -170,7 +180,7 @@
 	threadExit(NULL);
  }
 
- void sendToClient(struct commFacade_t threadCommunication){
+ void sendToClient(struct commFacade_t threadCommunication, char *id){
     fprintf(stdout, "[%.4d] | Send to User.\n", getpid());
     fflush(stdout);
 
@@ -181,7 +191,7 @@
     fflush(stdout);
     scanf("%s", mymessage);
 
-    message = newMessage((char *) getpid(), 10*sizeof(char), mymessage);
+    newMessage(&message, id, 10*sizeof(char), mymessage);
 
     if((sendMessage(&threadCommunication, (*message))) < 0) {
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
@@ -189,21 +199,20 @@
         perror("sendToClient");
         exit(-5);
     }    
+
+    free(message);
  }
 
- void receiveFromCLient(strut commFacade_t threadCommunication){
+ void receiveFromClient(struct commFacade_t threadCommunication){
     fprintf(stdout, "[.4d] | Receive from User.\n", getpid());
 
     struct Message_t *message;
 
-    message = receiveStruct(&threadCommunication, SendText);
+    receiveStruct(&threadCommunication, SendText, &message);
 
     if(message != NULL){
-        if((addNode(&messages, message->senderId, message->data)) < 0){
-            fprintf(stderr, "[%d] | Error! Couldn't add new message.\n", getpid());
-			fflush(stderr);
-			perror("receiveFromClient");
-        }
+        addNode(&messages, message->senderId, message->length, message->data);
+        free(message);
     } else{
         fprintf(stderr, "[%d] | Error! Couldn't receive new message.\n", getpid());
 		fflush(stderr);
@@ -228,7 +237,7 @@
             fprintf(stdout, "Message length: %d\n", message->length);
             fflush(stdout);
 
-            fprintf(stdout, "Message: %s\n", (Char *) message->data);
+            fprintf(stdout, "Message: %s\n", (char *) message->data);
             fflush(stdout);
 
             messages->initialNode = messages->initialNode->next;
@@ -238,10 +247,13 @@
 		        fflush(stderr);
 		        perror("readMessage");
             }
+
+            free(message);
         }
     }
- } 
- */
+
+    free(message);
+ }
 
  void  initSharedData() {
     mutex_remote = mutexInit();

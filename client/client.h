@@ -19,7 +19,7 @@
 #define VARS_INIT
     struct commFacade_t     local;
     struct commFacade_t     remote;
-    struct LinkedListHead   messages;
+    struct LinkedListHead   *messages;
     pthread_mutex_t  *mutex_list_messages;
     pthread_mutex_t  *mutex_remote;
     int whatsappCount;
@@ -33,15 +33,15 @@
     extern int whatsappCount;
 #endif
 
-void    connectToServer(char *);
+void    connectToServer(char *, int);
 void    logIn();
 User_t* requestClient();
 void    logOut();
 
-void    connectToClient(struct User_t *);
+void    connectToClient(struct User_t *, char *);
 void    *whatsapp(void *);
-void    receiveFromCLient(struct commFacade_t);
-void    sendToClient(struct commFacade_t);
+void    receiveFromClient(struct commFacade_t);
+void    sendToClient(struct commFacade_t, char *);
 
 void    readMessage();
 void    initSharedData();
