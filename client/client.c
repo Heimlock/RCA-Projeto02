@@ -63,7 +63,7 @@ void newConnectionClient(int PortaDeMandar) {
     int command_type;
     char ip[9] = "localhost";
 
-    while(command_type != 9){
+    while(command_type != '9'){
         
 
         fprintf(stdout, "[%.4d] | Mandar Msg (0) ou Receber Mensagem (1)\n", getpid());
@@ -125,27 +125,62 @@ void newConnectionClient(int PortaDeMandar) {
 int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | Client Module Initialized!\n", getpid());
     fflush(stdout);
+
+    if(argc != 3) {
+        fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
+        fprintf(stderr, "[%d] | Usage: ./client <PortaDeReceber> <PortaDeMandar>\n", getpid());
+        fflush(stderr);
+        exit(-1);
+    }
+
+    if(commOps.initClient(&localSend, 0) < 0) {
+        fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
+        fflush(stderr);
+        exit(-2);
+    }
+
+    fprintf(stdout, "[%d] | Socket de Recebimento\n", getpid());
+    fflush(stdout);
+
+    if((commOps.initServer(&localRec, atoi(argv[1]))) < 0){
+        fprintf(stderr, "[%d] | Error! Init Socket de Recebimento!\n", getpid());
+        fflush(stderr);
+        exit(-2);    
+    }
+
+    initSharedData();
+    mutex_remote_Rec = mutexInit(); //Precisa disso para mutex nao dar segmentation fault
+
+    do{
+        newConnectionClient(atoi(argv[2]));        
+    }while(canContinueClient());
+
+
+    //connectToServer(argv[1]);
+    commOps.close(&localSend);
+    commOps.close(&localRec);
+    return 0; //Nao vai passar daqui se nao comentar esse return
+
+    //  =============================STUB DO FELIPE=====================================
+    //  ================================================================================
     char ip[9] = "localhost";
+    int port = 5000; //porta do servidor hardcoded
 
     struct SPDT_Command *command;
 
-    //  ================================================================================
 
     fprintf(stdout, "[%d] | ========================================\n", getpid());
     fprintf(stdout, "[%d] | Stage 00 -- Init\n", getpid());
     fprintf(stdout, "[%d] | ========================================\n", getpid());
     fflush(stdout);
 
-   //if(argc != 3) {
-        //fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
-        //fprintf(stderr, "[%d] | Usage: ./client <ServerIp> <Port>\n", getpid());
-
    if(argc != 3) {
         fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
-        fprintf(stderr, "[%d] | Usage: ./client <PortaDeReceber> <PortaDeMandar>\n", getpid());
+        fprintf(stderr, "[%d] | Usage: ./client <ServerIp> <Port>\n", getpid());
         fflush(stderr);
         exit(-1);
     }
+   
 
     //  ================================================================================
 
@@ -159,7 +194,7 @@ int main(int argc, char const *argv[]) {
         fflush(stderr);
         exit(-2);
     }
-    if(commOps.connect(&localSend, &remoteSend, ip, 5000) < 0) { //ServerPort, atoi(argv[2]), definido como 5000
+    if(commOps.connect(&localSend, &remoteSend, ip, port) < 0) { //ServerPort, atoi(argv[2]), definido como 5000
         fprintf(stderr, "[%d] | Error! Connect to Server Socket!\n", getpid());
         fflush(stderr);
         exit(-2);
@@ -194,7 +229,7 @@ int main(int argc, char const *argv[]) {
         fflush(stderr);
         exit(-2);
     }
-    if(commOps.connect(&localSend, &remoteSend, ip, 5000) < 0) { //ServerPort, atoi(argv[2]), definido como 5000
+    if(commOps.connect(&localSend, &remoteSend, ip, port) < 0) { //ServerPort, atoi(argv[2]), definido como 5000
         fprintf(stderr, "[%d] | Error! Connect to Server Socket!\n", getpid());
         fflush(stderr);
         exit(-2);
@@ -238,7 +273,7 @@ int main(int argc, char const *argv[]) {
         fflush(stderr);
         exit(-2);
     }
-    if(commOps.connect(&localSend, &remoteSend, argv[1], atoi(argv[2])) < 0) {
+    if(commOps.connect(&localSend, &remoteSend, ip, port) < 0) {
         fprintf(stderr, "[%d] | Error! Connect to Server Socket!\n", getpid());
         fflush(stderr);
         exit(-2);
@@ -262,26 +297,4 @@ int main(int argc, char const *argv[]) {
     fflush(stdout);
     commOps.close(&localSend);
     commOps.close(&remoteSend);
-
-    fprintf(stdout, "[%d] | Socket de Recebimento\n", getpid());
-    fflush(stdout);
-
-    if((commOps.initServer(&localRec, atoi(argv[1]))) < 0){
-        fprintf(stderr, "[%d] | Error! Init Socket de Recebimento!\n", getpid());
-        fflush(stderr);
-        exit(-2);    
-    }
-
-    initSharedData();
-    mutex_remote_Rec = mutexInit();
-
-    do{
-        newConnectionClient(atoi(argv[2]));        
-    }while(canContinueClient());
-
-
-    //connectToServer(argv[1]);
-    commOps.close(&localSend);
-    commOps.close(&localRec);
-    return 0;
 }
