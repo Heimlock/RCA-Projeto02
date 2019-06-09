@@ -18,7 +18,7 @@
     User_t *user;
 
     while(connection){
-        if((commOps.connect(&local, &remote, ip, port)) < 0){
+        if((commOps.connect(&localSend, &remoteSend, ip, port)) < 0){
             fprintf(stderr, "[%.4d] | Error! Client couldn't connect to server.\n", getpid());
             fflush(stderr);
             perror("connectToServer");
@@ -31,16 +31,16 @@
 
         switch(command_type){
             case LogIn:     logIn(id);
-                            commOps.close(&remote);
+                            commOps.close(&remoteSend);
                             break;
 
             case LogOut:    logOut(id);
-                            commOps.close(&remote);
+                            commOps.close(&remoteSend);
                             connection = 0;
                             break;
             
             case RequestClient: user = requestClient();
-                                commOps.close(&remote);
+                                commOps.close(&remoteSend);
                                 //connectToClient(user, id);
                                 break;
 
@@ -63,7 +63,7 @@
 
     command = newCommand(LogIn, 9*sizeof(char), id);
 
-    if((sendCommand(&local, (*command))) < 0) {
+    if((sendCommand(&localSend, (*command))) < 0) {
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);
         perror(logIn);
@@ -78,7 +78,7 @@
 
     command = newCommand(LogOut, 9*sizeof(char), id);
 
-    if((sendCommand(&local, (*command))) < 0) {
+    if((sendCommand(&localSend, (*command))) < 0) {
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);
         perror(logOut);
@@ -98,14 +98,14 @@
 
     command = newCommand(RequestClient, 9*sizeof(char), cellphone);
 
-    if((sendCommand(&local, (*command))) < 0){
+    if((sendCommand(&localSend, (*command))) < 0){
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);
         perror(requestClient);
         exit(-6);
     }
 
-    user = receiveStruct(&local, RequestClient);
+    user = receiveStruct(&localSend, RequestClient);
 
     if(user == NULL){
         fprintf(stderr, "[%d] | Error! Failed to receive user.\n", getpid());
@@ -243,15 +243,18 @@
  } 
  */
 
- void  initSharedData() {
-    mutex_remote = mutexInit();
+void  initSharedData() {
+    allowNewConnections = 1;
+	childCount  = 0;
+    
+    mutex_remote_Send = mutexInit();
     mutex_list_messages = mutexInit();
     whatsappCount = 0;
 
-    if(mutex_remote == NULL || mutex_list_messages == NULL){
-        mutexDestroy(mutex_remote);
+    if(mutex_remote_Send == NULL || mutex_list_messages == NULL){
+        mutexDestroy(mutex_remote_Send);
         mutexDestroy(mutex_list_messages);
-        commOps.close(&local);
+        commOps.close(&localSend);
         exit(-2);
     }
 }
