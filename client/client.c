@@ -35,7 +35,7 @@ void *attendClientPeer(void *arg) {
     fflush(stdout);
 
 	memcpy(&innerRemote, &remoteRec, sizeof(commFacade_t));
-    //mutexUnlock(mutex_remote_Rec);
+    mutexUnlock(mutex_remote_Rec);
 
 
     //Receber data
@@ -99,13 +99,10 @@ void newConnectionClient(int PortaDeMandar) {
                 if(allowNewConnections) {
                     fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
                     fflush(stdout);
-                    fprintf(stdout, "[%.4d] | 1\n", getpid());
-
+                    
                     childCount++;
-                    fprintf(stdout, "[%.4d] | 2\n", getpid());
-                    //mutexLock(mutex_remote_Rec);
+                    mutexLock(mutex_remote_Rec);
 
-                    fprintf(stdout, "[%.4d] | 3\n", getpid());
                     if(noResponse(attendClientPeer, childCount) < 0) {
                         fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
                         fflush(stderr);
@@ -151,6 +148,7 @@ int main(int argc, char const *argv[]) {
     }
 
     initSharedData();
+    mutex_remote_Rec = mutexInit();
 
     do{
         newConnectionClient(atoi(argv[2]));        
