@@ -176,6 +176,9 @@ int     connectRemote(commFacade_t* local, commFacade_t* remote, char *addr, int
         perror("[connectRemote] | connect()");
         return -2;
     }
+    fprintf( stdout, "\n\n========================================\n");
+    fprintf( stdout, "[%d] | Connection Concluded\n", getpid());
     fprintf( stdout, "[%d] | Connected with %s:%d\n", getpid(), inet_ntoa(remote->socketAddr.sin_addr), ntohs(remote->socketAddr.sin_port) );
+    fflush(stdout);
     return 0;
 }

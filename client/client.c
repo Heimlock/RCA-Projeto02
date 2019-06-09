@@ -27,6 +27,65 @@ int canContinueClient() {
     return rtnValue;
 }
 
+void *mandarMensagem(void *arg) {
+	char ip[9] = "localhost"; //por enquanto é sempre localhost
+    int PortaDestino;
+    int saida = 0;
+
+    while(saida != 1){
+        fprintf(stdout, "[%.4d] | Mandar mensagem Iniciado\n", getpid());
+        fprintf(stdout, "[%.4d] | Porta destino da conexao:\n", getpid());
+        fflush(stdout);
+        scanf("%d", &PortaDestino);
+        
+        //Se digitar 0 na porta Destino, sair do while, fechar thread.
+        if(PortaDestino == 0){
+            saida = 1;
+            break;
+        }
+
+    
+        //Criação do socket que envia mensagens, tipo cliente
+        fprintf(stdout, "\n");
+        fprintf(stdout, "[%d] | Socket de Enviamento\n", getpid());
+        fflush(stdout);
+        if(commOps.initClient(&localSend, 0) < 0) {
+            fprintf(stderr, "[%d] | Error! Init Socket de Enviamento!\n", getpid());
+            fflush(stderr);
+            exit(-2);
+        }
+
+        //Conect com a PortaDestino
+        if((commOps.connect(&localSend, &remoteSend, ip, PortaDestino)) < 0){
+            fprintf(stderr, "[%.4d] | Error! Client couldn't connect to peer.\n", getpid());
+            fflush(stderr);
+            perror("connectToPeer");
+            exit(-3);
+        }
+
+        fprintf(stdout, "[%.4d] | Mandando mensagem\n", getpid());
+        fflush(stdout);
+    
+        //Mandar dados
+        //int send(int sockfd, const void *msg, int len, int flags); 
+
+        char *msg = "Beej was here!";
+        int len, bytes_sent;
+                    
+        len = strlen(msg);
+        bytes_sent = send(localSend.socketDesc, msg, len, 0);
+        //Mandar dados
+
+        //Fechar Socket
+        fprintf(stdout, "[%.4d] | Mensagem enviada, fechando socket\n", getpid());
+        fflush(stdout);
+        close_Socket(&localSend);
+    }
+
+	threadExit(NULL);
+}
+
+
 void *attendClientPeer(void *arg) {
 	int threadId =  (int)arg;
     struct SPDT_Command  *command;
@@ -37,7 +96,6 @@ void *attendClientPeer(void *arg) {
 
 	memcpy(&innerRemote, &remoteRec, sizeof(commFacade_t));
     mutexUnlock(mutex_remote_Rec);
-
 
     //Receber data
     //int bytesRecebidos = recv(socketDescConexao, void *buf, int len, 0);
@@ -59,104 +117,71 @@ void *attendClientPeer(void *arg) {
 	threadExit(NULL);
 }
 
-void newConnectionClient(int PortaDeMandar) {
-    int command_type;
-    char ip[9] = "localhost";
+void newConnectionClient() {
 
-    while(command_type != '9'){
-        
+    if((commOps.accept(&localRec, &remoteRec)) < 0){
+        fprintf(stderr, "[%.4d] | Error! Client couldn't accept connection.\n", getpid());
+        fflush(stderr);
+        perror("newConnection");
+        exit(-4);
+    }
 
-        fprintf(stdout, "[%.4d] | Mandar Msg (0) ou Receber Mensagem (1)\n", getpid());
+    if(allowNewConnections) {
+        fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
         fflush(stdout);
-        scanf("%d", &command_type);
-
-        switch(command_type){
-            case 0:    
-                if((commOps.connect(&localSend, &remoteSend, ip, PortaDeMandar)) < 0){
-                    fprintf(stderr, "[%.4d] | Error! Client couldn't connect to peer.\n", getpid());
-                    fflush(stderr);
-                    perror("connectToPeer");
-                    exit(-3);
-                }
-
-                //Mandar dados
-                //int send(int sockfd, const void *msg, int len, int flags); 
-
-                char *msg = "Beej was here!";
-                int len, bytes_sent;
                     
-                len = strlen(msg);
-                bytes_sent = send(localSend.socketDesc, msg, len, 0);
-                //Mandar dados
-                break;
+        childCount++;
+        mutexLock(mutex_remote_Rec);
 
-            case 1:
-                if((commOps.accept(&localRec, &remoteRec)) < 0){
-                    fprintf(stderr, "[%.4d] | Error! Client couldn't accept connection.\n", getpid());
-                    fflush(stderr);
-                    perror("newConnection");
-                    exit(-4);
-                }
-                if(allowNewConnections) {
-                    fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
-                    fflush(stdout);
-                    
-                    childCount++;
-                    mutexLock(mutex_remote_Rec);
-
-                    if(noResponse(attendClientPeer, childCount) < 0) {
-                        fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
-                        fflush(stderr);
-                        perror("newConnection");
-                    }
-                } else {
-                    commOps.close(&remoteRec);
-                }
-                break;
-
-            default:
-                fprintf(stdout, "[%.4d] | Command invalid.\n", getpid());
-                fflush(stdout);
-                break;
+        if(noResponse(attendClientPeer, childCount) < 0) {
+            fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
+            fflush(stderr);
+            perror("newConnection");
         }
-    }         
+    }else{
+        commOps.close(&remoteRec);
+    }
 }
 
 int main(int argc, char const *argv[]) {
+    //Inicia o cliente
     fprintf(stdout, "[%d] | Client Module Initialized!\n", getpid());
     fflush(stdout);
 
-    if(argc != 3) {
+
+    initSharedData(); //Inicia variaveis globais
+    mutex_remote_Rec = mutexInit(); //Precisa disso para mutex nao dar segmetation fault
+
+    //Precisa de uma variavel (./client PortaDeReceber)
+    if(argc != 2) {
         fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
-        fprintf(stderr, "[%d] | Usage: ./client <PortaDeReceber> <PortaDeMandar>\n", getpid());
+        fprintf(stderr, "[%d] | Usage: ./client <PortaDeReceber>\n", getpid());
         fflush(stderr);
         exit(-1);
     }
 
-    if(commOps.initClient(&localSend, 0) < 0) {
-        fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
+    //Thread que manda mensagens
+    if(noResponse(mandarMensagem, NULL) < 0) {
+        fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
         fflush(stderr);
-        exit(-2);
+        perror("newConnection");
     }
 
+    //Criação do socket que recebe mensagens, tipo servidor
     fprintf(stdout, "[%d] | Socket de Recebimento\n", getpid());
     fflush(stdout);
-
     if((commOps.initServer(&localRec, atoi(argv[1]))) < 0){
         fprintf(stderr, "[%d] | Error! Init Socket de Recebimento!\n", getpid());
         fflush(stderr);
         exit(-2);    
     }
 
-    initSharedData();
-    mutex_remote_Rec = mutexInit(); //Precisa disso para mutex nao dar segmentation fault
-
+    //Threads que recebem mensagens usando o socket de recebimento
     do{
-        newConnectionClient(atoi(argv[2]));        
+        newConnectionClient();        
     }while(canContinueClient());
 
-
-    //connectToServer(argv[1]);
+    //Fechar sockets
     commOps.close(&localSend);
     commOps.close(&localRec);
     return 0; //Nao vai passar daqui se nao comentar esse return
