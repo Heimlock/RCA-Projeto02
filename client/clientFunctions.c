@@ -61,7 +61,7 @@
     fflush(stdout);
     struct SPDT_Command *command;
 
-    command = newCommand(LogIn, 9*sizeof(char), id);
+     newCommand(&command, LogIn, 9*sizeof(char), id);
 
     if((sendCommand(&localSend, (*command))) < 0) {
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
@@ -76,7 +76,7 @@
     fflush(stdout);
     struct SPDT_Command *command;
 
-    command = newCommand(LogOut, 9*sizeof(char), id);
+    newCommand(&command, LogOut, 9*sizeof(char), id);
 
     if((sendCommand(&localSend, (*command))) < 0) {
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
@@ -96,7 +96,7 @@
     fprintf(stdout, "[%.4d] | User cellphone?\n", getpid());
     scanf("%s", cellphone);
 
-    command = newCommand(RequestClient, 9*sizeof(char), cellphone);
+    newCommand(&command, RequestClient, 9*sizeof(char), cellphone);
 
     if((sendCommand(&localSend, (*command))) < 0){
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
@@ -105,7 +105,7 @@
         exit(-6);
     }
 
-    user = receiveStruct(&localSend, RequestClient);
+    receiveStruct(&localSend, RequestClient, &user);
 
     if(user == NULL){
         fprintf(stderr, "[%d] | Error! Failed to receive user.\n", getpid());

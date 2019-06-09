@@ -125,7 +125,7 @@ void newConnectionClient(int PortaDeMandar) {
 int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | Client Module Initialized!\n", getpid());
     fflush(stdout);
-
+    char ip[9] = "localhost";
 
     struct SPDT_Command *command;
 
@@ -136,13 +136,13 @@ int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | ========================================\n", getpid());
     fflush(stdout);
 
+   //if(argc != 3) {
+        //fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
+        //fprintf(stderr, "[%d] | Usage: ./client <ServerIp> <Port>\n", getpid());
+
    if(argc != 3) {
         fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
-        fprintf(stderr, "[%d] | Usage: ./client <ServerIp> <Port>\n", getpid());
-
-   //if(argc != 3) {
-   //     fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
-   //     fprintf(stderr, "[%d] | Usage: ./client <PortaDeReceber> <PortaDeMandar>\n", getpid());
+        fprintf(stderr, "[%d] | Usage: ./client <PortaDeReceber> <PortaDeMandar>\n", getpid());
         fflush(stderr);
         exit(-1);
     }
@@ -154,12 +154,12 @@ int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | ========================================\n", getpid());
     fflush(stdout);
 
-    if(commOps.initClient(&local, 0) < 0) {
+    if(commOps.initClient(&localSend, 0) < 0) {
         fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
         fflush(stderr);
         exit(-2);
     }
-    if(commOps.connect(&local, &remote, argv[1], atoi(argv[2])) < 0) {
+    if(commOps.connect(&localSend, &remoteSend, ip, 5000) < 0) { //ServerPort, atoi(argv[2]), definido como 5000
         fprintf(stderr, "[%d] | Error! Connect to Server Socket!\n", getpid());
         fflush(stderr);
         exit(-2);
@@ -170,14 +170,14 @@ int main(int argc, char const *argv[]) {
     newCommand(&command, LogIn, UserId_Len * sizeof(char), value);
     printCommand(getpid(), *command);
 
-    if(sendCommand(&local, (*command)) < 0) {
+    if(sendCommand(&localSend, (*command)) < 0) {
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);
         exit(-4);
     }
     // destroyCommand(command);
-    commOps.close(&local);
-    commOps.close(&remote);
+    commOps.close(&localSend);
+    commOps.close(&remoteSend);
     sleep(5);
 
     //  ================================================================================
@@ -187,14 +187,14 @@ int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | ========================================\n", getpid());
     fflush(stdout);
 
-    if(commOps.initClient(&local, 0) < 0) {
+    if(commOps.initClient(&localSend, 0) < 0) {
 
     //if((commOps.initClient(&localSend, 0)) < 0) {
         fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
         fflush(stderr);
         exit(-2);
     }
-    if(commOps.connect(&local, &remote, argv[1], atoi(argv[2])) < 0) {
+    if(commOps.connect(&localSend, &remoteSend, ip, 5000) < 0) { //ServerPort, atoi(argv[2]), definido como 5000
         fprintf(stderr, "[%d] | Error! Connect to Server Socket!\n", getpid());
         fflush(stderr);
         exit(-2);
@@ -203,7 +203,7 @@ int main(int argc, char const *argv[]) {
     newCommand(&command, RequestClient, UserId_Len * sizeof(char), value);
     printCommand(getpid(), *command);
 
-    if(sendCommand(&local, (*command)) < 0) {
+    if(sendCommand(&localSend, (*command)) < 0) {
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);
         exit(-5);
@@ -219,11 +219,11 @@ int main(int argc, char const *argv[]) {
     fflush(stdout);
 
     struct User_t *user = NULL;
-    receiveStruct(&local, RequestClient, &user);
+    receiveStruct(&localSend, RequestClient, &user);
     fprintf("Telefone: %s\n", user->id);
 
-    commOps.close(&local);
-    commOps.close(&remote);
+    commOps.close(&localSend);
+    commOps.close(&remoteSend);
     sleep(10);
 
     //  ================================================================================
@@ -233,12 +233,12 @@ int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | ========================================\n", getpid());
     fflush(stdout);
 
-    if(commOps.initClient(&local, 0) < 0) {
+    if(commOps.initClient(&localSend, 0) < 0) {
         fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
         fflush(stderr);
         exit(-2);
     }
-    if(commOps.connect(&local, &remote, argv[1], atoi(argv[2])) < 0) {
+    if(commOps.connect(&localSend, &remoteSend, argv[1], atoi(argv[2])) < 0) {
         fprintf(stderr, "[%d] | Error! Connect to Server Socket!\n", getpid());
         fflush(stderr);
         exit(-2);
@@ -247,7 +247,7 @@ int main(int argc, char const *argv[]) {
     newCommand(&command, LogOut, UserId_Len * sizeof(char), value);
     printCommand(getpid(), *command);
 
-    if(sendCommand(&local, (*command)) < 0){
+    if(sendCommand(&localSend, (*command)) < 0){
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);
         exit(-6);
@@ -260,8 +260,8 @@ int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | Stage 05 -- Terminated\n", getpid());
     fprintf(stdout, "[%d] | ========================================\n", getpid());
     fflush(stdout);
-    commOps.close(&local);
-    commOps.close(&remote);
+    commOps.close(&localSend);
+    commOps.close(&remoteSend);
 
     fprintf(stdout, "[%d] | Socket de Recebimento\n", getpid());
     fflush(stdout);
