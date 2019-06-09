@@ -38,8 +38,8 @@ typedef	struct LinkedListHead {
 } LinkedListHead;
 
 typedef struct LinkedListOps {
-    int* (*initHead) (struct LinkedListHead*);
-    int* (*initNode) (struct LinkedListHead*);
+    void (*initHead) (struct LinkedListHead**);
+    // void (*initNode) (char* key, void* data, struct LinkedListNode** node);
     int* (*add) (struct LinkedListHead*, char* key, void* data);
     int* (*remove) (struct LinkedListHead*, char* key);
     struct LinkedListNode* (*get) (struct LinkedListHead*, char* key);
@@ -48,20 +48,20 @@ typedef struct LinkedListOps {
     void (*destroyNode) (struct LinkedListNode*);
 } LinkedListOps;
 
-struct LinkedListHead* initList();
-struct LinkedListNode* initNode(char* key, void* data);
+void initList(struct LinkedListHead** head);
+void addNode(LinkedListHead** head, char* key, int length, void* data);
+// void initNode(char* key, void* data, struct LinkedListNode** node);
 void  destroyHead(struct LinkedListHead* head);
 void  destroyNode(struct LinkedListNode* node);
-int  addNode(struct LinkedListHead* head, char* key, void* data);
 int  removeNode(struct LinkedListHead* head, char* key);
-struct LinkedListNode* getNode(struct LinkedListHead* head, char* key);
+struct LinkedListNode* getNode(LinkedListHead head, char* key);
 struct LinkedListNode* getFirst(struct LinkedListHead* head);
 
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 static struct LinkedListOps llOps = {
     .initHead   =   initList,
-    .initNode   =   initNode,
+    // .initNode   =   initNode,
     .add        =   addNode,
     .remove     =   removeNode,
     .get        =   getNode,

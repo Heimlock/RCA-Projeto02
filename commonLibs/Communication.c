@@ -91,32 +91,30 @@ void receiveCommand(struct commFacade_t* commData, struct SPDT_Command** command
  *     NULL          ==  Erro
  *     void*         ==  Ponteiro para o Tipo Abstrato
  */
-void*   receiveStruct(struct commFacade_t* commData, enum ActionType expectedType) {
+void receiveStruct(struct commFacade_t* commData, enum ActionType expectedType, void** outputData) {
     struct SPDT_Command* dataReceived;
     receiveCommand(commData, &dataReceived);
-    void*   outputData;
 
     switch (dataReceived->type) {
     case RequestClient:
-        outputData = (void*) bytes2User(dataReceived->value);
+        bytes2User(outputData, dataReceived->value);
         break;
     case SendText:
-        outputData = (void*) bytes2Message(dataReceived->value);
+        bytes2Message(outputData, dataReceived->value);
         break;
     case SendFile:
-        outputData = (void*) bytes2File(dataReceived->value);
+        bytes2File(outputData, dataReceived->value);
         break;
     default:
-        perror("Not a Valid Type!\n");
-        outputData = NULL;
-        break;
+        fprintf(stderr, "[receiveStruct] | Not a Valid Type.\n");
+        fflush(stderr);
+        return;
     }
 
     if(expectedType != dataReceived->type) {
         fprintf(stderr, "Type not Expected!\n Expected: %d, Received: %d\n", expectedType, dataReceived->type);
         fflush(stderr);
     }
-    return outputData;
 }
 
 /*
@@ -135,8 +133,10 @@ void*   receiveStruct(struct commFacade_t* commData, enum ActionType expectedTyp
  */
 int sendUser(struct commFacade_t* commData, struct User_t user) {
     void*   dataOut = user2Bytes(user);
-    struct SPDT_Command* userCommand = newCommand(RequestClient, UserData_Len, dataOut);
+    struct SPDT_Command* userCommand;
+    newCommand(&userCommand, RequestClient, UserData_Len, dataOut);
     return sendCommand(commData, *userCommand);
+    //  Destroy Command
 }
 
 /*
@@ -156,7 +156,8 @@ int sendUser(struct commFacade_t* commData, struct User_t user) {
 int sendMessage(struct commFacade_t* commData, struct Message_t message) {
     void*   dataOut = message2Bytes(message);
     int messageLength = UserId_Len + 2 + message.length;
-    struct SPDT_Command* msgCommand = newCommand(SendText, messageLength, dataOut);
+    struct SPDT_Command* msgCommand;
+    newCommand(&msgCommand, SendText, messageLength, dataOut);
     return sendCommand(commData, *msgCommand);
 }
 
@@ -177,7 +178,8 @@ int sendMessage(struct commFacade_t* commData, struct Message_t message) {
 int sendFile(struct commFacade_t* commData, struct File_t file) {
     void*   dataOut = file2Bytes(file);
     int     fileLength = UserId_Len + 2 + file.nameLength + 2 + file.length;
-    struct SPDT_Command* fileCommand = newCommand(SendFile, fileLength, dataOut);
+    struct SPDT_Command* fileCommand;
+    newCommand(&fileCommand, SendFile, fileLength, dataOut);
     return sendCommand(commData, *fileCommand);
 }
 

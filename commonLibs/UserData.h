@@ -34,9 +34,9 @@ typedef struct User_t {
     enum    UserState   state;
 } User_t;
 
-User_t* newUser(char* id, struct sockaddr_in addr, enum UserState state);
+void newUser(User_t** user, char* id, struct sockaddr_in addr, enum UserState state);
 char*  user2Bytes(User_t user);
-User_t* bytes2User(char* data);
+void bytes2User(User_t** user, char* data);
 void printUser(User_t user);
 char* getState(int stateCode);
 #endif

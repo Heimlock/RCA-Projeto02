@@ -32,7 +32,7 @@ typedef struct SPDT_Command {
     void* value;
 } SPDT_Command;
 
-SPDT_Command* newCommand(ActionType type, int length, void* data);
+void    newCommand(SPDT_Command** command, ActionType type, int length, void* data);
 void    destroyCommand(SPDT_Command* command);
 char*   command2bytes(SPDT_Command command);
 void    bytes2command(char* data, SPDT_Command**  command);
