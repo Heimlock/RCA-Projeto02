@@ -17,12 +17,11 @@
 #include <string.h>
 #include "SPDT.h"
 
-SPDT_Command* newCommand(ActionType type, int length, void* data) {
-    SPDT_Command* command = (SPDT_Command*) malloc(sizeof(SPDT_Command));
-    command->type   = type;
-    command->length = length;
-    command->value  = data;
-    return command;
+void newCommand(SPDT_Command** command, ActionType type, int length, void* data) {
+    (*command) = (SPDT_Command*) malloc(sizeof(SPDT_Command));
+    (*command)->type   = type;
+    (*command)->length = length;
+    (*command)->value  = data;
 }
 
 void    destroyCommand(SPDT_Command* command) {

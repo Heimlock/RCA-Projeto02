@@ -11,6 +11,7 @@
  */
 
  #include "./server.h"
+ #include "../commonLibs/LinkedList.h"
 
 void newConnection() {
     if((commOps.accept(&local, &remote)) < 0){
@@ -101,6 +102,8 @@ void  initSharedData() {
 	childCount  = 0;
     acceptNewConnections = 1;
 
+    initList(&users);
+
     mutex_remote = mutexInit();
     mutex_list_users = mutexInit();
 
@@ -124,23 +127,24 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
     #endif
 
     if(log_in->value != NULL) {
-        auxUser = getNode(&users, (char *) log_in->value);
+        mutexLock(mutex_list_users);
+        auxUser = getNode(*users, (char *) log_in->value);
         if(auxUser != NULL) {
             //TODO Usuario cadastrado na fila (Editar Usuario)
         } else {
-            user = newUser((char*) log_in->value, communication_data.socketAddr, Online);
-			if(user != NULL){
-                if((addNode(&users, user->id, user)) < 0) {
-				    fprintf(stderr, "[%d] | Error! Couldn't add new user.\n", getpid());
-				    fflush(stderr);
-				    perror("logIn");
-                }
-            } else{
+            fprintf(stdout, "[%d] | New User\n", getpid());
+            fflush(stdout);
+            newUser(&user, (char*) log_in->value, communication_data.socketAddr, Online);
+			if(user != NULL) {
+                addNode(&users, user->id, UserData_Len, user);
+                free(user);
+            } else {
                 fprintf(stderr, "[%d] | Couln't create new user.\n", getpid());
 				fflush(stderr);
 				perror("logIn");
             }
         }
+        mutexUnlock(mutex_list_users);
     } else {
         fprintf(stderr, "[%d] | Error! Client ID not received.\n", getpid());
         fflush(stderr);
@@ -152,7 +156,8 @@ void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_
     struct  LinkedListNode *auxUser;
 
     if(log_out->value != NULL){
-        auxUser = getNode(&users, (char *) log_out->value);
+        mutexLock(mutex_list_users);
+        auxUser = getNode(*users, (char *) log_out->value);
         if(auxUser != NULL) {
 			//TODO editar usuario ja existente (node)
         } else {
@@ -160,6 +165,7 @@ void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_
             fflush(stderr);
             perror("logOut");
         }
+        mutexUnlock(mutex_list_users);
     } else {
         fprintf(stderr, "[%d] | Error! User couldn't log out.\n", getpid());
         fflush(stderr);
@@ -167,39 +173,36 @@ void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_
     }
 }
 
-void	requestClient(struct commFacade_t communication_data, struct SPDT_Command *request_user) {
-	struct User_t *user;
-	struct LinkedListNode *auxUser;
+void	requestClient(struct commFacade_t commData, struct SPDT_Command *requestCommand) {
+	struct User_t* user;
+	struct LinkedListNode *userNode;
 
-	if(request_user->value != NULL) {
-		auxUser = getNode(&users, (char*) request_user->value);
-        if(auxUser != NULL) {
-            user = (User_t *) auxUser->data;
+	if(requestCommand->value != NULL) {
+        mutexLock(mutex_list_users);
+		userNode = getNode(*users, (char*) requestCommand->value);
+        if(userNode != NULL) {
+            user = (User_t *) userNode->data;
             if(user != NULL){
                 if(user->state == Online) { 
-                    if((sendUser(&communication_data, (*user))) < 0) {
+                    if((sendUser(&commData, (*user))) < 0) {
                         fprintf(stderr, "[%d] | Error! Failed to send user requested.\n", getpid());
                         fflush(stderr);
-                        perror("requestClient");
                     }
                 } else {
                     fprintf(stderr, "[%d] | Error! User not online.\n", getpid());
                     fflush(stderr);
-                    perror("requestClient");
                 }
-            } else{
+            } else {
                 fprintf(stderr, "[%d] | Error! Coundn't get user data.\n", getpid());
                 fflush(stderr);
-                perror("requestClient");
             }
         } else {
             fprintf(stderr, "[%d] | Error! User doens't exist.\n", getpid());
             fflush(stderr);
-            perror("requestClient");
         }
+        mutexUnlock(mutex_list_users);
 	} else {
 		fprintf(stderr, "[%d] | Error! Client ID not received.\n", getpid());
         fflush(stderr);
-        perror("requestClient");
 	}
 }

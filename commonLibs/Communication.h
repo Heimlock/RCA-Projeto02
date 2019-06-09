@@ -21,7 +21,7 @@
 #include "./SPDT.h"
 int sendCommand(struct commFacade_t* commData, struct SPDT_Command command);
 void receiveCommand(struct commFacade_t* commData, struct SPDT_Command** command);
-void*   receiveStruct(struct commFacade_t* commData, enum ActionType expectedType);
+void receiveStruct(struct commFacade_t* commData, enum ActionType expectedType, void** outputData);
 
 /*
  *  UserData Related

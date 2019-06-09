@@ -20,28 +20,26 @@
 /*
  *  Função que Inicia Corretamente um LinkedListHead
  */
-LinkedListHead* initList() {
-    LinkedListHead* head = (LinkedListHead*) malloc(sizeof(LinkedListHead));
-    memset(head, 0, sizeof(LinkedListHead));
+void initList(LinkedListHead** head) {
+    (*head) = (LinkedListHead*) malloc(sizeof(LinkedListHead));
+    memset((*head), 0, sizeof(LinkedListHead));
 
     //  Init Vars
-    head->size = 0;
-    head->initialNode = NULL;
-    return head;
+    (*head)->size = 0;
+    (*head)->initialNode = NULL;
 }
 
 /*
  *  Função que Inicia Corretamente um LinkedListNode
  */
-LinkedListNode* initNode(char* key, void* data) {
-    LinkedListNode* node = (LinkedListNode*) malloc(sizeof(LinkedListNode));
-    memset(node, 0, sizeof(LinkedListNode));
+void initNode(char* key, void* data, struct LinkedListNode** node) {
+    (*node) = (LinkedListNode*) malloc(sizeof(LinkedListNode));
+    memset((*node), 0, sizeof(LinkedListNode));
 
     //  Init Vars
-    memcpy(node->key, key, KEY_LEN);
-    memcpy(node->data, data, DATA_LEN);
-    node->next = NULL;
-    return node;
+    memcpy((*node)->key, key, KEY_LEN);
+    memcpy((*node)->data, data, DATA_LEN);
+    (*node)->next = NULL;
 }
 
 /*
@@ -70,27 +68,35 @@ void destroyNode(LinkedListNode* node) {
  *  Argumentos:
  *      @head       ==  Header da Lista Ligada
  *      @key        ==  Chave do Dado
- *      @data       ==  Dado
- *  Retornos:
- *      > 0         ==  Erro
- *      = 0         ==  Successo
+ *      @length     ==  Tamanho do Dado
+ *      @data       ==  Ponteiro do Dado
  */
-int addNode(LinkedListHead* head, char* key, void* data) {
-    LinkedListNode* node;
-    LinkedListNode** last;
-    last = &(head->initialNode);
-    node = head->initialNode;
-    do {
-        if(node == NULL) {
-            head->size++;
-            (*last)->next = initNode(key, data);
-            return 0;
-        } else {
-            (*last) = node;
-            node = node->next;
-        }
-    } while(node != NULL);
-    return -1;
+void addNode(LinkedListHead** head, char* key, int length, void* data) {
+    LinkedListNode** actual;
+
+    (*head)->size++;
+	actual = &((*head)->initialNode);
+	while (*actual) {
+		actual = &(*actual)->next;
+    }
+
+	(*actual) = (LinkedListNode *)malloc(sizeof(LinkedListNode));
+	(*actual)->key = (char *)malloc((KEY_LEN + 1) * sizeof(char));
+    memcpy((*actual)->key, key, KEY_LEN);
+    (*actual)->key[KEY_LEN] = '\0';
+    (*actual)->length = length;
+
+	(*actual)->data = malloc(length);
+    memcpy((*actual)->data, data, length);
+
+	(*actual)->next = NULL;
+
+    // #ifdef  DEBUG
+        fprintf(stdout, "[addNode] | Node Added!\n");
+        fprintf(stdout, "[addNode] | Key...: %s\n", (*actual)->key);
+        fprintf(stdout, "[addNode] | Length: %d\n", (*actual)->length);
+        fflush(stdout);
+    // #endif
 }
 
 /*
@@ -140,26 +146,24 @@ int removeNode(LinkedListHead* head, char* key) {
  *      Null        ==  Erro
  *      Node*       ==  LinkedListNode procurado
  */
-LinkedListNode* getNode(LinkedListHead* head, char* key) {
-    LinkedListNode* node;
-    int running = 1;
-    if(head->initialNode == NULL) {
-        perror("Initial Node is Null.");
-        return NULL;
-    } else {
-        node = head->initialNode;
-        do {
-            if(strcmp(node->key, key) == 0) {
-                return node;
-            } else if (node->next != NULL) {
-                node = node->next;
-            } else {
-                running = 0;
+LinkedListNode* getNode(LinkedListHead head, char* key) {
+    LinkedListNode** actual;
+
+    fprintf(stdout, "[getNode] | Init\n");
+    fflush(stdout);
+
+    if(head.initialNode != NULL || head.size != 0) {
+        actual = &head.initialNode;
+        while (*actual) {
+            if(compareKeys((*actual)->key, key)) {
+                return (*actual);
             }
-        } while(running);
-        perror("Node not Found");
-        return NULL;
+            actual = &(*actual)->next;
+        }
+        fprintf(stderr, "[getNode] | Node not Found\n");
+        fflush(stderr);
     }
+    return NULL;
 }
 
 /*
@@ -177,4 +181,28 @@ LinkedListNode* getFirst(LinkedListHead* head) {
     } else {
         return head->initialNode;
     }
+}
+
+
+/*
+ *  Função que Compara 2 Chaves
+ *  Argumentos:
+ *      @keyOne     ==  Chave 1
+ *      @keyTwo     ==  Chave 2
+ *  Retornos:
+ *      1           ==  Iguais
+ *      0           ==  Diferentes
+ */
+int compareKeys(char* keyOne, char* keyTwo) {
+    #ifdef  DEBUG
+        fprintf(stdout, "[compareKeys] | Comparing: %s & %s\n", keyOne, keyTwo);
+        fflush(stdout);
+    #endif
+
+    for(int i; i< KEY_LEN; i++) {
+        if(keyOne[i] != keyTwo[i]) {
+            return 0;
+        }
+    }
+    return 1;
 }
