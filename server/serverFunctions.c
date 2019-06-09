@@ -126,6 +126,7 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         printCommand(getpid(), *log_in);
     #endif
 
+    mutexLock(mutex_list_users);
     if(log_in->value != NULL) {
         mutexLock(mutex_list_users);
         auxUser = getNode(*users, (char *) log_in->value);
@@ -150,11 +151,13 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         fflush(stderr);
         perror("logIn");
     }
+    mutexUnlock(mutex_list_users);
 }
 
 void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_out) {
     struct  LinkedListNode *auxUser;
 
+    mutexLock(mutex_list_users);
     if(log_out->value != NULL){
         mutexLock(mutex_list_users);
         auxUser = getNode(*users, (char *) log_out->value);
@@ -171,6 +174,7 @@ void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_
         fflush(stderr);
         perror("logOut");
     }
+    mutexUnlock(mutex_list_users);
 }
 
 void	requestClient(struct commFacade_t commData, struct SPDT_Command *requestCommand) {
@@ -178,31 +182,31 @@ void	requestClient(struct commFacade_t commData, struct SPDT_Command *requestCom
 	struct LinkedListNode *userNode;
 
 	if(requestCommand->value != NULL) {
-        mutexLock(mutex_list_users);
+    mutexLock(mutex_list_users);
 		userNode = getNode(*users, (char*) requestCommand->value);
-        if(userNode != NULL) {
-            user = (User_t *) userNode->data;
-            if(user != NULL){
-                if(user->state == Online) { 
-                    if((sendUser(&commData, (*user))) < 0) {
-                        fprintf(stderr, "[%d] | Error! Failed to send user requested.\n", getpid());
-                        fflush(stderr);
-                    }
-                } else {
-                    fprintf(stderr, "[%d] | Error! User not online.\n", getpid());
-                    fflush(stderr);
-                }
-            } else {
-                fprintf(stderr, "[%d] | Error! Coundn't get user data.\n", getpid());
-                fflush(stderr);
-            }
-        } else {
-            fprintf(stderr, "[%d] | Error! User doens't exist.\n", getpid());
+    if(userNode != NULL) {
+      user = (User_t *) userNode->data;
+      if(user != NULL){
+        if(user->state == Online) { 
+          if((sendUser(&commData, (*user))) < 0) {
+            fprintf(stderr, "[%d] | Error! Failed to send user requested.\n", getpid());
             fflush(stderr);
+          }
+        } else {
+          fprintf(stderr, "[%d] | Error! User not online.\n", getpid());
+          fflush(stderr);
         }
-        mutexUnlock(mutex_list_users);
-	} else {
-		fprintf(stderr, "[%d] | Error! Client ID not received.\n", getpid());
+      } else {
+        fprintf(stderr, "[%d] | Error! Coundn't get user data.\n", getpid());
         fflush(stderr);
+      }
+    } else {
+      fprintf(stderr, "[%d] | Error! User doens't exist.\n", getpid());
+      fflush(stderr);
+    }
+    mutexUnlock(mutex_list_users);
+  } else {
+	  fprintf(stderr, "[%d] | Error! Client ID not received.\n", getpid());
+    fflush(stderr);
 	}
 }
