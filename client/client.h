@@ -27,7 +27,6 @@
     pthread_mutex_t  *mutex_list_messages;
     pthread_mutex_t  *mutex_remote;
     int whatsappCount;
-
 #else
     extern struct commFacade_t      local;
     extern struct commFacade_t      remote;

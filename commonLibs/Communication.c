@@ -111,7 +111,7 @@ void receiveStruct(struct commFacade_t* commData, enum ActionType expectedType, 
         return;
     }
 
-    if(expectedType != dataReceived->type) {
+    if((expectedType != -1 ) && (expectedType != dataReceived->type)) {
         fprintf(stderr, "Type not Expected!\n Expected: %d, Received: %d\n", expectedType, dataReceived->type);
         fflush(stderr);
     }

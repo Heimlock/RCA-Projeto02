@@ -117,7 +117,7 @@ void  initSharedData() {
 
 void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in) {
 	struct User_t *user;
-    struct LinkedListNode *auxUser;
+    struct LinkedListNode *userNode;
 
     #ifdef  DEBUG
         fprintf(stdout, "[%d] | LogIn Function Init\n", getpid());
@@ -126,12 +126,13 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         printCommand(getpid(), *log_in);
     #endif
 
-    mutexLock(mutex_list_users);
     if(log_in->value != NULL) {
         mutexLock(mutex_list_users);
-        auxUser = getNode(*users, (char *) log_in->value);
-        if(auxUser != NULL) {
+        userNode = getNode(*users, (char *) log_in->value);
+        if(userNode != NULL) {
             //TODO Usuario cadastrado na fila (Editar Usuario)
+            user = userNode;
+            user->addr = communication_data.socketAddr;
         } else {
             fprintf(stdout, "[%d] | New User\n", getpid());
             fflush(stdout);
@@ -151,18 +152,20 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         fflush(stderr);
         perror("logIn");
     }
-    mutexUnlock(mutex_list_users);
 }
 
 void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_out) {
-    struct  LinkedListNode *auxUser;
+    struct  LinkedListNode *userNode;
+    struct  User_t *user;
 
     mutexLock(mutex_list_users);
     if(log_out->value != NULL){
         mutexLock(mutex_list_users);
-        auxUser = getNode(*users, (char *) log_out->value);
-        if(auxUser != NULL) {
-			//TODO editar usuario ja existente (node)
+        userNode = getNode(*users, (char *) log_out->value);
+        if(userNode != NULL) {
+            user = userNode;
+            user->addr = communication_data.socketAddr;
+            user->state = Offline;
         } else {
             fprintf(stderr, "[%d] | Error! User doens't exist.\n", getpid());
             fflush(stderr);

@@ -11,6 +11,7 @@
  */
 
  #include "./client.h"
+ #include "../commonLibs/MessageData.h"
 
  void connectToServer(char *ip, int port){
     int connection = 1, command_type;
@@ -22,7 +23,7 @@
     scanf("%s", id);
 
     while(connection){
-        if((commOps.connect(&local, &remote, ip, port)) < 0){
+        if((commOps.connect(&local, &remote, 0, ip, port)) < 0){
             fprintf(stderr, "[%.4d] | Error! Client couldn't connect to server.\n", getpid());
             fflush(stderr);
             perror("connectToServer");
@@ -61,21 +62,15 @@
         fprintf(stdout, "[%.4d] | Connect with server again?\n", getpid());
         fflush(stdout);
         fscanf(stdin, "%d", &connection);
+        fflush(stdin);
 
-        if(connect == 1){
-            if((commOps.initClient(&local, 0)) < 0) {
-            fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
-            fflush(stderr);
-            exit(-2);
-            }
-        }
-        else{
+        if(connection != 1){
             break;
-        }    
+        }  
     }
 
-    if(whatsappCount == 0){
-
+    while(whatsappCount != 0){
+        wait();
     }
  }
 
@@ -117,7 +112,9 @@
     char cellphone[9];
 
     fprintf(stdout, "[%.4d] | User cellphone number?\n", getpid());
-    scanf("%s", cellphone);
+    fflush(stdout);
+    fscanf(stdin, "%s", cellphone);
+    fflush(stdin);
 
     newCommand(&command, RequestClient, 9*sizeof(char), cellphone);
 
@@ -147,13 +144,7 @@
     ip = inet_ntoa(user->addr.sin_addr);
     port = (int) user->addr.sin_port;
 
-    if((commOps.initClient(&localPeer, 0)) < 0) {
-        fprintf(stderr, "[%d] | Error! Init Socket Client Peer!\n", getpid());
-        fflush(stderr);
-        exit(-2);
-    }
-
-    if((commOps.connect(&localPeer, &remotePeer, ip, port)) < 0){
+    if((commOps.connect(&localPeer, &remotePeer, 0, ip, port)) < 0){
         fprintf(stderr, "[%.4d] | Error! Client couldn't connect to user.\n", getpid());
         fflush(stderr);
         perror("connectToClient");
@@ -290,7 +281,7 @@
     }
  }
 
- void  initSharedData() {
+  void  initSharedData() {
     mutex_remote = mutexInit();
     mutex_list_messages = mutexInit();
     whatsappCount = 0;
@@ -301,4 +292,4 @@
         commOps.close(&local);
         exit(-2);
     }
-}
+ }

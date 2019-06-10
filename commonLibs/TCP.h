@@ -32,7 +32,7 @@ typedef struct commFacade_t {
 } commFacade_t;
 
 typedef struct commOps_t {
-    int     (*initClient)   (commFacade_t*, int);
+    // int     (*initClient)   (commFacade_t*, int);
     int	    (*initServer)   (commFacade_t*, int);
     void    (*close)        (commFacade_t*);
 
@@ -40,22 +40,22 @@ typedef struct commOps_t {
     size_t  (*receive)      (commFacade_t*, void **, size_t);
 
     int     (*accept)       (commFacade_t*, commFacade_t*);
-    int     (*connect)      (commFacade_t*, commFacade_t*, char*, int);
+    int     (*connect)      (commFacade_t*, commFacade_t*, int, char*, int);
 } commOps_t;
 
 
-int     init_Client(commFacade_t* commData, int port );
+// int     init_Client(commFacade_t* commData, int port );
 int     init_Server(commFacade_t* commData, int port );
 void    close_Socket(commFacade_t* commData);
 int     sendData(commFacade_t* commData, void *data, size_t size);
 int     receiveData(commFacade_t* commData, void **data, size_t size);
 int	    acceptConnection(commFacade_t* local, commFacade_t* remote);
-int     connectRemote(commFacade_t* local, commFacade_t* remote, char *addr, int port);
+int     connectRemote(commFacade_t* local, commFacade_t* remote, int localPort, char *remoteAddr, int remotePort);
 
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 static struct commOps_t commOps = {
-    .initClient =init_Client,
+    // .initClient =init_Client,
     .initServer =init_Server,
     .close      =close_Socket,
     .send       =sendData,

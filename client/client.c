@@ -28,12 +28,6 @@ int main(int argc, char const *argv[]) {
         exit(-1);
     }
 
-    if((commOps.initClient(&local, 0)) < 0) {
-        fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
-        fflush(stderr);
-        exit(-2);
-    }
-
     initSharedData();
     connectToServer(argv[1], atoi(argv[2]));
     commOps.close(&local);
