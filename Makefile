@@ -13,7 +13,7 @@
 #	  Makefile Geral
 #
 
-FLAGS	= -pthread -DDEBUG -g -std=c99 -Wall -D_SVID_SOURCE -D_GNU_SOURCE
+FLAGS	= -pthread  -g -std=c99 -Wall -D_SVID_SOURCE -D_GNU_SOURCE #-DDEBUG
 CMP 	= gcc
 OBJECTS = *.o
 
