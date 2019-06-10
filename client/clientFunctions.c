@@ -20,7 +20,9 @@
 
     fprintf(stdout, "[%.4d] | Write your cellphone number.\n", getpid());
     fflush(stdout);
-    scanf("%s", id);
+
+    fflush(stdin);
+    fgets(id, UserId_Len*sizeof(char), stdin);
 
     while(connection){
         if((commOps.connect(&local, &remote, 0, ip, port)) < 0){
@@ -32,8 +34,9 @@
 
         fprintf(stdout, "[%.4d] | LogIn (0) LogOut (1) RequestClient (2)\n", getpid());
         fflush(stdout);
-        fscanf(stdin, "%d", &command_type);
+        
         fflush(stdin);
+        fscanf(stdin, "%d", &command_type);
 
         switch(command_type){
             case LogIn:     logIn(id);
@@ -61,8 +64,9 @@
 
         fprintf(stdout, "[%.4d] | Connect with server again?\n", getpid());
         fflush(stdout);
-        fscanf(stdin, "%d", &connection);
+
         fflush(stdin);
+        fscanf(stdin, "%d", &connection);
 
         if(connection != 1){
             break;
@@ -79,7 +83,7 @@
     fflush(stdout);
     struct SPDT_Command *command;
 
-    newCommand(&command, LogIn, 9*sizeof(char), id);
+    newCommand(&command, LogIn, UserId_Len*sizeof(char), id);
 
     if((sendCommand(&local, (*command))) < 0) {
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
@@ -94,7 +98,7 @@
     fflush(stdout);
     struct SPDT_Command *command;
 
-    newCommand(&command, LogOut, 9*sizeof(char), id);
+    newCommand(&command, LogOut, UserId_Len*sizeof(char), id);
 
     if((sendCommand(&local, (*command))) < 0) {
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
@@ -113,10 +117,11 @@
 
     fprintf(stdout, "[%.4d] | User cellphone number?\n", getpid());
     fflush(stdout);
-    fscanf(stdin, "%s", cellphone);
-    fflush(stdin);
 
-    newCommand(&command, RequestClient, 9*sizeof(char), cellphone);
+    fflush(stdin);
+    fgets(cellphone, UserId_Len*sizeof(char), stdin);
+
+    newCommand(&command, RequestClient, UserId_Len*sizeof(char), cellphone);
 
     if((sendCommand(&local, (*command))) < 0){
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
@@ -181,8 +186,9 @@
     while(1){
         fprintf(stdout, "[%.4d] | Receive (0) Send (1) Read(2)\n");
         fflush(stdout);
-        fscanf(stdin, "%d", &operation);
+
         fflush(stdin);
+        fscanf(stdin, "%d", &operation);
 
         switch(operation){
             case 0: receiveFromClient(innerRemote);
@@ -215,9 +221,10 @@
 
     fprintf(stdout, "[%.4d] | Message: \n", getpid());
     fflush(stdout);
-    fscanf(stdin, "%s", mymessage);
-    fflush(stdin);
 
+    fflush(stdin);
+    fgets(mymessage, 10*sizeof(char), stdin);
+ 
     newMessage(&message, id, 10*sizeof(char), mymessage);
 
     if((sendMessage(&threadCommunication, (*message))) < 0) {
