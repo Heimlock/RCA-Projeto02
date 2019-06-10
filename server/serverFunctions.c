@@ -130,7 +130,6 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         mutexLock(mutex_list_users);
         userNode = getNode(*users, (char *) log_in->value);
         if(userNode != NULL) {
-            //TODO Usuario cadastrado na fila (Editar Usuario)
             user = userNode;
             user->addr = communication_data.socketAddr;
         } else {

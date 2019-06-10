@@ -256,7 +256,7 @@
 		fflush(stderr);
 		perror("readMessage");
     } else{
-        while(messages->initialNode->next != NULL){
+        while(messages->initialNode != NULL){
             message =  (Message_t *) messages->initialNode->data; 
             
             fprintf(stdout, "Sender ID: %s\n", message->senderId);
