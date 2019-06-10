@@ -69,12 +69,17 @@ void *mandarMensagem(void *arg) {
         //Mandar dados
         //int send(int sockfd, const void *msg, int len, int flags); 
 
+        //Mandar string
         char *msg = "Beej was here!";
-        int len, bytes_sent;
-                    
+        int len, bytes_sent;          
         len = strlen(msg);
         bytes_sent = send(localSend.socketDesc, msg, len, 0);
-        //Mandar dados
+
+        //Mandar imagem
+        struct File_t* file;
+        disk2Memory(&file, "go.png", "998673533");
+        sendFile(&localSend, *file);
+        //Fim de Mandar dados
 
         //Fechar Socket
         fprintf(stdout, "[%.4d] | Mensagem enviada, fechando socket\n", getpid());
@@ -97,22 +102,28 @@ void *attendClientPeer(void *arg) {
 	memcpy(&innerRemote, &remoteRec, sizeof(commFacade_t));
     mutexUnlock(mutex_remote_Rec);
 
-    //Receber data
+    //Receber dados
     //int bytesRecebidos = recv(socketDescConexao, void *buf, int len, 0);
-
+    
+    //Receber String
     #define MAXDATASIZE 100 // max number of bytes we can get at once
     char buf[MAXDATASIZE];
     int numbytes;
-
     if ((numbytes = recv(innerRemote.socketDesc, buf, MAXDATASIZE-1, 0)) < 0) {
         perror("recv");
         exit(1);    
     }
-    
     buf[numbytes] = '\0';    
     printf("client: received '%s'\n",buf);
-    //Receber data
 
+    //Receber imagem
+    struct File_t* file;
+    receiveStruct(&innerRemote, SendFile, &file);
+    file->name[0] = 'R';
+    memory2Disk(*file);
+    //Fim de Receber dados
+
+    //Fechar socket
     close_Socket(&innerRemote);
 	threadExit(NULL);
 }
