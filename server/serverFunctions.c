@@ -116,7 +116,7 @@ void  initSharedData() {
 }
 
 void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in) {
-	struct User_t *user;
+	struct User_t* user;
     struct LinkedListNode *userNode;
 
     #ifdef  DEBUG
@@ -130,7 +130,7 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         mutexLock(mutex_list_users);
         userNode = getNode(*users, (char *) log_in->value);
         if(userNode != NULL) {
-            user = userNode;
+            user = (User_t *) userNode->data;
             user->addr = communication_data.socketAddr;
         } else {
             fprintf(stdout, "[%d] | New User\n", getpid());
@@ -155,16 +155,15 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
 
 void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_out) {
     struct  LinkedListNode *userNode;
-    struct  User_t *user;
+    struct  User_t** user;
 
     mutexLock(mutex_list_users);
     if(log_out->value != NULL){
         mutexLock(mutex_list_users);
         userNode = getNode(*users, (char *) log_out->value);
         if(userNode != NULL) {
-            user = userNode;
-            user->addr = communication_data.socketAddr;
-            user->state = Offline;
+            user = (User_t *) userNode->data;
+            (*user)->state = Offline;
         } else {
             fprintf(stderr, "[%d] | Error! User doens't exist.\n", getpid());
             fflush(stderr);
