@@ -50,6 +50,12 @@ void    logIn();
 User_t* requestClient();
 void    logOut();
 
+
+int     canContinueClient();
+void   *mandarMensagem(void *arg);
+void   *attendClientPeer(void *arg);
+void    newConnectionClient();
+
 void    connectToClient(struct User_t *);
 void    *whatsapp(void *);
 void    receiveFromCLient(struct commFacade_t);

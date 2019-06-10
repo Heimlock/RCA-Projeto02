@@ -19,7 +19,7 @@
  *  Retornos:
  *      > 0         ==  Erro
  *      = 0         ==  Sucesso
- */
+ *
 int     init_Client(commFacade_t* commData, int port ) {
     int socket_len;
 
@@ -46,6 +46,7 @@ int     init_Client(commFacade_t* commData, int port ) {
     fflush(stdout);
     return 0;
 }
+*/
 
 /*
  *  Função que Inicializa a Comunicação via Socket (Servidor)
@@ -155,27 +156,55 @@ int     acceptConnection(commFacade_t* local, commFacade_t* remote) {
 /*
  *  Função que realiza a conexão TCP com o servidor
  *  Argumentos:
- *      @commData   ==  Communication Facade
- *      @addr       ==  Remote Address
- *      @port       ==  Remote Port
+ *      @local      ==  Local Communication Facade
+ *      @remote     ==  Remote Communication Facade
+ *      @localPort  ==  Local Client Port
+ *      @remoteAddr ==  Remote Address
+ *      @remotePort ==  Remote Port
  *  Retornos:
  *      > 0         ==  Erro
  *      = 0         ==  Sucesso
  */
-int     connectRemote(commFacade_t* local, commFacade_t* remote, char *addr, int port) {
+int     connectRemote(commFacade_t* local, commFacade_t* remote, int localPort, char *remoteAddr, int remotePort) {
     struct hostent *hostnm;
-    hostnm = gethostbyname(addr);
-    if (hostnm == (struct hostent *) 0) {
-        perror("[connectRemote] | gethostbyname()");
+    int socket_len;
+
+    if (((local->socketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("[connectRemote] | socket()");
         return -1;
     }
+    if (setsockopt((local->socketDesc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+        perror("[connectRemote] | setsockopt(SO_REUSEADDR) failed");
+        return -2;
+    }
+    local->socketAddr.sin_family      = AF_INET;
+    local->socketAddr.sin_port        = htons(localPort);
+    local->socketAddr.sin_addr.s_addr = INADDR_ANY;
+    if (bind((local->socketDesc), (struct sockaddr*)&(local->socketAddr), sizeof(local->socketAddr)) < 0) {
+        perror("[connectRemote] | bind()");
+        return -3;
+    }
+
+    socket_len   =   sizeof(local->socketAddr);
+    getsockname(local->socketDesc, (struct sockaddr *)&(local->socketAddr), (socklen_t *)&socket_len);
+
+    fprintf(stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(local->socketAddr.sin_port));
+    fflush(stdout);
+
+    hostnm = gethostbyname(remoteAddr);
+    if (hostnm == (struct hostent *) 0) {
+        perror("[connectRemote] | gethostbyname()");
+        return -4;
+    }
+
     remote->socketAddr.sin_family      = AF_INET;
-    remote->socketAddr.sin_port        = htons(port);
+    remote->socketAddr.sin_port        = htons(remotePort);
     remote->socketAddr.sin_addr.s_addr = *((unsigned long *)hostnm->h_addr);
     if (connect(local->socketDesc, (struct sockaddr *)&remote->socketAddr, sizeof(remote->socketAddr)) < 0) {
         perror("[connectRemote] | connect()");
-        return -2;
+        return -5;
     }
+
     fprintf( stdout, "\n\n========================================\n");
     fprintf( stdout, "[%d] | Connection Concluded\n", getpid());
     fprintf( stdout, "[%d] | Connected with %s:%d\n", getpid(), inet_ntoa(remote->socketAddr.sin_addr), ntohs(remote->socketAddr.sin_port) );

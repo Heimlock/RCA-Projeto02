@@ -126,7 +126,6 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         printCommand(getpid(), *log_in);
     #endif
 
-    mutexLock(mutex_list_users);
     if(log_in->value != NULL) {
         mutexLock(mutex_list_users);
         auxUser = getNode(*users, (char *) log_in->value);
@@ -151,7 +150,6 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         fflush(stderr);
         perror("logIn");
     }
-    mutexUnlock(mutex_list_users);
 }
 
 void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_out) {
