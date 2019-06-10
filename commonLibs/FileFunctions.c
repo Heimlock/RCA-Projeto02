@@ -84,19 +84,24 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
     (*newFile) = (File_t*) malloc(sizeof(File_t));
 
     //  SendId
-    (*newFile)->senderId = (char *)malloc(UserId_Len);
+    (*newFile)->senderId = (char *)malloc((UserId_Len + 1) * sizeof(char));
     memcpy((*newFile)->senderId, userId, UserId_Len);
+    (*newFile)->senderId[UserId_Len] = '\0';
 
     //  File Name
     (*newFile)->nameLength = FileName_Len;
-    (*newFile)->name = (char *)malloc((*newFile)->nameLength);
+    (*newFile)->name = (char *)malloc(((*newFile)->nameLength + 1) * sizeof(char));
     memcpy((*newFile)->name, basename(filePath), (*newFile)->nameLength);
+    (*newFile)->name[(*newFile)->nameLength] = '\0';
 
     //  Open File
     FILE *fp = fopen((*newFile)->name, "rb");
     if (fp == NULL) {
-        perror("Can't open file");
-        return NULL;
+        fprintf(stderr, "[disk2Memory] | Error! Can't open file\n";
+        fflush(stderr);
+        (*newFile) =  NULL;
+        //Destroy file
+        return;
     }
 
     //  File Size Discover
@@ -107,9 +112,12 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
     //  File Data
     (*newFile)->data = malloc((*newFile)->length);
     if(fread((*newFile)->data, (*newFile)->length, 1, fp) != (*newFile)->length) {
-        perror("Can't Read File");
+        fprintf(stderr, "[disk2Memory] | Error! Can't Read File\n";
+        fflush(stderr);
         fclose(fp);
-        return NULL;
+        (*newFile) =  NULL;
+        //Destroy file
+        return;
     }
 
     fclose(fp);
@@ -129,14 +137,16 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
 int memory2Disk(File_t file) {
     FILE *fp = fopen(file.name, "wb");
     if (fp == NULL) {
-        perror("Open File Error\n");
+        fprintf(stderr, "[disk2Memory] | Error! Can't open file\n";
+        fflush(stderr);
         return -1;
     }
     if (fwrite(file.data, file.length, 1, fp) != 1) {
-        perror("Write File Error\n");
-        fclose(fp);
+        fprintf(stderr, "[disk2Memory] | Error! Can't Write File\n";
+        fflush(stderr);
         return -2;
     }
     fclose(fp);
+    //Destroy file
     return 0;
 }
