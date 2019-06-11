@@ -37,7 +37,7 @@ typedef enum MenuItem {
     Error = 0xFF
 } MenuItem;
 
-void    initTerminal();
+void    *initTerminal();
 void    contactsSubMenu ();
 void    printHeader();
 int     mainMenu();

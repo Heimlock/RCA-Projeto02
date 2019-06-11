@@ -86,7 +86,7 @@ void    *initTerminal() {
                 char groupId[10];
                 File_t *file;
                 LinkedListNode* groupNode;
-                
+
                 groupFile(userId, &groupId, &file);
                 //  Send File Message
                 groupNode = getNode(*groups, groupId);
@@ -263,11 +263,15 @@ int     displayContactsMenu() {
 void    directMessage(char* userId, char** peerId, Message_t** msg) {
     char messageText[80];
 
+    //fprintf(stdout, "a\n");
+    __fpurge(stdin);
     getString("PeerId: ", peerId, (UserId_Len + 1) * sizeof(char));
 
     fprintf(stdout, "Message: ");
     fflush(stdout);
 
+    //fprintf(stdout, "b\n");
+    __fpurge(stdin);
     fgets(messageText, MessageMaxSize * sizeof(char), stdin);
     __fpurge(stdin);
 
@@ -320,6 +324,7 @@ void    getString(char* inputStr, char** id, int maxStrLen) {
     fprintf(stdout, inputStr);
     fflush(stdout);
 
+    __fpurge(stdin);
     fgets(*id, maxStrLen, stdin);
     __fpurge(stdin);
 }

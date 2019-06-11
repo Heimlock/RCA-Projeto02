@@ -122,7 +122,7 @@ User_t* requestClient(char* peerId) {
     return NULL;
 }
 
-int    canContinueReceiver(){
+int    canContinue(){
     int rtnValue;
     
     if(allowNewConnections) {
@@ -254,4 +254,21 @@ void 	sendFilePeer(struct sockaddr_in address, struct File_t file){
 
     commOps.close(&localPeer);
     commOps.close(&remotePeer);
+}
+
+void  initSharedData() {
+    mutex_list_messages = mutexInit();
+
+    initList(&messages);
+    initList(&contacts);
+    initList(&groups);
+
+    threadCount = 0;
+    allowNewConnections = 1;
+
+    //TODO free nas listas
+    if(mutex_list_messages == NULL) {
+        mutexDestroy(mutex_list_messages);
+        exit(-1);
+    }
 }

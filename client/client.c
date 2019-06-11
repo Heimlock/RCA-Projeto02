@@ -44,7 +44,7 @@ int main(int argc, char const *argv[]) {
     __fpurge(stdin);
 
     //Iniciar socket do tipo Servidor
-    if((commOps.initServer(&local, 0) < 0){ 
+    if((commOps.initServer(&local, 0)) < 0){ 
         fprintf(stderr, "[%d] | Error! Init Socket de Recebimento!\n", getpid());
         fflush(stderr);
         exit(-2);    
@@ -65,7 +65,7 @@ int main(int argc, char const *argv[]) {
     //Criação de Threads que recebem mensagens usando o socket de recebimento
     do{
         newReceiver();        
-    }while(canContinueClient());
+    }while(canContinue());
 
     return 0;
 }

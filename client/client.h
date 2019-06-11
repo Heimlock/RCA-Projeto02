@@ -53,11 +53,10 @@ void    logIn();
 void    logOut();
 User_t* requestClient(char*);
 
-void    createReceiver();
 void    newReceiver();
-void    *receiveFromPeer(void *);
+void    *attendClientPeer(void *arg);
 void    sendMessagePeer(struct sockaddr_in, struct Message_t);
 void    sendFilePeer(struct sockaddr_in, struct File_t);
 
-int     canContinueReceiver();
+int     canContinue();
 void    initSharedData();
