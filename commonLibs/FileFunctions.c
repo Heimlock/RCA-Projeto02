@@ -97,7 +97,7 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
     //  Open File
     FILE *fp = fopen((*newFile)->name, "rb");
     if (fp == NULL) {
-        fprintf(stderr, "[disk2Memory] | Error! Can't open file\n";
+        fprintf(stderr, "[disk2Memory] | Error! Can't open file\n");
         fflush(stderr);
         (*newFile) =  NULL;
         //Destroy file
@@ -112,7 +112,7 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
     //  File Data
     (*newFile)->data = malloc((*newFile)->length);
     if(fread((*newFile)->data, (*newFile)->length, 1, fp) != (*newFile)->length) {
-        fprintf(stderr, "[disk2Memory] | Error! Can't Read File\n";
+        fprintf(stderr, "[disk2Memory] | Error! Can't Read File\n");
         fflush(stderr);
         fclose(fp);
         (*newFile) =  NULL;
@@ -137,12 +137,12 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
 int memory2Disk(File_t file) {
     FILE *fp = fopen(file.name, "wb");
     if (fp == NULL) {
-        fprintf(stderr, "[disk2Memory] | Error! Can't open file\n";
+        fprintf(stderr, "[disk2Memory] | Error! Can't open file\n");
         fflush(stderr);
         return -1;
     }
     if (fwrite(file.data, file.length, 1, fp) != 1) {
-        fprintf(stderr, "[disk2Memory] | Error! Can't Write File\n";
+        fprintf(stderr, "[disk2Memory] | Error! Can't Write File\n");
         fflush(stderr);
         return -2;
     }

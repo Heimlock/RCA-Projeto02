@@ -258,6 +258,8 @@ void  initSharedData() {
         commOps.close(&localSend);
         exit(-2);
     }
+
+    initList(&messages);
 }
 
 

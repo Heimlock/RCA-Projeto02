@@ -17,6 +17,7 @@
 #include "./client.h"
 #include "../commonLibs/UserData.h"
 
+/*
 int canContinueClient() {
     int rtnValue;
     if(allowNewConnections) {
@@ -27,7 +28,7 @@ int canContinueClient() {
     return rtnValue;
 }
 
-void *mandarMensagem(void *arg) {
+ void *mandarMensagem(void *arg) {
 	char ip[9] = "localhost"; //por enquanto é sempre localhost
     int PortaDestino;
     int saida = 0;
@@ -153,7 +154,7 @@ void newConnectionClient() {
         commOps.close(&remoteRec);
     }
 }
-
+*/
 int main(int argc, char const *argv[]) {
     //Inicia o cliente
     fprintf(stdout, "[%d] | Client Module Initialized!\n", getpid());
@@ -163,36 +164,73 @@ int main(int argc, char const *argv[]) {
     initSharedData(); //Inicia variaveis globais
     mutex_remote_Rec = mutexInit(); //Precisa disso para mutex nao dar segmetation fault
 
-    //Precisa de uma variavel (./client PortaDeReceber)
-    if(argc != 2) {
+    //Precisa de duas variaveis (./client IpDoServidor PortaDoServidor)
+    if(argc != 3) {
         fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
-        fprintf(stderr, "[%d] | Usage: ./client <PortaDeReceber>\n", getpid());
+        fprintf(stderr, "[%d] | Usage: ./client <IpDoServidor> <PortaDoServidor>\n", getpid());
         fflush(stderr);
         exit(-1);
     }
 
-    //Thread que manda mensagens
+    fprintf(stdout, "[%d] | Digite seu número de telefone:\n", getpid());
+    
+    //FIXME Código errado para testes
+    fprintf(stdout, "[%d] | Digite 1 para cliente 1, 2 para cliente 2, 3 para cliente 3\n", getpid());
+    fflush(stdout);
+    char IdTeclado;
+    char* UserId;
+    int porta;
+    scanf(" %c", &IdTeclado);
+    
+    if(IdTeclado == '1'){
+        UserId = "998673533";
+        porta = 5000;
+    }else if(IdTeclado == '2'){
+        UserId = "999999999";
+        porta = 6000;
+    }else if(IdTeclado == '3'){
+        UserId = "222222222";
+        porta = 7000;
+    }
+
+    fprintf(stdout, "[%d] | UserId = %s, Porta = %d\n", getpid(), UserId, porta);
+    fflush(stdout);
+    //Fim do código teste
+
+    //Criação do socket que recebe mensagens, tipo servidor
+    fprintf(stdout, "[%d] | Socket de Recebimento\n", getpid());
+    fflush(stdout);
+    if((commOps.initServer(&localRec, porta)) < 0){ //FIXME depois que Servidor e LogIn estiverem funcionando, mudar "porta" para "0"
+        fprintf(stderr, "[%d] | Error! Init Socket de Recebimento!\n", getpid());
+        fflush(stderr);
+        exit(-2);    
+    }
+
+    /*
+    TODO
+    Mandar a porta criada no .initServer e o IP para o servidor, 
+        junto com o ID, que é o telefone
+    SendToServer(UserId, IPdoCliente, PortaDoCliente)
+    Exemplo de IpDoCliente = "localhost" (funciona para outros valores?)
+    Exemplo PortaDoCliente = localRec.socketAddr.sin_port???
+     */
+    
+    //Criar uma thread que manda e le mensagens
     if(noResponse(mandarMensagem, NULL) < 0) {
         fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
         fflush(stderr);
         perror("newConnection");
     }
 
-    //Criação do socket que recebe mensagens, tipo servidor
-    fprintf(stdout, "[%d] | Socket de Recebimento\n", getpid());
-    fflush(stdout);
-    if((commOps.initServer(&localRec, atoi(argv[1]))) < 0){
-        fprintf(stderr, "[%d] | Error! Init Socket de Recebimento!\n", getpid());
-        fflush(stderr);
-        exit(-2);    
-    }
-
-    //Threads que recebem mensagens usando o socket de recebimento
+    //Criação de Threads que recebem mensagens usando o socket de recebimento
     do{
         newConnectionClient();        
     }while(canContinueClient());
 
-    //Fechar sockets
+    /*
+    Fechar sockets
+    Deveria fechar mais coisas antes de fechar a main?
+     */
     commOps.close(&localSend);
     commOps.close(&localRec);
     return 0; //Nao vai passar daqui se nao comentar esse return
