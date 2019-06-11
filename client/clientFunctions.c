@@ -152,7 +152,7 @@ User_t* requestClient(char* ip, int port, char* peerId) {
     return user;
  }
 
- void connectToClient(struct User_t *user, char *id){
+void connectToClient(struct User_t *user, char *id){
     char *ip; 
     int port;
 
@@ -179,7 +179,7 @@ User_t* requestClient(char* ip, int port, char* peerId) {
     mutexUnlock(mutex_remote);
  }
 
- void *whatsapp(void *args) {
+void *whatsapp(void *args) {
     char *whatsappID =  (char *) args;
     struct commFacade_t  innerLocal;
 	struct commFacade_t  innerRemote;
@@ -220,7 +220,7 @@ User_t* requestClient(char* ip, int port, char* peerId) {
 	threadExit(NULL);
  }
 
- void sendToClient(struct commFacade_t threadCommunication, char *id){
+void sendToClient(struct commFacade_t threadCommunication, char *id){
     fprintf(stdout, "[%.4d] | Send to User.\n", getpid());
     fflush(stdout);
 
@@ -237,7 +237,7 @@ User_t* requestClient(char* ip, int port, char* peerId) {
     free(message);
  }
 
- void receiveFromClient(struct commFacade_t threadCommunication){
+void receiveFromClient(struct commFacade_t threadCommunication){
     fprintf(stdout, "[.4d] | Receive from User.\n", getpid());
     fflush(stdout);
 
@@ -255,7 +255,7 @@ User_t* requestClient(char* ip, int port, char* peerId) {
     }
  }
 
- void   readMessage(){
+void   readMessage(){
     struct Message_t *message;
 
     if(messages == NULL){
@@ -288,13 +288,17 @@ User_t* requestClient(char* ip, int port, char* peerId) {
     }
  }
 
-  void  initSharedData() {
+void  initSharedData() {
     mutex_remote = mutexInit();
     mutex_list_messages = mutexInit();
+
+    initList(&messages);
+    initList(&contacts);
+    initList(&groups);
 
     if(mutex_remote == NULL || mutex_list_messages == NULL) {
         mutexDestroy(mutex_remote);
         mutexDestroy(mutex_list_messages);
         exit(-1);
     }
- }
+}

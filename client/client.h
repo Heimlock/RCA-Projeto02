@@ -21,13 +21,17 @@
     struct commFacade_t     remotePeer;
 
     struct LinkedListHead   *messages;
+    struct LinkedListHead   *contacts;
+    struct LinkedListHead   *groups;
     pthread_mutex_t  *mutex_list_messages;
     pthread_mutex_t  *mutex_remote;
 #else
     extern struct commFacade_t      localPeer;
     extern struct commFacade_t      remotePeer;
 
-    extern struct LinkedListHead    messages;
+    extern struct LinkedListHead   *messages;
+    extern struct LinkedListHead   *contacts;
+    extern struct LinkedListHead   *groups;
     extern pthread_mutex_t  *mutex_list_messages;
     extern pthread_mutex_t  *mutex_remote;
     extern int whatsappCount;

@@ -14,6 +14,7 @@
 #define Message_Def
 
 #define SenderId_Len 9
+#define MessageMaxSize 80
 
 typedef struct Message_t {
     char*   senderId;
