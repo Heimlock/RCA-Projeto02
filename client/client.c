@@ -31,7 +31,6 @@ int main(int argc, char const *argv[]) {
     }
 
     initSharedData();
-    //connectToServer(argv[1], atoi(argv[2]));
     ip = argv[1];
     port = atoi(argv[2]);
 

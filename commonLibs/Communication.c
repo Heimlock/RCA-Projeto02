@@ -91,29 +91,24 @@ void receiveCommand(struct commFacade_t* commData, struct SPDT_Command** command
  *     NULL          ==  Erro
  *     void*         ==  Ponteiro para o Tipo Abstrato
  */
-void receiveStruct(struct commFacade_t* commData, enum ActionType expectedType, void** outputData) {
+int receiveStruct(struct commFacade_t* commData, void** outputData) {
     struct SPDT_Command* dataReceived;
     receiveCommand(commData, &dataReceived);
 
     switch (dataReceived->type) {
     case RequestClient:
         bytes2User(outputData, dataReceived->value);
-        break;
+        return RequestClient;
     case SendText:
         bytes2Message(outputData, dataReceived->value);
-        break;
+        return SendText;
     case SendFile:
         bytes2File(outputData, dataReceived->value);
-        break;
+        return SendFile;
     default:
         fprintf(stderr, "[receiveStruct] | Not a Valid Type.\n");
         fflush(stderr);
-        return;
-    }
-
-    if((expectedType != -1 ) && (expectedType != dataReceived->type)) {
-        fprintf(stderr, "Type not Expected!\n Expected: %d, Received: %d\n", expectedType, dataReceived->type);
-        fflush(stderr);
+        return -1;
     }
 }
 

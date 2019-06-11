@@ -13,63 +13,6 @@
  #include "./client.h"
  #include "../commonLibs/MessageData.h"
 
-void    connectToServer(char *ip, int port) {
-    int connection  = 1;
-    int command_type = -1;
-    char id[10];
-    User_t *user;
-
-    fprintf(stdout, "[%.4d] | Write your cellphone number.\n", getpid());
-    fflush(stdout);
-
-    gets(id);
-    fflush(stdin);
-
-    while(connection) {
-        fprintf(stdout, "[%.4d] | LogIn (0) LogOut (1) RequestClient (2)\n", getpid());
-        fprintf(stdout, "[%.4d] | Option: ", getpid());
-        fflush(stdout);
-
-        scanf("%d", &command_type);
-        fflush(stdin);
-
-        fprintf(stdout, "\n[%.4d] | command_type: %d\n", getpid(), command_type);
-        fflush(stdout);
-
-        switch(command_type) {
-            case LogIn: {
-                logIn(ip, port, id);
-                break;
-            }
-            case LogOut: {
-                logOut(ip, port, id);
-                break;
-            }
-            case RequestClient: {
-                char peerId[10];
-
-                gets(peerId);
-                fflush(stdin);
-
-                user = requestClient(ip, port, peerId);
-                connectToClient(user, id);
-                free(user);
-                break;
-            }
-            case 9: {
-                connection = 0;
-                break;
-            }
-            default: {
-                fprintf(stdout, "[%.4d] | Command invalid.\n", getpid());
-                fflush(stdout);
-                break;
-            }
-        }
-        command_type = -1;
-    }
- }
-
 void    logIn() {
     commFacade_t local, remote;
     struct SPDT_Command *command;
@@ -92,7 +35,7 @@ void    logIn() {
     }
     commOps.close(&local);
     commOps.close(&remote);
- }
+}
 
 void    logOut() {
     commFacade_t local, remote;
@@ -116,10 +59,14 @@ void    logOut() {
     }
     commOps.close(&local);
     commOps.close(&remote);
- }
+}
 
-User_t* requestClient(char* ip, int port, char* peerId) {
-    commFacade_t local, remote;
+User_t* requestClient(char* peerId) {
+    struct commFacade_t local, remote;
+    
+    int dataType;
+    void *dataReceived;
+
     struct SPDT_Command *command;
     struct User_t *user;
 
@@ -140,164 +87,167 @@ User_t* requestClient(char* ip, int port, char* peerId) {
         exit(-1);
     }
 
-    receiveStruct(&local, RequestClient, &user);
-    if(user == NULL) {
-        fprintf(stderr, "[requestClient] | Error! Failed to receive user.\n");
-        fflush(stderr);
-        perror(requestClient);
-        exit(-2);
+    dataType = receiveStruct(&local, &dataReceived);
+	
+    if(dataReceived != NULL){
+	    switch(dataType){
+		    case RequestClient: {
+			    user = (User_t *) dataReceived;
+			
+			    if(user == NULL) {
+        		    	fprintf(stderr, "[requestClient] | Error! Failed to receive user.\n");
+       				    fflush(stderr);
+        			    perror(requestClient);
+        			    exit(-1);
+    			}
+			
+		    	commOps.close(&local);
+    		    commOps.close(&remote);
+			    return user;
+		    }
+		    default:{
+			    fprintf(stdout, "[%.4d] | Type not expected.\n", getpid());
+         		fflush(stdout);
+         		break; 
+		    }
+	    }
     }
+    else{
+        fprintf(stdout, "[%.4d] | Error! Couldn't receive user.\n", getpid());
+        fflush(stdout);
+    }
+
     commOps.close(&local);
     commOps.close(&remote);
-    return user;
- }
+    return NULL;
+}
 
-void connectToClient(struct User_t *user, char *id){
-    char *ip;
-    int port;
-
-    ip = inet_ntoa(user->addr.sin_addr);
-    port = (int) user->addr.sin_port;
-
-    if((commOps.connect(&localPeer, &remotePeer, 0, ip, port)) < 0){
-        fprintf(stderr, "[%.4d] | Error! Client couldn't connect to user.\n", getpid());
+void  	newReceiver(){
+    threadCount++;
+    
+    if((waitResponse(receiveFromPeer, threadCount)) == NULL) {
+        fprintf(stderr, "[%.4d] | Error! Failed to create thread.\n", getpid());
         fflush(stderr);
-        perror("connectToClient");
-        exit(-8);
+        perror("newConnection");
     }
+}
 
-    mutexLock(mutex_remote);
-    if((waitResponse(whatsapp, id)) == NULL) {
-        fprintf(stderr, "[%.4d] | Error! Failed whatsapp.\n", getpid());
-        fflush(stderr);
-        perror("connectToClient");
-    }
+void 	sendMessagePeer(struct sockaddr_in address, struct Message_t message){
+    struct commFacade_t localPeer, remotePeer;
+    char *ipPeer; 
+    int portPeer;
 
-    mutexLock(mutex_remote);
-    commOps.close(&remotePeer);
-    commOps.close(&localPeer);
-    mutexUnlock(mutex_remote);
- }
-
-void *whatsapp(void *args) {
-    char *whatsappID =  (char *) args;
-    struct commFacade_t  innerLocal;
-	struct commFacade_t  innerRemote;
-    int operation;
-
-    fprintf(stdout, "[%.4d] | Whatsapp peer 2 peer init\n", getpid());
-    fflush(stdout);
-
-    memcpy(&innerLocal, &localPeer, sizeof(commFacade_t));
-	memcpy(&innerRemote, &remotePeer, sizeof(commFacade_t));
-    mutexUnlock(mutex_remote);
-
-    while(1){
-        fprintf(stdout, "[%.4d] | Receive (0) Send (1) Read(2)\n");
-        fflush(stdout);
-
-        fflush(stdin);
-        fscanf(stdin, "%d", &operation);
-
-        switch(operation){
-            case 0: receiveFromClient(innerRemote);
-                    break;
-
-            case 1: sendToClient(innerRemote, whatsappID);
-                    break;
-
-            case 2: readMessage();
-                    break;
-
-            default:    fprintf(stdout, "[%.4d] | Operation invalid.\n", getpid());
-                        fflush(stdout);
-                        break;
-        }
-    }
-
-    commOps.close(&innerRemote);
-    commOps.close(&innerLocal);
-	threadExit(NULL);
- }
-
-void sendToClient(struct commFacade_t threadCommunication, char *id){
-    fprintf(stdout, "[%.4d] | Send to User.\n", getpid());
-    fflush(stdout);
-
-    struct Message_t *message;
-    char mymessage[10];
-
-    newMessage(&message, id, 10*sizeof(char), mymessage);
-
-    if((sendMessage(&threadCommunication, (*message))) < 0) {
-        fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
+    ipPeer = inet_ntoa(address.sin_addr);
+    portPeer = ntohs(address.sin_port);
+      
+    if((commOps.connect(&localPeer, &remotePeer, 0, ipPeer, portPeer)) < 0){
+	    fprintf(stderr, "[%.4d] | Error! Couldn't connect to peer.\n", getpid());
         fflush(stderr);
         exit(-1);
     }
-    free(message);
- }
 
-void receiveFromClient(struct commFacade_t threadCommunication){
-    fprintf(stdout, "[.4d] | Receive from User.\n", getpid());
-    fflush(stdout);
-
-    struct Message_t *message;
-
-    receiveStruct(&threadCommunication, SendText, &message);
-
-    if(message != NULL){
-        addNode(&messages, message->senderId, message->length, message->data);
-        free(message);
-    } else{
-        fprintf(stderr, "[%d] | Error! Couldn't receive new message.\n", getpid());
-		fflush(stderr);
-		perror("receiveFromClient");
+    if((sendMessage(&localPeer, message)) < 0){
+	    fprintf(stderr, "[%.4d] | Error! Couldn't send message to peer.\n", getpid());
+        fflush(stderr);
+        exit(-1);
     }
- }
 
-void   readMessage(){
-    struct Message_t *message;
+    commOps.close(&localPeer);
+    commOps.close(&remotePeer);
+}
 
-    if(messages == NULL){
-        fprintf(stderr, "[%d] | No Messages.\n", getpid());
-		fflush(stderr);
-		perror("readMessage");
-    } else{
-        while(messages->initialNode != NULL){
-            message =  (Message_t *) messages->initialNode->data;
+void 	sendFilePeer(struct sockaddr_in address, struct File_t file){
+    struct commFacade_t localPeer, remotePeer;
+    char *ipPeer; 
+    int portPeer;
 
-            fprintf(stdout, "Sender ID: %s\n", message->senderId);
-            fflush(stdout);
-
-            fprintf(stdout, "Message length: %d\n", message->length);
-            fflush(stdout);
-
-            fprintf(stdout, "Message: %s\n", (char *) message->data);
-            fflush(stdout);
-
-            messages->initialNode = messages->initialNode->next;
-
-            if((removeNode(&messages, message->senderId)) < 0){
-                fprintf(stderr, "[%d] | Error! Couldn't remove message.\n", getpid());
-		        fflush(stderr);
-		        perror("readMessage");
-            }
-
-            free(message);
-        }
+    ipPeer = inet_ntoa(address.sin_addr);
+    portPeer = ntohs(address.sin_port);
+      
+    if((commOps.connect(&localPeer, &remotePeer, 0, ipPeer, portPeer)) < 0){
+	    fprintf(stderr, "[%.4d] | Error! Couldn't connect to peer.\n", getpid());
+        fflush(stderr);
+        exit(-1);
     }
- }
+
+    if((sendFile(&localPeer, file)) < 0){
+	    fprintf(stderr, "[%.4d] | Error! Couldn't send file to peer.\n", getpid());
+        fflush(stderr);
+        exit(-1);
+    }
+
+    commOps.close(&localPeer);
+    commOps.close(&remotePeer);
+}
+
+void 	*receiveFromPeer(void *args){
+    int threadId = (int)args;
+    struct commFacade_t localSocket, remoteSocket;
+      
+    void *dataReceived;
+    int  dataType;
+      
+    Message_t *message;
+    File_t *file;
+
+    if((commOps.initServer(&localSocket, 0)) < 0){
+        fprintf(stderr, "[%d] | Error! Init Socket de Client Receiver!\n", getpid());
+        fflush(stderr);
+        perror("receiveFromPeer");
+	    threadExit(NULL);    
+    }
+      	
+	if((commOps.accept(&localSocket, &remoteSocket)) < 0) {
+        fprintf(stderr, "[%.4d] | Error! Client couldn't accept connection.\n", threadId);
+        fflush(stderr);
+        perror("receiveFromPeer");
+        threadExit(NULL);
+    }
+
+	dataType = receiveStruct(&remoteSocket, &dataReceived);
+
+	if(dataReceived != NULL){
+		switch(dataType){
+	    	case SendText: {
+				message = (Message_t *) dataReceived;
+				addNode(&messages, message->senderId, message->length, message->data);
+				free(message);
+				break;
+            }	
+
+	    	case SendFile: {
+				file = (File_t *) dataReceived;
+				memory2Disk((*file));
+				free(file);	
+				break;
+			}
+			default: {
+				fprintf(stdout, "[%.4d] | Type not expected.\n", threadId);
+         			fflush(stdout);
+         			break; 
+			}
+		}
+	} else {
+		fprintf(stdout, "[%.4d] | Error! Couldn't receive data.\n", threadId);
+        fflush(stdout);
+	}
+
+	commOps.close(&localSocket);
+    commOps.close(&remoteSocket);
+	threadExit(NULL);
+}
 
 void  initSharedData() {
-    mutex_remote = mutexInit();
     mutex_list_messages = mutexInit();
 
     initList(&messages);
     initList(&contacts);
     initList(&groups);
 
-    if(mutex_remote == NULL || mutex_list_messages == NULL) {
-        mutexDestroy(mutex_remote);
+    threadCount = 0;
+
+    //TODO free nas listas
+    if(mutex_list_messages == NULL) {
         mutexDestroy(mutex_list_messages);
         exit(-1);
     }

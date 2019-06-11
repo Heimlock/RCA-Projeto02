@@ -40,6 +40,12 @@ void    initTerminal() {
     __fpurge(stdin);
 
     noResponse(logIn, NULL);
+    /* 
+     *  TODO - criar a thread de receive message/file
+     *    
+     *  As funções estão feitas no clientFunctions.c (newReceiver(), receiveFromPeer())
+     *  Adaptar código do feature/Rodrigo
+     */
     do {
         option = Error;
         option = mainMenu();
@@ -47,8 +53,10 @@ void    initTerminal() {
             case DirectMessage: {
                 char peerId[10];
                 Message_t *msg;
+                User_t  *user;
                 directMessage(userId, &peerId, &msg);
-                //  Send Text Message
+                user = requestClient(peerId);
+                sendMessagePeer(user->addr, (*msg));
                 enter2Continue();
                 break;
             }
@@ -73,10 +81,10 @@ void    initTerminal() {
             case DirectFile: {
                 char peerId[10];
                 File_t *file;
+                User_t *user;
                 directFile(userId, &peerId, &file);
-                //  Send File Message
-                fprintf(stdout, "Send File Message\n");
-                fflush(stdout);
+                user = requestClient(peerId);
+                sendFilePeer(user->addr, (*file));
                 enter2Continue();
                 break;
             }

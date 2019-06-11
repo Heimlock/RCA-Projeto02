@@ -17,45 +17,37 @@
 
 #ifndef VARS_INIT
 #define VARS_INIT
-    struct commFacade_t     localPeer;
-    struct commFacade_t     remotePeer;
-
     char* ip;
     int port;
     UserState state;
     char userId[10];
+    int  threadCount;
 
     struct LinkedListHead   *messages;
     struct LinkedListHead   *contacts;
     struct LinkedListHead   *groups;
     pthread_mutex_t  *mutex_list_messages;
-    pthread_mutex_t  *mutex_remote;
 #else
-    extern struct commFacade_t      localPeer;
-    extern struct commFacade_t      remotePeer;
-
     extern char* ip;
     extern int port;
     extern UserState state;
     extern char userId[10];
+    extern int threadCount;
 
     extern struct LinkedListHead   *messages;
     extern struct LinkedListHead   *contacts;
     extern struct LinkedListHead   *groups;
     extern pthread_mutex_t  *mutex_list_messages;
-    extern pthread_mutex_t  *mutex_remote;
-    extern int whatsappCount;
 #endif
 
 void    connectToServer(char *, int);
 void    logIn();
 void    logOut();
-User_t* requestClient(char* ip, int port, char* peerId);
+User_t* requestClient(char*);
 
-void    connectToClient(struct User_t *, char *);
-void    *whatsapp(void *);
-void    receiveFromClient(struct commFacade_t);
-void    sendToClient(struct commFacade_t, char *);
+void    newReceiver();
+void    *receiveFromPeer(void *);
+void    sendMessagePeer(struct sockaddr_in, struct Message_t);
+void    sendFilePeer(struct sockaddr_in, struct File_t);
 
-void    readMessage();
 void    initSharedData();
