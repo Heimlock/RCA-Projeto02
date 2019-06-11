@@ -49,4 +49,9 @@ void    groupFile(char* userId, char** groupId, File_t** file);
 void    getString(char* inputStr, char** id, int maxStrLen);
 void    enter2Continue();
 
+void    *sendDirectMessage();
+void    *sendGroupMessage();
+void    *sendDirectFile();
+void    *sendGroupFile();
+
 #endif

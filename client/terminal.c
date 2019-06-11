@@ -45,58 +45,22 @@ void    initTerminal() {
         option = mainMenu();
         switch (option) {
             case DirectMessage: {
-                char peerId[10];
-                Message_t *msg;
-                User_t  *user;
-                directMessage(userId, &peerId, &msg);
-                user = requestClient(peerId);
-                sendMessagePeer(user->addr, (*msg));
+                noResponse(sendDirectMessage, NULL);
                 enter2Continue();
                 break;
             }
             case GroupMessage: {
-                char groupId[10];
-                Message_t *msg;
-                LinkedListNode* groupNode;
-                groupMessage(userId, &groupId, &msg);
-                groupNode = getNode(*groups, groupId);
-                if(groupNode != NULL) {
-                    //  Send Message For Each Node
-                    fprintf(stdout, "Send Message For Each Node\n");
-                    fflush(stdout);
-                    enter2Continue();
-                } else {
-                    fprintf(stderr, "Group not Found.\n");
-                    fflush(stderr);
-                }
+                noResponse(sendGroupMessage, NULL);
                 enter2Continue();
                 break;
             }
             case DirectFile: {
-                char peerId[10];
-                File_t *file;
-                User_t *user;
-                directFile(userId, &peerId, &file);
-                user = requestClient(peerId);
-                sendFilePeer(user->addr, (*file));
+                noResponse(sendDirectFile, NULL);
                 enter2Continue();
                 break;
             }
             case GroupFile: {
-                char groupId[10];
-                File_t *file;
-                User_t *userGroup;
-                
-                LinkedListNode* groupNode;
-                groupFile(userId, &groupId, &file);
-                //  Send File Message
-                groupNode = getNode(*groups, groupId);
-                if(groupNode != NULL) {
-                    
-                } else {
-                    fprintf(stderr, "Group not Found.\n");
-                    fflush(stderr);
-                }
+                noResponse(sendGroupFile, NULL);
                 enter2Continue();
                 break;
             }
@@ -330,4 +294,70 @@ void enter2Continue() {
     fflush(stdout);
     getchar();
     __fpurge(stdin);
+}
+
+/*
+ *  Send dos Inputs
+ */
+
+void   *sendDirectMessage(){
+    char peerId[10];
+    Message_t *msg;
+    User_t  *user;
+
+    directMessage(userId, &peerId, &msg);
+    user = requestClient(peerId);
+    sendMessagePeer(user->addr, (*msg));
+
+    threadExit(NULL);
+}
+
+void   *sendGroupMessage(){
+    char groupId[10];
+    Message_t *msg;
+    LinkedListNode* groupNode;
+    
+    groupMessage(userId, &groupId, &msg);
+    groupNode = getNode(*groups, groupId);
+    if(groupNode != NULL) {
+        //  Send Message For Each Node
+        fprintf(stdout, "Send Message For Each Node\n");
+        fflush(stdout);
+    } else {
+        fprintf(stderr, "Group not Found.\n");
+        fflush(stderr);
+    }
+    
+    threadExit(NULL);
+}
+
+void   *sendDirectFile(){
+    char peerId[10];
+    File_t *file;
+    User_t *user;
+    
+    directFile(userId, &peerId, &file);
+    user = requestClient(peerId);
+    sendFilePeer(user->addr, (*file));
+
+    threadExit(NULL);
+}
+
+void   *sendGroupFile(){
+    char groupId[10];
+    File_t *file;
+    User_t *userGroup;
+                
+    LinkedListNode* groupNode;
+    groupFile(userId, &groupId, &file);
+    //  Send File Message
+    groupNode = getNode(*groups, groupId);
+    if(groupNode != NULL) {
+                    
+    } else {
+        fprintf(stderr, "Group not Found.\n");
+        fflush(stderr);
+    }
+
+    threadExit(NULL);
 }
