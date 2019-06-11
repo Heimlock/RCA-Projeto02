@@ -30,12 +30,16 @@ int main(int argc, char const *argv[]) {
         exit(-1);
     }
 
+    //Inicia váriaveis globais
     initSharedData();
     ip = argv[1];
     port = atoi(argv[2]);
-
     state = Online;
+    
+    //Cria as threads que recebem mensagens
     noResponse(createReceiver, NULL);
+
+    //Inicia a interface para o usuário
     initTerminal();
     return 0;
 }

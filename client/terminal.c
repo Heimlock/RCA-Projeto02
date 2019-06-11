@@ -33,6 +33,7 @@
 void    initTerminal() {
     MenuItem option = -1;
 
+
     fprintf(stdout, "Enter with your 9 digit ID\n");
     fprintf(stdout, "UserId: ");
     fflush(stdout);
@@ -45,22 +46,22 @@ void    initTerminal() {
         option = mainMenu();
         switch (option) {
             case DirectMessage: {
-                noResponse(sendDirectMessage, NULL);
+                waitResponse(sendDirectMessage, NULL);
                 enter2Continue();
                 break;
             }
             case GroupMessage: {
-                noResponse(sendGroupMessage, NULL);
+                waitResponse(sendGroupMessage, NULL);
                 enter2Continue();
                 break;
             }
             case DirectFile: {
-                noResponse(sendDirectFile, NULL);
+                waitResponse(sendDirectFile, NULL);
                 enter2Continue();
                 break;
             }
             case GroupFile: {
-                noResponse(sendGroupFile, NULL);
+                waitResponse(sendGroupFile, NULL);
                 enter2Continue();
                 break;
             }
@@ -171,7 +172,7 @@ void    contactsSubMenu () {
  */
 
 void    printHeader() {
-    system("clear");
+    //system("clear"); //FIXME
     fprintf(stdout, "========================================\n");
     fprintf(stdout, "----------------WhatsP2P----------------\n");
     fprintf(stdout, "========================================\n");
