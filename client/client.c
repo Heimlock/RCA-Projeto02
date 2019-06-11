@@ -1,4 +1,4 @@
-﻿
+
 /*
  *		Redes de Computadores A
  *      Projeto 02 - WhatsAp2p, 
@@ -225,12 +225,7 @@ int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | ========================================\n", getpid());
     fflush(stdout);
 
-    if(commOps.initClient(&localSend, 0) < 0) {
-        fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
-        fflush(stderr);
-        exit(-2);
-    }
-    if(commOps.connect(&localSend, &remoteSend, ip, port) < 0) { //ServerPort, atoi(argv[2]), definido como 5000
+    if(commOps.connect(&localSend, &remoteSend, 0, ip, port) < 0) { //ServerPort, atoi(argv[2]), definido como 5000
         fprintf(stderr, "[%d] | Error! Connect to Server Socket!\n", getpid());
         fflush(stderr);
         exit(-2);
@@ -258,14 +253,7 @@ int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | ========================================\n", getpid());
     fflush(stdout);
 
-    if(commOps.initClient(&localSend, 0) < 0) {
-
-    //if((commOps.initClient(&localSend, 0)) < 0) {
-        fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
-        fflush(stderr);
-        exit(-2);
-    }
-    if(commOps.connect(&localSend, &remoteSend, ip, port) < 0) { //ServerPort, atoi(argv[2]), definido como 5000
+    if(commOps.connect(&localSend, &remoteSend, 0, ip, port) < 0) { //ServerPort, atoi(argv[2]), definido como 5000
         fprintf(stderr, "[%d] | Error! Connect to Server Socket!\n", getpid());
         fflush(stderr);
         exit(-2);
@@ -304,12 +292,7 @@ int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | ========================================\n", getpid());
     fflush(stdout);
 
-    if(commOps.initClient(&localSend, 0) < 0) {
-        fprintf(stderr, "[%d] | Error! Init Socket Client!\n", getpid());
-        fflush(stderr);
-        exit(-2);
-    }
-    if(commOps.connect(&localSend, &remoteSend, ip, port) < 0) {
+    if(commOps.connect(&localSend, &remoteSend, 0, ip, port) < 0) {
         fprintf(stderr, "[%d] | Error! Connect to Server Socket!\n", getpid());
         fflush(stderr);
         exit(-2);

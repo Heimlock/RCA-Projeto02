@@ -13,6 +13,8 @@
 #ifndef Message_Def
 #define Message_Def
 
+#define SenderId_Len 9
+
 typedef struct Message_t {
     char*   senderId;
     int     length;

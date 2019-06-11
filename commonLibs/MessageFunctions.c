@@ -15,7 +15,11 @@
 
 void newMessage(Message_t** message, char* senderId, int length, void* data) {
     (*message) = (Message_t*) malloc(sizeof(Message_t));
-    memcpy((*message)->senderId, senderId, UserId_Len);
+
+    (*message)->senderId = (char *) malloc((SenderId_Len + 1) * sizeof(char));
+    memcpy((*message)->senderId, senderId, SenderId_Len);
+    (*message)->senderId[SenderId_Len] = '\0';
+
     (*message)->length = length;
     (*message)->data = malloc(length);
     memcpy((*message)->data, data, length);
@@ -25,13 +29,13 @@ void newMessage(Message_t** message, char* senderId, int length, void* data) {
 }
 
 char*   message2Bytes(Message_t message) {
-    int     dataSize = UserId_Len + sizeof(int) + message.length;
+    int     dataSize = SenderId_Len + sizeof(int) + message.length;
     int     offset = 0;
     void*   dataOut = malloc(dataSize);
     offset  = 0;
 
-    memcpy(dataOut + offset, message.senderId,   UserId_Len);
-    offset += UserId_Len;
+    memcpy(dataOut + offset, message.senderId,   SenderId_Len);
+    offset += SenderId_Len;
 
     memcpy(dataOut + offset, &message.length, sizeof(int));
     offset += sizeof(int);
@@ -46,8 +50,10 @@ void bytes2Message(Message_t**  message, char* data) {
     int     offset;
     offset  = 0;
 
-    memcpy((*message)->senderId,  data + offset, UserId_Len);
-    offset += UserId_Len;
+    (*message)->senderId = (char *) malloc((SenderId_Len + 1) * sizeof(char));
+    memcpy((*message)->senderId,  data + offset, SenderId_Len);
+    (*message)->senderId[SenderId_Len] = '\0';
+    offset += SenderId_Len;
 
     memcpy(&(*message)->length,data + offset, sizeof(int));
     offset += sizeof(int);

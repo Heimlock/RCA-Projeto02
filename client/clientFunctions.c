@@ -11,6 +11,7 @@
  */
 
  #include "./client.h"
+ #include "../commonLibs/MessageData.h"
 
  void connectToServer(char *id){
     char ip[10] = "localhost";
@@ -18,7 +19,7 @@
     User_t *user;
 
     while(connection){
-        if((commOps.connect(&localSend, &remoteSend, ip, port)) < 0){
+        if((commOps.connect(&localSend, &remoteSend, 0, ip, port)) < 0){
             fprintf(stderr, "[%.4d] | Error! Client couldn't connect to server.\n", getpid());
             fflush(stderr);
             perror("connectToServer");
@@ -256,5 +257,120 @@ void  initSharedData() {
         mutexDestroy(mutex_list_messages);
         commOps.close(&localSend);
         exit(-2);
+    }
+}
+
+
+int canContinueClient() {
+    int rtnValue;
+    if(allowNewConnections) {
+        rtnValue = 1;
+    } else {
+        rtnValue = 0;
+    }
+    return rtnValue;
+}
+
+void *mandarMensagem(void *arg) {
+	char ip[9] = "localhost"; //por enquanto é sempre localhost
+    int PortaDestino;
+    int saida = 0;
+    struct commFacade_t     localSend;
+
+    while(saida != 1) {
+        fprintf(stdout, "[%.4d] | Mandar mensagem Iniciado\n", getpid());
+        fprintf(stdout, "[%.4d] | Porta destino da conexao:\n", getpid());
+        fflush(stdout);
+        fflush(stdin);
+        scanf("%d", &PortaDestino);
+
+        //Se digitar 0 na porta Destino, sair do while, fechar thread.
+        if(PortaDestino == 0) {
+            saida = 1;
+            break;
+        }
+
+        //Criação do socket que envia mensagens, tipo cliente
+        fprintf(stdout, "\n");
+        fprintf(stdout, "[%d] | Socket de Enviamento\n", getpid());
+        fflush(stdout);
+
+        //Conect com a PortaDestino
+        if((commOps.connect(&localSend, &remoteSend, 0, ip, PortaDestino)) < 0) {
+            fprintf(stderr, "[%.4d] | Error! Client couldn't connect to peer.\n", getpid());
+            fflush(stderr);
+            perror("connectToPeer");
+            exit(-3);
+        }
+
+        fprintf(stdout, "[%.4d] | Mandando mensagem\n", getpid());
+        fflush(stdout);
+
+        //Mandar dados
+        char *msg = "Quidquid latine dictum sit, altum viditur.";
+        char *userId = "982660910";
+        int len, bytes_sent;
+        Message_t *message;
+        len = strlen(msg);
+
+        newMessage(&message, userId, len, msg);
+        if(sendMessage(&localSend, *message) < 0) {
+            fprintf(stderr, "[%.4d] | Error! On send Message.\n", getpid());
+            fflush(stderr);
+            exit(-3);
+        }
+
+        //Fechar Socket
+        fprintf(stdout, "[%.4d] | Mensagem enviada, fechando socket\n", getpid());
+        fflush(stdout);
+        close_Socket(&localSend);
+    }
+	threadExit(NULL);
+}
+
+
+void *attendClientPeer(void *arg) {
+	int threadId =  (int)arg;
+    struct SPDT_Command  *command;
+	struct commFacade_t  innerRemote;
+
+    fprintf(stdout, "[%.4d] | Attend Peer Init\n", threadId);
+    fflush(stdout);
+
+	memcpy(&innerRemote, &remoteRec, sizeof(commFacade_t));
+    mutexUnlock(mutex_remote_Rec);
+
+    //Receber data
+    Message_t *message;
+    receiveStruct(&innerRemote, SendText, &message);
+    printMsg(*message);
+
+    close_Socket(&innerRemote);
+	threadExit(NULL);
+}
+
+void newConnectionClient() {
+
+    if((commOps.accept(&localRec, &remoteRec)) < 0) {
+        fprintf(stderr, "[%.4d] | Error! Client couldn't accept connection.\n", getpid());
+        fflush(stderr);
+        perror("newConnection");
+        exit(-4);
+    }
+
+    if(allowNewConnections) {
+        fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
+        fflush(stdout);
+
+        childCount++;
+        mutexLock(mutex_remote_Rec);
+
+        if(noResponse(attendClientPeer, childCount) < 0) {
+            fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
+            fflush(stderr);
+            perror("newConnection");
+        }
+    } else {
+        commOps.close(&remoteRec);
     }
 }
