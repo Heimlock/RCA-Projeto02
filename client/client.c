@@ -1,4 +1,4 @@
-﻿
+
 /*
  *		Redes de Computadores A
  *      Projeto 02 - WhatsAp2p, 
@@ -16,6 +16,143 @@
 #include <unistd.h>
 #include "./client.h"
 #include "../commonLibs/UserData.h"
+
+int canContinueClient() {
+    int rtnValue;
+    if(allowNewConnections) {
+        rtnValue = 1;
+    } else {
+        rtnValue = 0;
+    }
+    return rtnValue;
+}
+
+void *mandarMensagem(void *arg) {
+	char ip[9] = "localhost"; //por enquanto é sempre localhost
+    int PortaDestino;
+    int saida = 0;
+
+    while(saida != 1){
+        fprintf(stdout, "[%.4d] | Mandar mensagem Iniciado\n", getpid());
+        fprintf(stdout, "[%.4d] | Porta destino da conexao:\n", getpid());
+        fflush(stdout);
+        scanf("%d", &PortaDestino);
+        
+        //Se digitar 0 na porta Destino, sair do while, fechar thread.
+        if(PortaDestino == 0){
+            saida = 1;
+            break;
+        }
+
+    
+        //Criação do socket que envia mensagens, tipo cliente
+        fprintf(stdout, "\n");
+        fprintf(stdout, "[%d] | Socket de Enviamento\n", getpid());
+        fflush(stdout);
+        if(commOps.initClient(&localSend, 0) < 0) {
+            fprintf(stderr, "[%d] | Error! Init Socket de Enviamento!\n", getpid());
+            fflush(stderr);
+            exit(-2);
+        }
+
+        //Conect com a PortaDestino
+        if((commOps.connect(&localSend, &remoteSend, ip, PortaDestino)) < 0){
+            fprintf(stderr, "[%.4d] | Error! Client couldn't connect to peer.\n", getpid());
+            fflush(stderr);
+            perror("connectToPeer");
+            exit(-3);
+        }
+
+        fprintf(stdout, "[%.4d] | Mandando mensagem\n", getpid());
+        fflush(stdout);
+    
+        //Mandar dados
+        //int send(int sockfd, const void *msg, int len, int flags); 
+
+        //Mandar string
+        char *msg = "Beej was here!";
+        int len, bytes_sent;          
+        len = strlen(msg);
+        bytes_sent = send(localSend.socketDesc, msg, len, 0);
+
+        //Mandar imagem
+        struct File_t* file;
+        disk2Memory(&file, "go.png", "998673533");
+        sendFile(&localSend, *file);
+        //Fim de Mandar dados
+
+        //Fechar Socket
+        fprintf(stdout, "[%.4d] | Mensagem enviada, fechando socket\n", getpid());
+        fflush(stdout);
+        close_Socket(&localSend);
+    }
+
+	threadExit(NULL);
+}
+
+
+void *attendClientPeer(void *arg) {
+	int threadId =  (int)arg;
+    struct SPDT_Command  *command;
+	struct commFacade_t  innerRemote;
+
+    fprintf(stdout, "[%.4d] | Attend Peer Init\n", threadId);
+    fflush(stdout);
+
+	memcpy(&innerRemote, &remoteRec, sizeof(commFacade_t));
+    mutexUnlock(mutex_remote_Rec);
+
+    //Receber dados
+    //int bytesRecebidos = recv(socketDescConexao, void *buf, int len, 0);
+    
+    //Receber String
+    #define MAXDATASIZE 100 // max number of bytes we can get at once
+    char buf[MAXDATASIZE];
+    int numbytes;
+    if ((numbytes = recv(innerRemote.socketDesc, buf, MAXDATASIZE-1, 0)) < 0) {
+        perror("recv");
+        exit(1);    
+    }
+    buf[numbytes] = '\0';    
+    printf("client: received '%s'\n",buf);
+
+    //Receber imagem
+    struct File_t* file;
+    receiveStruct(&innerRemote, SendFile, &file);
+    file->name[0] = 'R';
+    memory2Disk(*file);
+    //Fim de Receber dados
+
+    //Fechar socket
+    close_Socket(&innerRemote);
+	threadExit(NULL);
+}
+
+void newConnectionClient() {
+
+    if((commOps.accept(&localRec, &remoteRec)) < 0){
+        fprintf(stderr, "[%.4d] | Error! Client couldn't accept connection.\n", getpid());
+        fflush(stderr);
+        perror("newConnection");
+        exit(-4);
+    }
+
+    if(allowNewConnections) {
+        fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
+        fflush(stdout);
+                    
+        childCount++;
+        mutexLock(mutex_remote_Rec);
+
+        if(noResponse(attendClientPeer, childCount) < 0) {
+            fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
+            fflush(stderr);
+            perror("newConnection");
+        }
+    }else{
+        commOps.close(&remoteRec);
+    }
+}
 
 int main(int argc, char const *argv[]) {
     //Inicia o cliente
