@@ -122,13 +122,6 @@ User_t* requestClient(char* peerId) {
     return NULL;
 }
 
-void    createReceiver(){
-    
-    do{
-        newReceiver();        
-    }while(canContinueReceiver());
-}
-
 int    canContinueReceiver(){
     int rtnValue;
     
@@ -142,12 +135,77 @@ int    canContinueReceiver(){
 
 void  	newReceiver(){
     threadCount++;
-    
-    if((waitResponse(receiveFromPeer, threadCount)) == NULL) {
-        fprintf(stderr, "[%.4d] | Error! Failed to create thread.\n", getpid());
+
+    if((commOps.accept(&local, &remote)) < 0) {
+        fprintf(stderr, "[%.4d] | Error! Client couldn't accept connection.\n", getpid());
         fflush(stderr);
         perror("newConnection");
+        exit(-4);
     }
+
+    if(allowNewConnections) {
+        fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
+        fflush(stdout);
+
+        //mutexLock(mutex_remote_Rec);
+
+        if(noResponse(attendClientPeer, threadCount) < 0) {
+            fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
+            fflush(stderr);
+            perror("newConnection");
+        }
+    } else {
+        commOps.close(&remote);
+    }
+}
+
+void *attendClientPeer(void *arg) {
+	int threadId =  (int)arg;
+    //struct SPDT_Command  *command;
+	struct commFacade_t  innerRemote;
+
+    int  dataType;
+    void *dataReceived;
+    Message_t *message;
+    File_t *file;
+
+    fprintf(stdout, "[%.4d] | Attend Peer Init\n", threadId);
+    fflush(stdout);
+
+
+	memcpy(&innerRemote, &remote, sizeof(commFacade_t));
+    //mutexUnlock(mutex_remote_Rec);
+
+    dataType = receiveStruct(&innerRemote, &dataReceived);
+
+    if(dataReceived != NULL){
+		switch(dataType){
+	    	case SendText: {
+				message = (Message_t *) dataReceived;
+				addNode(&messages, message->senderId, message->length, message->data);
+				free(message);
+				break;
+            }	
+
+	    	case SendFile: {
+				file = (File_t *) dataReceived;
+				memory2Disk((*file));
+				free(file);	
+				break;
+			}
+			default: {
+				fprintf(stdout, "[%.4d] | Type not expected.\n", threadId);
+         			fflush(stdout);
+         			break; 
+			}
+		}
+	} else {
+		fprintf(stdout, "[%.4d] | Error! Couldn't receive data.\n", threadId);
+        fflush(stdout);
+	}
+
+	commOps.close(&innerRemote);
+	threadExit(NULL);
 }
 
 void 	sendMessagePeer(struct sockaddr_in address, struct Message_t message){
@@ -196,78 +254,4 @@ void 	sendFilePeer(struct sockaddr_in address, struct File_t file){
 
     commOps.close(&localPeer);
     commOps.close(&remotePeer);
-}
-
-void 	*receiveFromPeer(void *args){
-    int threadId = (int)args;
-    struct commFacade_t localSocket, remoteSocket;
-      
-    void *dataReceived;
-    int  dataType;
-      
-    Message_t *message;
-    File_t *file;
-
-    if((commOps.initServer(&localSocket, 0)) < 0){
-        fprintf(stderr, "[%d] | Error! Init Socket de Client Receiver!\n", getpid());
-        fflush(stderr);
-        perror("receiveFromPeer");
-	    threadExit(NULL);    
-    }
-      	
-	if((commOps.accept(&localSocket, &remoteSocket)) < 0) {
-        fprintf(stderr, "[%.4d] | Error! Client couldn't accept connection.\n", threadId);
-        fflush(stderr);
-        perror("receiveFromPeer");
-        threadExit(NULL);
-    }
-
-	dataType = receiveStruct(&remoteSocket, &dataReceived);
-
-	if(dataReceived != NULL){
-		switch(dataType){
-	    	case SendText: {
-				message = (Message_t *) dataReceived;
-				addNode(&messages, message->senderId, message->length, message->data);
-				free(message);
-				break;
-            }	
-
-	    	case SendFile: {
-				file = (File_t *) dataReceived;
-				memory2Disk((*file));
-				free(file);	
-				break;
-			}
-			default: {
-				fprintf(stdout, "[%.4d] | Type not expected.\n", threadId);
-         			fflush(stdout);
-         			break; 
-			}
-		}
-	} else {
-		fprintf(stdout, "[%.4d] | Error! Couldn't receive data.\n", threadId);
-        fflush(stdout);
-	}
-
-	commOps.close(&localSocket);
-    commOps.close(&remoteSocket);
-	threadExit(NULL);
-}
-
-void  initSharedData() {
-    mutex_list_messages = mutexInit();
-
-    initList(&messages);
-    initList(&contacts);
-    initList(&groups);
-
-    threadCount = 0;
-    allowNewConnections = 1;
-
-    //TODO free nas listas
-    if(mutex_list_messages == NULL) {
-        mutexDestroy(mutex_list_messages);
-        exit(-1);
-    }
 }

@@ -28,6 +28,9 @@
     struct LinkedListHead   *contacts;
     struct LinkedListHead   *groups;
     pthread_mutex_t  *mutex_list_messages;
+
+    struct commFacade_t local;
+    struct commFacade_t remote;
 #else
     extern char* ip;
     extern int port;
@@ -40,6 +43,9 @@
     extern struct LinkedListHead   *contacts;
     extern struct LinkedListHead   *groups;
     extern pthread_mutex_t  *mutex_list_messages;
+
+    extern struct commFacade_t local;
+    extern struct commFacade_t remote;
 #endif
 
 void    connectToServer(char *, int);

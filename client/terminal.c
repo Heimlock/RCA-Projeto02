@@ -30,23 +30,22 @@
 /*
  * noResponse Thread
  */
-void    initTerminal() {
+void    *initTerminal() {
     MenuItem option = -1;
 
-
-    fprintf(stdout, "Enter with your 9 digit ID\n");
-    fprintf(stdout, "UserId: ");
-    fflush(stdout);
-    fgets(userId, (UserId_Len + 1) * sizeof(char), stdin);
-    __fpurge(stdin);
-
-    noResponse(logIn, NULL);
     do {
         option = Error;
         option = mainMenu();
         switch (option) {
             case DirectMessage: {
-                waitResponse(sendDirectMessage, NULL);
+                char peerId[10];;
+                Message_t *msg;
+                User_t  *user;
+
+                directMessage(userId, &peerId, &msg);
+                user = requestClient(peerId);
+                sendMessagePeer(user->addr, (*msg));
+                
                 enter2Continue();
                 break;
             }
