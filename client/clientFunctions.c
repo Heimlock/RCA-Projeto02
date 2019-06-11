@@ -290,6 +290,20 @@ void *mandarMensagem(void *arg) {
         if(PortaDestino == 0) {
             saida = 1;
             break;
+        }else if(PortaDestino == 1){
+            //Se digitar 1, ler mensagens na lista ligada
+            
+            struct LinkedListNode* nodeMensagem = getNode(messages, 1);
+            char *msg = nodeMensagem->data;
+
+            //buf[numbytes] = '\0';    
+            printf("client: received '%s'\n",msg);
+            //Message_t *mensagem;
+            //mensagem.length = nodeMensagem->length;
+            //mensagem.data = nodeMensagem->data;
+            //mensagem.senderId = 10;
+            //printMsg(mensagem); 
+                        
         }
 
         //Criação do socket que envia mensagens, tipo cliente
@@ -332,8 +346,9 @@ void *mandarMensagem(void *arg) {
 
 
 void *attendClientPeer(void *arg) {
-	int threadId =  (int)arg;
-    struct SPDT_Command  *command;
+	//FIXME nao tem mutex
+    int threadId =  (int)arg;
+    struct SPDT_Command  *command; //FIXME essa variavel nao é usada? XD
 	struct commFacade_t  innerRemote;
 
     fprintf(stdout, "[%.4d] | Attend Peer Init\n", threadId);
@@ -346,6 +361,8 @@ void *attendClientPeer(void *arg) {
     Message_t *message;
     receiveStruct(&innerRemote, SendText, &message);
     printMsg(*message);
+    addNode(&messages, 1, sizeof(message), message);
+    //Fim de receber data
 
     close_Socket(&innerRemote);
 	threadExit(NULL);
