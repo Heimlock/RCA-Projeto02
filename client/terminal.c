@@ -1,7 +1,7 @@
 
 /*
  *		Redes de Computadores A
- *      Projeto 02 - WhatsP2P, 
+ *      Projeto 02 - WhatsP2P,
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
@@ -16,6 +16,13 @@
 #include "../commonLibs/MessageData.h"
 #include "../commonLibs/FileData.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <netinet/in.h>
+
 /*
  *  Logic
  */
@@ -23,55 +30,61 @@
 /*
  * noResponse Thread
  */
-void    *init(void* arg) {
-    int option = -1;
-    char userId[10];
+void    initTerminal() {
+    MenuItem option = -1;
 
     fprintf(stdout, "Enter with your 9 digit ID\n");
     fprintf(stdout, "UserId: ");
     fflush(stdout);
     fgets(userId, (UserId_Len + 1) * sizeof(char), stdin);
-    fflush(stdin);
+    __fpurge(stdin);
 
-    //  LogIn
-
+    noResponse(logIn, NULL);
     do {
-        option = -1;
+        option = Error;
         option = mainMenu();
         switch (option) {
             case DirectMessage: {
                 char peerId[10];
-                Message_t *directMsg;
-                directMessage(userId, &peerId, &directMsg);
+                Message_t *msg;
+                directMessage(userId, &peerId, &msg);
                 //  Send Text Message
+                enter2Continue();
                 break;
             }
             case GroupMessage: {
                 char groupId[10];
-                Message_t *groupMsg;
+                Message_t *msg;
                 LinkedListNode* groupNode;
-                groupMessage(userId, &groupId, &groupMsg);
+                groupMessage(userId, &groupId, &msg);
                 groupNode = getNode(*groups, groupId);
                 if(groupNode != NULL) {
                     //  Send Message For Each Node
+                    fprintf(stdout, "Send Message For Each Node\n");
+                    fflush(stdout);
+                    enter2Continue();
                 } else {
                     fprintf(stderr, "Group not Found.\n");
                     fflush(stderr);
                 }
+                enter2Continue();
                 break;
             }
             case DirectFile: {
                 char peerId[10];
-                File_t *directFile;
-                directFile(userId, &peerId, &directFile);
+                File_t *file;
+                directFile(userId, &peerId, &file);
                 //  Send File Message
+                fprintf(stdout, "Send File Message\n");
+                fflush(stdout);
+                enter2Continue();
                 break;
             }
             case GroupFile: {
-                char peerId[10];
-                File_t *groupFile;
+                char groupId[10];
+                File_t *file;
                 LinkedListNode* groupNode;
-                groupFile(userId, &peerId, &groupFile);
+                groupFile(userId, &groupId, &file);
                 //  Send File Message
                 groupNode = getNode(*groups, groupId);
                 if(groupNode != NULL) {
@@ -80,6 +93,7 @@ void    *init(void* arg) {
                     fprintf(stderr, "Group not Found.\n");
                     fflush(stderr);
                 }
+                enter2Continue();
                 break;
             }
             case Inbox: {
@@ -93,12 +107,13 @@ void    *init(void* arg) {
                             llOps.remove(messages, msgNode->key);
                             auxMsg = msgNode->data;
                             printMsg(*auxMsg);
-                            system("pause");    //  Avaliar necessidade
+                            enter2Continue();
                         }
                     } while(msgNode != NULL);
                 } else {
                     fprintf(stderr, "No Messages to Read.\n");
                     fflush(stderr);
+                    enter2Continue();
                 }
                 mutexUnlock(mutex_list_messages);
                 break;
@@ -113,16 +128,18 @@ void    *init(void* arg) {
             default: {
                 fprintf(stderr, "Not a Valid Option!\n");
                 fflush(stderr);
+                __fpurge(stdin);
+                enter2Continue();
                 break;
             }
         }
-    }while(!option == Exit);
-    //  LogOut
-    threadExit(NULL);
+    }while(option != Exit);
+    waitResponse(logOut, NULL);
+    state = Offline;
 }
 
 void    contactsSubMenu () {
-    int option;
+    MenuItem option;
     do {
         option = -1;
         option = displayContactsMenu();
@@ -157,7 +174,7 @@ void    contactsSubMenu () {
             }
             case NewGroup: {
                 //  Receive GroupId
-                //  Do 
+                //  Do
                 //  Receive UserId
                 //  While True
                 fprintf(stdout, "Not yet Implemented!\n");
@@ -190,8 +207,9 @@ void    printHeader() {
     fprintf(stdout, "========================================\n");
     fprintf(stdout, "----------------WhatsP2P----------------\n");
     fprintf(stdout, "========================================\n");
+    fprintf(stdout, "UserId: %s\n", userId);
     mutexLock(mutex_list_messages);
-    fprintf(stdout, "Inbox: %d\n", messages->size);
+    fprintf(stdout, "Inbox.: %d\n", messages->size);
     mutexUnlock(mutex_list_messages);
     fflush(stdout);
 }
@@ -210,8 +228,9 @@ int     mainMenu() {
     fflush(stdout);
 
     int option;
+    __fpurge(stdin);
     scanf("%d", &option);
-    fflush(stdin);
+    __fpurge(stdin);
     return option;
 }
 
@@ -229,8 +248,9 @@ int     displayContactsMenu() {
     fflush(stdout);
 
     int option;
+    __fpurge(stdin);
     scanf("%d", &option);
-    fflush(stdin);
+    __fpurge(stdin);
     return option;
 }
 
@@ -240,12 +260,13 @@ int     displayContactsMenu() {
 void    directMessage(char* userId, char** peerId, Message_t** msg) {
     char messageText[80];
 
-    getString("PeerId: \n", peerId, (UserId_Len + 1) * sizeof(char));
+    getString("PeerId: ", peerId, (UserId_Len + 1) * sizeof(char));
 
     fprintf(stdout, "Message: ");
     fflush(stdout);
+
     fgets(messageText, MessageMaxSize * sizeof(char), stdin);
-    fflush(stdin);
+    __fpurge(stdin);
 
     newMessage(msg, userId, sizeof(messageText), messageText);
 }
@@ -253,38 +274,41 @@ void    directMessage(char* userId, char** peerId, Message_t** msg) {
 void    directFile(char* userId, char** peerId, File_t** file) {
     char filePath[FileName_Len];
 
-    getString("PeerId: \n", peerId, (UserId_Len + 1) * sizeof(char));
+    getString("PeerId: ", peerId, (UserId_Len + 1) * sizeof(char));
 
     fprintf(stdout, "File Path: ");
     fflush(stdout);
-    fgets(filePath, FileName_Len * sizeof(char), stdin);
-    fflush(stdin);
 
-    disk2Memory(file, filePath, char* userId);
+    fgets(filePath, FileName_Len * sizeof(char), stdin);
+    __fpurge(stdin);
+
+    disk2Memory(file, filePath, userId);
 }
 
-void    groupMessage(char* userId, char** groupId, Message_t* msg) {
+void    groupMessage(char* userId, char** groupId, Message_t** msg) {
     char messageText[80];
 
-    getString("GroupId: \n", groupId, (UserId_Len + 1) * sizeof(char));
+    getString("GroupId: ", groupId, (UserId_Len + 1) * sizeof(char));
 
     fprintf(stdout, "Message: ");
     fflush(stdout);
-    fgets(messageText, MessageMaxSize * sizeof(char), stdin);
-    fflush(stdin);
 
-    newMessage(&msg, userId, sizeof(messageText), messageText);
+    fgets(messageText, MessageMaxSize * sizeof(char), stdin);
+    __fpurge(stdin);
+
+    newMessage(msg, userId, sizeof(messageText), messageText);
 }
 
-void    groupFile(char* userId, char** groupId, File_t* file) {
+void    groupFile(char* userId, char** groupId, File_t** file) {
     char filePath[FileName_Len];
 
-    getString("GroupId: \n", groupId, (UserId_Len + 1) * sizeof(char));
+    getString("GroupId: ", groupId, (UserId_Len + 1) * sizeof(char));
 
     fprintf(stdout, "File Path: ");
     fflush(stdout);
+
     fgets(filePath, FileName_Len * sizeof(char), stdin);
-    fflush(stdin);
+    __fpurge(stdin);
 
     disk2Memory(file, filePath, userId);
 }
@@ -292,6 +316,14 @@ void    groupFile(char* userId, char** groupId, File_t* file) {
 void    getString(char* inputStr, char** id, int maxStrLen) {
     fprintf(stdout, inputStr);
     fflush(stdout);
+
     fgets(*id, maxStrLen, stdin);
-    fflush(stdin);
+    __fpurge(stdin);
+}
+
+void enter2Continue() {
+    fprintf(stdout, "Press Enter to continue.\n");
+    fflush(stdout);
+    getchar();
+    __fpurge(stdin);
 }

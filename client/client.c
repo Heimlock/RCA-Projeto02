@@ -1,7 +1,7 @@
 ﻿
 /*
  *		Redes de Computadores A
- *      Projeto 02 - WhatsAp2p, 
+ *      Projeto 02 - WhatsAp2p,
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "./client.h"
+#include "./terminal.h"
+#include "../commonLibs/ThreadManager.h"
 #include "../commonLibs/UserData.h"
 
 int main(int argc, char const *argv[]) {
@@ -29,6 +31,13 @@ int main(int argc, char const *argv[]) {
     }
 
     initSharedData();
-    connectToServer(argv[1], atoi(argv[2]));
+    //connectToServer(argv[1], atoi(argv[2]));
+    ip = argv[1];
+    port = atoi(argv[2]);
+
+    state = Online;
+    //  Command Handler
+    //  Terminal
+    initTerminal();
     return 0;
 }

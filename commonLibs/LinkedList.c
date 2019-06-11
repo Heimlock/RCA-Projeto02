@@ -1,13 +1,13 @@
 
 /*
  *		Redes de Computadores A
- *      Projeto 02 - WhatsAp2p, 
+ *      Projeto 02 - WhatsAp2p,
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
  *		Felipe Moreira Ferreira       RA: 16116469
  *
- *  Desenvolvimento dos Recursos Referentes a 
+ *  Desenvolvimento dos Recursos Referentes a
  *  manipulacao de Listas Ligadas
  */
 
@@ -148,6 +148,7 @@ int removeNode(LinkedListHead* head, char* key) {
  */
 LinkedListNode* getNode(LinkedListHead head, char* key) {
     LinkedListNode** actual;
+    int equals = 0;
 
     fprintf(stdout, "[getNode] | Init\n");
     fflush(stdout);
@@ -155,7 +156,8 @@ LinkedListNode* getNode(LinkedListHead head, char* key) {
     if(head.initialNode != NULL || head.size != 0) {
         actual = &head.initialNode;
         while (*actual) {
-            if(compareKeys((*actual)->key, key)) {
+            equals = compareKeys((*actual)->key, key);
+            if(equals) {
                 return (*actual);
             }
             actual = &(*actual)->next;
@@ -199,8 +201,12 @@ int compareKeys(char* keyOne, char* keyTwo) {
         fflush(stdout);
     #endif
 
-    for(int i; i< KEY_LEN; i++) {
-        if(keyOne[i] != keyTwo[i]) {
+    int key_1, key_2;
+
+    for(int i = 0; i < KEY_LEN; i++) {
+        key_1 = (int)keyOne[i];
+        key_2 = (int)keyTwo[i];
+        if(key_1 != key_2) {
             return 0;
         }
     }

@@ -1,7 +1,7 @@
 
 /*
  *		Redes de Computadores A
- *      Projeto 02 - WhatsAp2p, 
+ *      Projeto 02 - WhatsAp2p,
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
@@ -20,6 +20,11 @@
     struct commFacade_t     localPeer;
     struct commFacade_t     remotePeer;
 
+    char* ip;
+    int port;
+    UserState state;
+    char userId[10];
+
     struct LinkedListHead   *messages;
     struct LinkedListHead   *contacts;
     struct LinkedListHead   *groups;
@@ -28,6 +33,11 @@
 #else
     extern struct commFacade_t      localPeer;
     extern struct commFacade_t      remotePeer;
+
+    extern char* ip;
+    extern int port;
+    extern UserState state;
+    extern char userId[10];
 
     extern struct LinkedListHead   *messages;
     extern struct LinkedListHead   *contacts;
@@ -38,8 +48,8 @@
 #endif
 
 void    connectToServer(char *, int);
-void    logIn(char* ip, int port, char* id);
-void    logOut(char* ip, int port, char* id);
+void    logIn();
+void    logOut();
 User_t* requestClient(char* ip, int port, char* peerId);
 
 void    connectToClient(struct User_t *, char *);

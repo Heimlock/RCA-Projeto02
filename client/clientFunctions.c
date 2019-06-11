@@ -1,7 +1,7 @@
 
 /*
  *		Redes de Computadores A
- *      Projeto 02 - WhatsAp2p, 
+ *      Projeto 02 - WhatsAp2p,
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
@@ -30,7 +30,7 @@ void    connectToServer(char *ip, int port) {
         fprintf(stdout, "[%.4d] | Option: ", getpid());
         fflush(stdout);
 
-        scanf("%d", &command_type); 
+        scanf("%d", &command_type);
         fflush(stdin);
 
         fprintf(stdout, "\n[%.4d] | command_type: %d\n", getpid(), command_type);
@@ -70,7 +70,7 @@ void    connectToServer(char *ip, int port) {
     }
  }
 
-void    logIn(char* ip, int port, char* id) {
+void    logIn() {
     commFacade_t local, remote;
     struct SPDT_Command *command;
 
@@ -83,7 +83,7 @@ void    logIn(char* ip, int port, char* id) {
         exit(-1);
     }
 
-    newCommand(&command, LogIn, UserId_Len * sizeof(char), id);
+    newCommand(&command, LogIn, UserId_Len * sizeof(char), userId);
 
     if((sendCommand(&local, (*command))) < 0) {
         fprintf(stderr, "[logIn] | Error! Failed to send.\n");
@@ -94,7 +94,7 @@ void    logIn(char* ip, int port, char* id) {
     commOps.close(&remote);
  }
 
-void    logOut(char* ip, int port, char* id) {
+void    logOut() {
     commFacade_t local, remote;
     struct SPDT_Command *command;
 
@@ -107,7 +107,7 @@ void    logOut(char* ip, int port, char* id) {
         exit(-1);
     }
 
-    newCommand(&command, LogOut, UserId_Len*sizeof(char), id);
+    newCommand(&command, LogOut, UserId_Len*sizeof(char), userId);
 
     if((sendCommand(&local, (*command))) < 0) {
         fprintf(stderr, "[logOut] | Error! Failed to send.\n");
@@ -153,7 +153,7 @@ User_t* requestClient(char* ip, int port, char* peerId) {
  }
 
 void connectToClient(struct User_t *user, char *id){
-    char *ip; 
+    char *ip;
     int port;
 
     ip = inet_ntoa(user->addr.sin_addr);
@@ -214,7 +214,7 @@ void *whatsapp(void *args) {
                         break;
         }
     }
-    
+
     commOps.close(&innerRemote);
     commOps.close(&innerLocal);
 	threadExit(NULL);
@@ -233,7 +233,7 @@ void sendToClient(struct commFacade_t threadCommunication, char *id){
         fprintf(stderr, "[%d] | Error! Failed to send.\n", getpid());
         fflush(stderr);
         exit(-1);
-    }    
+    }
     free(message);
  }
 
@@ -264,8 +264,8 @@ void   readMessage(){
 		perror("readMessage");
     } else{
         while(messages->initialNode != NULL){
-            message =  (Message_t *) messages->initialNode->data; 
-            
+            message =  (Message_t *) messages->initialNode->data;
+
             fprintf(stdout, "Sender ID: %s\n", message->senderId);
             fflush(stdout);
 

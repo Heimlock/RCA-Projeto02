@@ -1,7 +1,7 @@
 
 /*
  *		Redes de Computadores A
- *      Projeto 02 - WhatsAp2p, 
+ *      Projeto 02 - WhatsAp2p,
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
@@ -10,7 +10,14 @@
  *  Biblioteca de Recursos Referentes ao Terminal
  */
 
-typedef enum ActionType {
+#ifndef Terminal_Def
+#define Terminal_Def
+
+#include "../commonLibs/MessageData.h"
+#include "../commonLibs/FileData.h"
+#include "../commonLibs/UserData.h"
+
+typedef enum MenuItem {
     //  Main Menu
     DirectMessage = 0x01,
     DirectFile = 0x02,
@@ -26,7 +33,20 @@ typedef enum ActionType {
     NewGroup = 0x0B,
     DeleteGroup = 0x0C,
     //  Generic
-    Exit = 0x63
-} ActionType;
+    Exit = 0x63,
+    Error = 0xFF
+} MenuItem;
 
-void    *init(void* arg);
+void    initTerminal();
+void    contactsSubMenu ();
+void    printHeader();
+int     mainMenu();
+int     displayContactsMenu();
+void    directMessage(char* userId, char** peerId, Message_t** msg);
+void    directFile(char* userId, char** peerId, File_t** file);
+void    groupMessage(char* userId, char** groupId, Message_t** msg);
+void    groupFile(char* userId, char** groupId, File_t** file);
+void    getString(char* inputStr, char** id, int maxStrLen);
+void    enter2Continue();
+
+#endif

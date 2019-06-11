@@ -1,7 +1,7 @@
 
 /*
  *		Redes de Computadores A
- *      Projeto 02 - WhatsAp2p, 
+ *      Projeto 02 - WhatsAp2p,
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
@@ -29,21 +29,21 @@
  */
 void* waitResponse(void* function, void* args) {
     pthread_t thread;
-    void** retValue = NULL;
+    void* retValue = malloc(sizeof(void*));
     if (pthread_create(&thread, NULL, function, args)) {
         fprintf(stderr, "[%d] | Error! Thread couldn't be Created.\n", getpid());
         fflush(stderr);
         perror("pthread_create");
         return NULL;
     }
-    if ((pthread_join(thread, retValue)) != 0) {
+    if ((pthread_join(thread, &retValue)) != 0) {
         perror("Error Joining a Thread.");
         fprintf(stderr, "[%d] | Error! Thread couldn't be Joined.\n", getpid());
         fflush(stderr);
         perror("pthread_join");
         return NULL;
     }
-    return (*retValue);
+    return retValue;
 }
 
 /*

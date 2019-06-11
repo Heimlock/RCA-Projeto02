@@ -1,7 +1,7 @@
 
 /*
  *		Redes de Computadores A
- *      Projeto 02 - WhatsAp2p, 
+ *      Projeto 02 - WhatsAp2p,
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
@@ -14,12 +14,17 @@
  #include "../commonLibs/LinkedList.h"
 
 void newConnection() {
+    fprintf(stdout, "[%.4d] | NewConnection Init!\n", getpid());
+    fflush(stdout);
     if((commOps.accept(&local, &remote)) < 0){
         fprintf(stderr, "[%.4d] | Error! Server couldn't accept connection.\n", getpid());
         fflush(stderr);
         perror("newConnection");
         exit(-4);
     }
+
+    fprintf(stdout, "[%.4d] | NewConnection Accepted!\n", getpid());
+    fflush(stdout);
 
     if(allowNewConnections) {
         fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
@@ -63,7 +68,7 @@ void *attendClient(void *arg) {
                 break;
             case RequestClient:
                 requestClient(innerRemote, command);
-                break; 
+                break;
             default:
                 fprintf(stderr, "[%.4d] | Error! Not a Valid Type. Type = %d\n", threadId, command->type);
                 fflush(stderr);
@@ -130,13 +135,17 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         mutexLock(mutex_list_users);
         userNode = getNode(*users, (char *) log_in->value);
         if(userNode != NULL) {
-            user = (User_t *) userNode->data;
-            user->addr = communication_data.socketAddr;
-        } else {
-            fprintf(stdout, "[%d] | New User\n", getpid());
+            fprintf(stdout, "[%d] | Update User\n", getpid());
             fflush(stdout);
+            user = (User_t *) userNode->data;
+            user->state = Online;
+            user->addr = communication_data.socketAddr;
+            printUser(*user);
+        } else {
             newUser(&user, (char*) log_in->value, communication_data.socketAddr, Online);
 			if(user != NULL) {
+                fprintf(stdout, "[%d] | New User Added\n", getpid());
+                fflush(stdout);
                 addNode(&users, user->id, UserData_Len, user);
                 free(user);
             } else {
@@ -154,16 +163,18 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
 }
 
 void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_out) {
-    struct  LinkedListNode *userNode;
-    struct  User_t** user;
+	struct User_t* user;
+    struct LinkedListNode *userNode;
 
-    mutexLock(mutex_list_users);
     if(log_out->value != NULL){
         mutexLock(mutex_list_users);
         userNode = getNode(*users, (char *) log_out->value);
         if(userNode != NULL) {
+            fprintf(stdout, "[%d] | User Offline\n", getpid());
+            fflush(stdout);
             user = (User_t *) userNode->data;
-            (*user)->state = Offline;
+            user->state = Offline;
+            printUser(*user);
         } else {
             fprintf(stderr, "[%d] | Error! User doens't exist.\n", getpid());
             fflush(stderr);
@@ -175,7 +186,6 @@ void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_
         fflush(stderr);
         perror("logOut");
     }
-    mutexUnlock(mutex_list_users);
 }
 
 void	requestClient(struct commFacade_t commData, struct SPDT_Command *requestCommand) {
@@ -188,7 +198,7 @@ void	requestClient(struct commFacade_t commData, struct SPDT_Command *requestCom
     if(userNode != NULL) {
       user = (User_t *) userNode->data;
       if(user != NULL){
-        if(user->state == Online) { 
+        if(user->state == Online) {
           if((sendUser(&commData, (*user))) < 0) {
             fprintf(stderr, "[%d] | Error! Failed to send user requested.\n", getpid());
             fflush(stderr);
