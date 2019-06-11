@@ -35,8 +35,7 @@ int main(int argc, char const *argv[]) {
     port = atoi(argv[2]);
 
     state = Online;
-    //  Command Handler
-    //  Terminal
+    noResponse(createReceiver, NULL);
     initTerminal();
     return 0;
 }

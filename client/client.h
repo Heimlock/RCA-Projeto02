@@ -22,6 +22,7 @@
     UserState state;
     char userId[10];
     int  threadCount;
+    int allowNewConnections;
 
     struct LinkedListHead   *messages;
     struct LinkedListHead   *contacts;
@@ -33,6 +34,7 @@
     extern UserState state;
     extern char userId[10];
     extern int threadCount;
+    extern int allowNewConnections;
 
     extern struct LinkedListHead   *messages;
     extern struct LinkedListHead   *contacts;
@@ -45,9 +47,11 @@ void    logIn();
 void    logOut();
 User_t* requestClient(char*);
 
+void    createReceiver();
 void    newReceiver();
 void    *receiveFromPeer(void *);
 void    sendMessagePeer(struct sockaddr_in, struct Message_t);
 void    sendFilePeer(struct sockaddr_in, struct File_t);
 
+int     canContinueReceiver();
 void    initSharedData();

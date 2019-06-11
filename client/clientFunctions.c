@@ -122,6 +122,24 @@ User_t* requestClient(char* peerId) {
     return NULL;
 }
 
+void    createReceiver(){
+    
+    do{
+        newReceiver();        
+    }while(canContinueReceiver());
+}
+
+int    canContinueReceiver(){
+    int rtnValue;
+    
+    if(allowNewConnections) {
+        rtnValue = 1;
+    } else {
+        rtnValue = 0;
+    }
+    return rtnValue;
+}
+
 void  	newReceiver(){
     threadCount++;
     
@@ -245,6 +263,7 @@ void  initSharedData() {
     initList(&groups);
 
     threadCount = 0;
+    allowNewConnections = 1;
 
     //TODO free nas listas
     if(mutex_list_messages == NULL) {

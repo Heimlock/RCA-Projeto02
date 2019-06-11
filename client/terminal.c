@@ -40,12 +40,6 @@ void    initTerminal() {
     __fpurge(stdin);
 
     noResponse(logIn, NULL);
-    /* 
-     *  TODO - criar a thread de receive message/file
-     *    
-     *  As funções estão feitas no clientFunctions.c (newReceiver(), receiveFromPeer())
-     *  Adaptar código do feature/Rodrigo
-     */
     do {
         option = Error;
         option = mainMenu();
@@ -91,12 +85,14 @@ void    initTerminal() {
             case GroupFile: {
                 char groupId[10];
                 File_t *file;
+                User_t *userGroup;
+                
                 LinkedListNode* groupNode;
                 groupFile(userId, &groupId, &file);
                 //  Send File Message
                 groupNode = getNode(*groups, groupId);
                 if(groupNode != NULL) {
-                    //  Send File For Each Node
+                    
                 } else {
                     fprintf(stderr, "Group not Found.\n");
                     fflush(stderr);
