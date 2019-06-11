@@ -42,6 +42,6 @@ BUILD_CLIENT: clean
 	@echo
 
 clean:
-	@rm -Rf ./server/*.o ./server/*.gch
-	@rm -Rf ./client/*.o ./client/*.gch
+	@rm -Rf ./server/*.o ./server/*.gch $(SERVER)
+	@rm -Rf ./client/*.o ./client/*.gch $(ClIENT)
 	@rm -Rf *.o *.gch ./commonLibs/*.o ./commonLibs/*.gch

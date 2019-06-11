@@ -30,6 +30,5 @@ int main(int argc, char const *argv[]) {
 
     initSharedData();
     connectToServer(argv[1], atoi(argv[2]));
-    commOps.close(&local);
     return 0;
 }

@@ -17,20 +17,13 @@
 
 #ifndef VARS_INIT
 #define VARS_INIT
-    struct commFacade_t     local;
-    struct commFacade_t     remote;
-
     struct commFacade_t     localPeer;
     struct commFacade_t     remotePeer;
 
     struct LinkedListHead   *messages;
     pthread_mutex_t  *mutex_list_messages;
     pthread_mutex_t  *mutex_remote;
-    int whatsappCount;
 #else
-    extern struct commFacade_t      local;
-    extern struct commFacade_t      remote;
-
     extern struct commFacade_t      localPeer;
     extern struct commFacade_t      remotePeer;
 
@@ -41,9 +34,9 @@
 #endif
 
 void    connectToServer(char *, int);
-void    logIn();
-User_t* requestClient();
-void    logOut();
+void    logIn(char* ip, int port, char* id);
+void    logOut(char* ip, int port, char* id);
+User_t* requestClient(char* ip, int port, char* peerId);
 
 void    connectToClient(struct User_t *, char *);
 void    *whatsapp(void *);
