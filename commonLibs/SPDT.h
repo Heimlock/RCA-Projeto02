@@ -5,7 +5,10 @@
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
+ *      Bruno Pereira Bannwart        RA: 15171572
  *		Felipe Moreira Ferreira       RA: 16116469
+ *      Gabriela Ferreira Jorge       RA: 12228441
+ *		Rodrigo da Silva Cardoso      RA: 16430126
  *
  *  Biblioteca de Recursos Referentes ao Protocolo de comunicacao
  *  (Simple Protocol for Data Transfer)
@@ -32,8 +35,10 @@ typedef struct SPDT_Command {
     void* value;
 } SPDT_Command;
 
-SPDT_Command* newCommand(ActionType type, int length, void* data);
+void    newCommand(SPDT_Command** command, ActionType type, int length, void* data);
+void    destroyCommand(SPDT_Command* command);
 char*   command2bytes(SPDT_Command command);
-SPDT_Command* bytes2command(char* data);
-SPDT_Command* bytes2commandHeader(char* data);
+void    bytes2command(char* data, SPDT_Command**  command);
+void    bytes2commandHeader(char* data, SPDT_Command**  command);
+void    printCommand(int id, SPDT_Command command);
 #endif

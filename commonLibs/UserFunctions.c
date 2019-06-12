@@ -5,7 +5,10 @@
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
+ *      Bruno Pereira Bannwart        RA: 15171572
  *		Felipe Moreira Ferreira       RA: 16116469
+ *      Gabriela Ferreira Jorge       RA: 12228441
+ *		Rodrigo da Silva Cardoso      RA: 16430126
  *
  *  Desenvolvimento dos Recursos Referentes ao Usuario
  */
@@ -16,17 +19,17 @@
 #include <arpa/inet.h>
 #include"./UserData.h"
 
-User_t* newUser(char* id, struct sockaddr_in addr, enum UserState state) {
-    User_t* newUser = (User_t*) malloc(sizeof(User_t));
+void newUser(User_t** user, char* id, struct sockaddr_in addr, enum UserState state) {
+    (*user) = (User_t*) malloc(sizeof(User_t));
 
-    newUser->id = (char *) malloc(UserId_Len * sizeof(char));
-    memcpy(&newUser->id, id, UserId_Len);
-    newUser->addr = addr;
-    newUser->state= state;
+    (*user)->id = (char *) malloc((UserId_Len + 1) * sizeof(char));
+    memcpy((*user)->id, id, UserId_Len);
+    (*user)->id[UserId_Len] = '\0';
+    (*user)->addr = addr;
+    (*user)->state= state;
     #ifdef DEBUG
-        printUser(*newUser);
+        printUser(*(*user));
     #endif
-    return newUser;
 }
 
 char*  user2Bytes(User_t user) {
@@ -37,17 +40,16 @@ char*  user2Bytes(User_t user) {
     return dataOut;
 }
 
-User_t* bytes2User(char* data) {
-    User_t* newUser = (User_t *) malloc(sizeof(User_t));
-    newUser->id = (char *) malloc(UserId_Len * sizeof(char));
+void bytes2User(User_t** user, char* data) {
+    (*user) = (User_t *) malloc(sizeof(User_t));
+    (*user)->id = (char *) malloc(UserId_Len * sizeof(char));
 
-    memcpy(newUser->id, data, UserId_Len);
-    memcpy(&newUser->addr, data + 9, sizeof(struct sockaddr_in));
-    memcpy(&newUser->state, data + 25, 1 * sizeof(char));
+    memcpy((*user)->id, data, UserId_Len);
+    memcpy(&(*user)->addr, data + 9, sizeof(struct sockaddr_in));
+    memcpy(&(*user)->state, data + 25, 1 * sizeof(char));
     #ifdef DEBUG
-        printUser(newUser);
+        printUser(*(*user));
     #endif
-    return newUser;
 }
 
 void printUser(User_t user) {

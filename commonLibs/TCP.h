@@ -5,7 +5,10 @@
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
+ *      Bruno Pereira Bannwart        RA: 15171572
  *		Felipe Moreira Ferreira       RA: 16116469
+ *      Gabriela Ferreira Jorge       RA: 12228441
+ *		Rodrigo da Silva Cardoso      RA: 16430126
  *
  *	 Biblioteca de Recursos Referentes a Comunicacao TCP
  */
@@ -27,41 +30,46 @@
 #include <netdb.h>
 
 typedef struct commFacade_t {
-    int     localSocketDesc;
-    int     remoteSocketDesc;
-    struct  sockaddr_in  local;
-    struct  sockaddr_in  remote;
+    int     socketDesc;
+    struct  sockaddr_in  socketAddr;
 } commFacade_t;
 
 typedef struct commOps_t {
-    int     (*init)         (commFacade_t*, int);
+    // int     (*initClient)   (commFacade_t*, int);
+    int	    (*initServer)   (commFacade_t*, int);
     void    (*close)        (commFacade_t*);
-    void    (*closeRemote)  (commFacade_t*);
 
     size_t  (*send)         (commFacade_t*, void *, size_t);
-    size_t  (*receive)      (commFacade_t*, void *, size_t);
+    size_t  (*receive)      (commFacade_t*, void **, size_t);
 
-    int     (*accept)       (commFacade_t*);
-    int     (*connect)      (commFacade_t*, char *, int);
+    int     (*accept)       (commFacade_t*, commFacade_t*);
+    int     (*connect)      (commFacade_t*, commFacade_t*, int, char*, int);
 } commOps_t;
 
 
-int     init_Socket(commFacade_t* commData, int port );
+// int     init_Client(commFacade_t* commData, int port );
+int     init_Server(commFacade_t* commData, int port );
 void    close_Socket(commFacade_t* commData);
-void    close_Remote(commFacade_t* commData);
-size_t  sendData(commFacade_t* commData, void *data, size_t size);
-size_t  receiveData(commFacade_t* commData, void *data, size_t size);
-int	    acceptConnection(commFacade_t* commData);
-int     connectRemote(commFacade_t* commData, char *addr, int port);
+int     sendData(commFacade_t* commData, void *data, size_t size);
+int     receiveData(commFacade_t* commData, void **data, size_t size);
+int	    acceptConnection(commFacade_t* local, commFacade_t* remote);
+int     connectRemote(commFacade_t* local, commFacade_t* remote, int localPort, char *remoteAddr, int remotePort);
 
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static struct commOps_t commOps = {
-    .init       =init_Socket,
+    // .initClient =init_Client,
+    .initServer =init_Server,
     .close      =close_Socket,
-    .closeRemote=close_Remote,
     .send       =sendData,
     .receive    =receiveData,
     .accept     =acceptConnection,
     .connect    =connectRemote,
 };
+
+#ifdef  DEBUG
+    static int enable = 1;
+#else
+    static int enable = 0;
+#endif
 #endif

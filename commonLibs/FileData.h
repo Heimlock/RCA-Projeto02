@@ -5,7 +5,10 @@
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
+ *      Bruno Pereira Bannwart        RA: 15171572
  *		Felipe Moreira Ferreira       RA: 16116469
+ *      Gabriela Ferreira Jorge       RA: 12228441
+ *		Rodrigo da Silva Cardoso      RA: 16430126
  *
  *  Biblioteca de Recursos Referentes a Manipulacao 
  *  de Arquivos
@@ -30,10 +33,10 @@ typedef struct File_t {
 } File_t;
 
 char* file2Bytes(File_t file);
-File_t* bytes2File(char* data);
+void bytes2File(File_t** newFile, char* data);
 void printFile(File_t file);
 
-File_t*  disk2Memory(char* filePath, char* userId);
+void disk2Memory(File_t** newFile, char* filePath, char* userId);
 int memory2Disk(File_t file);
 #endif
 

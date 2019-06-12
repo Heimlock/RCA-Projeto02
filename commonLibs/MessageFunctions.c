@@ -5,7 +5,10 @@
  *      Sistema de Mensageiro peer-to-peer hibrido
  *
  *	Integrantes:
+ *      Bruno Pereira Bannwart        RA: 15171572
  *		Felipe Moreira Ferreira       RA: 16116469
+ *      Gabriela Ferreira Jorge       RA: 12228441
+ *		Rodrigo da Silva Cardoso      RA: 16430126
  *
  *  Desenvolvimento dos Recursos Referentes as Mensagens
  */
@@ -13,26 +16,29 @@
 #include "./UserData.h"
 #include "./MessageData.h"
 
-Message_t* newMessage(char* senderId, int length, void* data) {
-    Message_t* newMsg = (Message_t*) malloc(sizeof(Message_t));
-    memcpy(newMsg->senderId, senderId, UserId_Len);
-    newMsg->length = length;
-    newMsg->data = malloc(length);
-    memcpy(newMsg->data, data, length);
+void newMessage(Message_t** message, char* senderId, int length, void* data) {
+    (*message) = (Message_t*) malloc(sizeof(Message_t));
+
+    (*message)->senderId = (char *) malloc((SenderId_Len + 1) * sizeof(char));
+    memcpy((*message)->senderId, senderId, SenderId_Len);
+    (*message)->senderId[SenderId_Len] = '\0';
+
+    (*message)->length = length;
+    (*message)->data = malloc(length);
+    memcpy((*message)->data, data, length);
     #ifdef DEBUG
-        printMsg(*newMsg);
+        printMsg(*(*message));
     #endif
-    return newMsg;
 }
 
 char*   message2Bytes(Message_t message) {
-    int     dataSize = UserId_Len + sizeof(int) + message.length;
+    int     dataSize = SenderId_Len + sizeof(int) + message.length;
     int     offset = 0;
     void*   dataOut = malloc(dataSize);
     offset  = 0;
 
-    memcpy(dataOut + offset, message.senderId,   UserId_Len);
-    offset += UserId_Len;
+    memcpy(dataOut + offset, message.senderId,   SenderId_Len);
+    offset += SenderId_Len;
 
     memcpy(dataOut + offset, &message.length, sizeof(int));
     offset += sizeof(int);
@@ -41,25 +47,26 @@ char*   message2Bytes(Message_t message) {
     return dataOut;
 }
 
-Message_t* bytes2Message(char* data) {
-    Message_t* newMsg = (Message_t*) malloc(sizeof(Message_t));
+void bytes2Message(Message_t**  message, char* data) {
+    (*message) = (Message_t*) malloc(sizeof(Message_t));
 
     int     offset;
     offset  = 0;
 
-    memcpy(newMsg->senderId,  data + offset, UserId_Len);
-    offset += UserId_Len;
+    (*message)->senderId = (char *) malloc((SenderId_Len + 1) * sizeof(char));
+    memcpy((*message)->senderId,  data + offset, SenderId_Len);
+    (*message)->senderId[SenderId_Len] = '\0';
+    offset += SenderId_Len;
 
-    memcpy(&newMsg->length,data + offset, sizeof(int));
+    memcpy(&(*message)->length,data + offset, sizeof(int));
     offset += sizeof(int);
 
-    newMsg->data = malloc(newMsg->length);
-    memcpy(newMsg->data,  data + offset, newMsg->length);
+    (*message)->data = malloc((*message)->length);
+    memcpy((*message)->data,  data + offset, (*message)->length);
 
     #ifdef DEBUG
-        printMsg(*newMsg);
+        printMsg(*(*message));
     #endif
-    return newMsg;
 }
 
 void printMsg(Message_t message) {
