@@ -56,6 +56,8 @@ void  destroyNode(struct LinkedListNode* node);
 int  removeNode(struct LinkedListHead* head, char* key);
 struct LinkedListNode* getNode(LinkedListHead head, char* key);
 struct LinkedListNode* getFirst(struct LinkedListHead* head);
+void    printAllKeys(LinkedListHead* head);
+void    forEach(LinkedListHead* head, void (*function)(LinkedListNode*));
 
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
 #pragma GCC diagnostic ignored "-Wunused-variable"

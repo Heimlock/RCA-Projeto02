@@ -185,6 +185,47 @@ LinkedListNode* getFirst(LinkedListHead* head) {
     }
 }
 
+/*
+ *  Função que Improme a Key de todos os Nodes de uma Lista Ligada
+ *  Argumentos:
+ *      @head       ==  Header da Lista Ligada
+ */
+void    printAllKeys(LinkedListHead* head) {
+    LinkedListNode** actual;
+    int nodeCount = 0;
+
+    if(head->initialNode != NULL || head->size != 0) {
+        actual = &head->initialNode;
+        while (*actual) {
+            fprintf(stdout, "[%.4d] | Key: %s\n", nodeCount++, (*actual)->key);
+            fflush(stdout);
+            actual = &(*actual)->next;
+        }
+    } else {
+        fprintf(stderr, "Head is Empty\n");
+        fflush(stderr);
+    }
+}
+
+/*
+ *  Função que Itera a Lista executando um Procedimento sobre cada Node
+ *  Argumentos:
+ *      @head       ==  Header da Lista Ligada
+ *      @function   ==  Ponteiro do Procedimento
+ */
+void    forEach(LinkedListHead* head, void (*function)(LinkedListNode*)) {
+    LinkedListNode** actual;
+    if(head->initialNode != NULL || head->size != 0) {
+        actual = &head->initialNode;
+        while (*actual) {
+            function(*actual);
+            actual = &(*actual)->next;
+        }
+    } else {
+        fprintf(stderr, "Head is Empty\n");
+        fflush(stderr);
+    }
+}
 
 /*
  *  Função que Compara 2 Chaves

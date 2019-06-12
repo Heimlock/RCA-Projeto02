@@ -282,6 +282,11 @@ void 	sendFilePeer(void* vars) { //(struct sockaddr_in address, struct File_t fi
     commOps.close(&remotePeer);
 }
 
+void    printGroup(LinkedListNode* group) {
+    LinkedListHead* groupHead = (LinkedListHead*)group->data;
+    forEach(groupHead, printAllKeys);
+}
+
 void  initSharedData() {
     mutex_list_messages = mutexInit();
 

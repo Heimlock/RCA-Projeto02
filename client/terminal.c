@@ -158,12 +158,15 @@ void    contactsSubMenu () {
 
         switch (option) {
             case ListUsers: {
-                //  For Each Node, Print its Key
+                printAllKeys(contacts);
+                enter2Continue();
                 break;
             }
             case ListGroups: {
                 //  For Each Node, Print its Key
                 //  And Iterate over its Data (Inner Linked List)
+                forEach(groups, printGroup);
+                enter2Continue();
                 break;
             }
             case NewContact: {
@@ -173,6 +176,7 @@ void    contactsSubMenu () {
                 fflush(stdout);
                 getString("UserId: \n", &userId, (UserId_Len + 1) * sizeof(char));
                 llOps.add(contacts, userId, userId);
+                enter2Continue();
                 break;
             }
             case DeleteContact: {
@@ -182,6 +186,7 @@ void    contactsSubMenu () {
                 fflush(stdout);
                 getString("UserId: \n", &userId, (UserId_Len + 1) * sizeof(char));
                 llOps.remove(contacts, userId);
+                enter2Continue();
                 break;
             }
             case NewGroup: {
@@ -194,11 +199,13 @@ void    contactsSubMenu () {
                 break;
             }
             case DeleteGroup: {
-                //  Receive GroupId
-                //  Get Group by Its Id
-                //  DestroyHead
-                fprintf(stdout, "Not yet Implemented!\n");
+                char groupId[10];
+                fprintf(stdout, "Delete Contact\n");
+                fprintf(stdout, "Enter the GroupId to Delete.\n");
                 fflush(stdout);
+                getString("GroupId: \n", &groupId, (UserId_Len + 1) * sizeof(char));
+                llOps.remove(groups, groupId);
+                enter2Continue();
                 break;
             }
             default: {
