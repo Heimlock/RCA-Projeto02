@@ -7,6 +7,8 @@
  *	Integrantes:
  *      Bruno Pereira Bannwart        RA: 15171572
  *		Felipe Moreira Ferreira       RA: 16116469
+ *      Gabriela Ferreira Jorge       RA: 12228441
+ *		Rodrigo da Silva Cardoso      RA: 16430126
  *
  *	 Biblioteca de Recursos Referentes ao Cliente
  */

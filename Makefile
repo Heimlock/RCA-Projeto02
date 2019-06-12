@@ -5,8 +5,10 @@
 #		Sistema de Mensageiro peer-to-peer hibrido
 #
 #	Integrantes:
-#		Bruno Pereira Bannwart		  RA: 15171572
+#		Bruno Pereira Bannwart        RA: 15171572
 #		Felipe Moreira Ferreira       RA: 16116469
+#       Gabriela Ferreira Jorge       RA: 12228441
+#		Rodrigo da Silva Cardoso      RA: 16430126
 #
 #	  Makefile Geral
 #
