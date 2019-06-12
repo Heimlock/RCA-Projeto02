@@ -27,10 +27,7 @@
  *  Logic
  */
 
-/*
- * noResponse Thread
- */
-void    *initTerminal() {
+void    initTerminal() {
     MenuItem option = -1;
 
     do {
@@ -38,14 +35,20 @@ void    *initTerminal() {
         option = mainMenu();
         switch (option) {
             case DirectMessage: {
-                char peerId[10];;
+                char peerId[10];
                 Message_t *msg;
-                User_t  *user;
+                int offset;
+                int size = (UserId_Len + 1) * sizeof(char) + sizeof(Message_t);
+                void* vars = malloc(size);
 
                 directMessage(userId, &peerId, &msg);
-                user = requestClient(peerId);
-                sendMessagePeer(user->addr, (*msg));
-                
+
+                offset = 0;
+                memcpy(vars + offset, peerId, (UserId_Len + 1) * sizeof(char));
+                offset = (UserId_Len + 1) * sizeof(char);
+                memcpy(vars + offset, msg, sizeof(Message_t));
+
+                noResponse(sendMessagePeer, vars);
                 enter2Continue();
                 break;
             }
@@ -53,10 +56,10 @@ void    *initTerminal() {
                 char groupId[10];
                 Message_t *msg;
                 LinkedListNode* groupNode;
-                
+
                 groupMessage(userId, &groupId, &msg);
                 groupNode = getNode(*groups, groupId);
-                
+
                 if(groupNode != NULL) {
                     //  Send Message For Each Node
                     fprintf(stdout, "Send Message For Each Node\n");
@@ -66,7 +69,6 @@ void    *initTerminal() {
                     fprintf(stderr, "Group not Found.\n");
                     fflush(stderr);
                 }
-                
                 enter2Continue();
                 break;
             }
@@ -75,10 +77,17 @@ void    *initTerminal() {
                 File_t *file;
 
                 directFile(userId, &peerId, &file);
-                //  Send File Message
-                fprintf(stdout, "Send File Message\n");
-                fflush(stdout);
                 
+                int offset;
+                int size = (UserId_Len + 1) * sizeof(char) + sizeof(File_t);
+                void* vars = malloc(size);
+                offset = 0;
+                memcpy(vars + offset, peerId, (UserId_Len + 1) * sizeof(char));
+                offset = (UserId_Len + 1) * sizeof(char);
+                memcpy(vars + offset, file, sizeof(File_t));
+
+                //  Send File Message
+                noResponse(sendFilePeer, vars);
                 enter2Continue();
                 break;
             }
@@ -95,7 +104,7 @@ void    *initTerminal() {
                 } else {
                     fprintf(stderr, "Group not Found.\n");
                     fflush(stderr);
-}
+                }
                 enter2Continue();
                 break;
             }
@@ -206,7 +215,7 @@ void    contactsSubMenu () {
  */
 
 void    printHeader() {
-    //system("clear"); //FIXME
+    system("clear");
     fprintf(stdout, "========================================\n");
     fprintf(stdout, "----------------WhatsP2P----------------\n");
     fprintf(stdout, "========================================\n");
@@ -263,14 +272,12 @@ int     displayContactsMenu() {
 void    directMessage(char* userId, char** peerId, Message_t** msg) {
     char messageText[80];
 
-    //fprintf(stdout, "a\n");
     __fpurge(stdin);
     getString("PeerId: ", peerId, (UserId_Len + 1) * sizeof(char));
 
     fprintf(stdout, "Message: ");
     fflush(stdout);
 
-    //fprintf(stdout, "b\n");
     __fpurge(stdin);
     fgets(messageText, MessageMaxSize * sizeof(char), stdin);
     __fpurge(stdin);

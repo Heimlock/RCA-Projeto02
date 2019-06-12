@@ -55,8 +55,8 @@ User_t* requestClient(char*);
 
 void    newReceiver();
 void    *attendClientPeer(void *arg);
-void    sendMessagePeer(struct sockaddr_in, struct Message_t);
-void    sendFilePeer(struct sockaddr_in, struct File_t);
+void    sendMessagePeer(void* vars);// (struct sockaddr_in, struct Message_t);
+void 	sendFilePeer(void* vars);//(struct sockaddr_in, struct File_t);
 
 int     canContinue();
 void    initSharedData();

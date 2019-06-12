@@ -208,13 +208,26 @@ void *attendClientPeer(void *arg) {
 	threadExit(NULL);
 }
 
-void 	sendMessagePeer(struct sockaddr_in address, struct Message_t message){
+void 	sendMessagePeer(void* vars) { //(struct sockaddr_in address, struct Message_t message){
     struct commFacade_t localPeer, remotePeer;
     char *ipPeer; 
     int portPeer;
 
-    ipPeer = inet_ntoa(address.sin_addr);
-    portPeer = ntohs(address.sin_port);
+    struct Message_t message;
+    char *peerId;
+    int offset;
+
+    offset = 0;
+    memcpy(peerId, vars + offset, (UserId_Len + 1) * sizeof(char));
+    offset = (UserId_Len + 1) * sizeof(char);
+    memcpy(&message, vars + offset, sizeof(Message_t));    
+    free(vars);
+
+    User_t  *user;
+    user = requestClient(peerId);
+
+    ipPeer = inet_ntoa(user->addr.sin_addr);
+    portPeer = ntohs(user->addr.sin_port);
       
     if((commOps.connect(&localPeer, &remotePeer, 0, ipPeer, portPeer)) < 0){
 	    fprintf(stderr, "[%.4d] | Error! Couldn't connect to peer.\n", getpid());
@@ -232,14 +245,27 @@ void 	sendMessagePeer(struct sockaddr_in address, struct Message_t message){
     commOps.close(&remotePeer);
 }
 
-void 	sendFilePeer(struct sockaddr_in address, struct File_t file){
+void 	sendFilePeer(void* vars) { //(struct sockaddr_in address, struct File_t file){
     struct commFacade_t localPeer, remotePeer;
-    char *ipPeer; 
+    char *ipPeer;
     int portPeer;
 
-    ipPeer = inet_ntoa(address.sin_addr);
-    portPeer = ntohs(address.sin_port);
-      
+    struct File_t file;
+    char *peerId;
+    int offset;
+
+    offset = 0;
+    memcpy(peerId, vars + offset, (UserId_Len + 1) * sizeof(char));
+    offset = (UserId_Len + 1) * sizeof(char);
+    memcpy(&file, vars + offset, sizeof(File_t));    
+    free(vars);
+
+    User_t  *user;
+    user = requestClient(peerId);
+
+    ipPeer = inet_ntoa(user->addr.sin_addr);
+    portPeer = ntohs(user->addr.sin_port);
+
     if((commOps.connect(&localPeer, &remotePeer, 0, ipPeer, portPeer)) < 0){
 	    fprintf(stderr, "[%.4d] | Error! Couldn't connect to peer.\n", getpid());
         fflush(stderr);
