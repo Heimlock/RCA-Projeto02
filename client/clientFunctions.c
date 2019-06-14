@@ -26,7 +26,16 @@ void    logIn() {
         exit(-1);
     }
 
-    newCommand(&command, LogIn, UserId_Len * sizeof(char), userId);
+    int commandSize = (UserId_Len * sizeof(char)) + sizeof(sockaddr_in);
+    init_Server(local, 0);
+
+    void* dataOut = malloc(commandSize);
+    int offset = 0;
+    memcpy(dataOut + offset, commData->socketAddr, sizeof(sockaddr_in));
+    offset = sizeof(sockaddr_in);
+    memcpy(dataOut + offset, userId, (UserId_Len * sizeof(char)));
+
+    newCommand(&command, LogIn, commandSize, dataOut);
 
     if((sendCommand(&local, (*command))) < 0) {
         fprintf(stderr, "[logIn] | Error! Failed to send.\n");
@@ -34,7 +43,9 @@ void    logIn() {
         exit(-2);
     }
     commOps.close(&local);
-    commOps.close(&remote);
+    commOps.close(&remote); 
+    //   MutexUnlock
+    mutexUnlock(mutex_ServerSocket);
 }
 
 void    logOut() {
@@ -289,6 +300,7 @@ void    printGroup(LinkedListNode* group) {
 
 void  initSharedData() {
     mutex_list_messages = mutexInit();
+    mutex_ServerSocket = mutexInit();
 
     initList(&messages);
     initList(&contacts);

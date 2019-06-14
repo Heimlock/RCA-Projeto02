@@ -120,9 +120,21 @@ void  initSharedData() {
     }
 }
 
+void parseLogin(void* dataIn, int size, char** userId, sockaddr_in** clientSocket) {
+    (*userId) = (char*) malloc(UserId_Len * sizeof(char));
+    (*clientSocket) = (sockaddr_in*) malloc(sizeof(sockaddr_in));
+
+    int offset = 0;
+    memcpy(clientSocket, dataIn + offset, sizeof(sockaddr_in));
+    offset = sizeof(sockaddr_in);
+    memcpy(userId, dataIn + offset, (UserId_Len * sizeof(char)));
+}
+
 void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in) {
-	struct User_t* user;
+    struct User_t* user;
     struct LinkedListNode *userNode;
+    char* userId;
+    sockaddr_in* clientSocket;
 
     #ifdef  DEBUG
         fprintf(stdout, "[%d] | LogIn Function Init\n", getpid());
@@ -132,6 +144,8 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
     #endif
 
     if(log_in->value != NULL) {
+	parseLogin(log_in->value, log_in->length, &userId, &clientSocket);
+
         mutexLock(mutex_list_users);
         userNode = getNode(*users, (char *) log_in->value);
         if(userNode != NULL) {
@@ -139,10 +153,10 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
             fflush(stdout);
             user = (User_t *) userNode->data;
             user->state = Online;
-            user->addr = communication_data.socketAddr;
+            user->addr = *clientSocket;
             printUser(*user);
         } else {
-            newUser(&user, (char*) log_in->value, communication_data.socketAddr, Online);
+            newUser(&user, userId, *clientSocket, Online);
 			if(user != NULL) {
                 fprintf(stdout, "[%d] | New User Added\n", getpid());
                 fflush(stdout);

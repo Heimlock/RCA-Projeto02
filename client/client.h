@@ -29,6 +29,8 @@
     struct LinkedListHead   *groups;
     pthread_mutex_t  *mutex_list_messages;
 
+    pthread_mutex_t  *mutex_ServerSocket;
+
     struct commFacade_t local;
     struct commFacade_t remote;
 #else
@@ -43,6 +45,8 @@
     extern struct LinkedListHead   *contacts;
     extern struct LinkedListHead   *groups;
     extern pthread_mutex_t  *mutex_list_messages;
+
+    extern pthread_mutex_t  *mutex_ServerSocket;
 
     extern struct commFacade_t local;
     extern struct commFacade_t remote;

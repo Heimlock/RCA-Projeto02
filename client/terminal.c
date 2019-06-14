@@ -36,7 +36,7 @@ void    initTerminal() {
     fgets(userId, (UserId_Len + 1) * sizeof(char), stdin);
     __fpurge(stdin);
 
-    // noResponse(logIn, NULL);
+    noResponse(logIn, NULL);
     do {
         option = Error;
         option = mainMenu();
@@ -49,14 +49,14 @@ void    initTerminal() {
                 void* vars = malloc(size);
 
                 directMessage(userId, &peerId, &msg);
-                /*
+                ///*
                 offset = 0;
                 memcpy(vars + offset, peerId, (UserId_Len + 1) * sizeof(char));
                 offset = (UserId_Len + 1) * sizeof(char);
                 memcpy(vars + offset, msg, sizeof(Message_t));
 
                 noResponse(sendMessagePeer, vars);
-                */
+                //*/
                 enter2Continue();
                 break;
             }
@@ -66,7 +66,7 @@ void    initTerminal() {
                 LinkedListNode* groupNode;
 
                 groupMessage(userId, &groupId, &msg);
-                 /*
+                ///*
                 groupNode = getNode(*groups, groupId);
 
                 if(groupNode != NULL) {
@@ -78,7 +78,7 @@ void    initTerminal() {
                     fprintf(stderr, "Group not Found.\n");
                     fflush(stderr);
                 }
-                 */
+                //*/
                 enter2Continue();
                 break;
             }
@@ -87,7 +87,7 @@ void    initTerminal() {
                 File_t *file;
 
                 directFile(userId, &peerId, &file);
-                 /*
+                ///*
                 int offset;
                 int size = (UserId_Len + 1) * sizeof(char) + sizeof(File_t);
                 void* vars = malloc(size);
@@ -98,7 +98,7 @@ void    initTerminal() {
 
                 //  Send File Message
                 noResponse(sendFilePeer, vars);
-                 */
+                //*/
                 enter2Continue();
                 break;
             }
@@ -108,7 +108,7 @@ void    initTerminal() {
                 LinkedListNode* groupNode;
 
                 groupFile(userId, &groupId, &file);
-                 /*
+                ///*
                 //  Send File Message
                 groupNode = getNode(*groups, groupId);
                 if(groupNode != NULL) {
@@ -117,7 +117,7 @@ void    initTerminal() {
                     fprintf(stderr, "Group not Found.\n");
                     fflush(stderr);
                 }
-                 */
+                //*/
                 enter2Continue();
                 break;
             }
@@ -160,7 +160,7 @@ void    initTerminal() {
             }
         }
     }while(option != Exit);
-    // waitResponse(logOut, NULL);
+    waitResponse(logOut, NULL);
     state = Offline;
 }
 /*

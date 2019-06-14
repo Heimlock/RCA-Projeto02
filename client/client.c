@@ -19,6 +19,17 @@
 #include "../commonLibs/ThreadManager.h"
 #include "../commonLibs/UserData.h"
 
+void serverThread() {
+    //Criação de Threads que recebem mensagens usando o socket de recebimento
+
+    mutexLock(mutex_ServerSocket);
+    mutexLock(mutex_ServerSocket);
+
+    do{
+        newReceiver();        
+    }while(canContinue());
+}
+
 int main(int argc, char const *argv[]) {
     fprintf(stdout, "[%d] | Client Module Initialized!\n", getpid());
     fflush(stdout);
@@ -38,23 +49,25 @@ int main(int argc, char const *argv[]) {
 
     state = Online;
     //  Command Handler
+    noResponse(serverThread, NULL);
     //  Terminal
     initTerminal();
     return 0;
 
     noResponse(logIn, NULL);
 
+    noResponse(serverThread, NULL);
+
+    initTerminal();
+
     //Criar uma thread que manda e le mensagens
+/*
     if(noResponse(initTerminal, NULL) < 0) {
         fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
         fflush(stderr);
         perror("newConnection");
     }
-
-    //Criação de Threads que recebem mensagens usando o socket de recebimento
-    do{
-        newReceiver();        
-    }while(canContinue());
+*/
 
     return 0;
 }
