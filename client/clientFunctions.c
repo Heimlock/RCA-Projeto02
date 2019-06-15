@@ -10,40 +10,57 @@
  *	 Desenvolvimento dos Recursos Referentes ao Cliente
  */
 
- #include "./client.h"
- #include "../commonLibs/MessageData.h"
+#include "./client.h"
+#include "../commonLibs/MessageData.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <netinet/in.h>
 
 void    logIn() {
-    commFacade_t local, remote;
+    commFacade_t sendSocket, serverConnectionSckt;
     struct SPDT_Command *command;
 
     fprintf(stdout, "[%.4d] | Log In Function\n", getpid());
     fflush(stdout);
 
-    if((commOps.connect(&local, &remote, 0, ip, port)) < 0) {
+    if((commOps.connect(&sendSocket, &serverConnectionSckt, 0, ip, port)) < 0) {
         fprintf(stderr, "[%.4d] | Error! Client couldn't connect to server.\n", getpid());
         fflush(stderr);
         exit(-1);
     }
 
-    int commandSize = (UserId_Len * sizeof(char)) + sizeof(sockaddr_in);
-    init_Server(local, 0);
+    int auxRtn, count = 0;
+    do {
+        if(count > 10) {
+            fprintf(stderr, "[%.4d] | Error! Client couldn't Create a Server Socket.\n", getpid());
+            fflush(stderr);
+            exit(-1);
+        } else {
+            count++;
+            auxRtn = 0;
+            auxRtn = init_Server(&local, rand() % 10000);
+        }
+    } while(auxRtn < 0);
 
+    int commandSize = (UserId_Len * sizeof(char)) + sizeof(int);
     void* dataOut = malloc(commandSize);
     int offset = 0;
-    memcpy(dataOut + offset, commData->socketAddr, sizeof(sockaddr_in));
-    offset = sizeof(sockaddr_in);
+    int auxPort = ntohs(local.socketAddr.sin_port);
+    memcpy(dataOut + offset, &auxPort, sizeof(int));
+    offset = sizeof(int);
     memcpy(dataOut + offset, userId, (UserId_Len * sizeof(char)));
 
     newCommand(&command, LogIn, commandSize, dataOut);
 
-    if((sendCommand(&local, (*command))) < 0) {
+    if((sendCommand(&sendSocket, (*command))) < 0) {
         fprintf(stderr, "[logIn] | Error! Failed to send.\n");
         fflush(stderr);
         exit(-2);
     }
-    commOps.close(&local);
-    commOps.close(&remote); 
+    commOps.close(&sendSocket);
+    commOps.close(&serverConnectionSckt);
     //   MutexUnlock
     mutexUnlock(mutex_ServerSocket);
 }

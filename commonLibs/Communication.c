@@ -77,7 +77,9 @@ void receiveCommand(struct commFacade_t* commData, struct SPDT_Command** command
         (*command) = NULL;
     }
     #ifdef DEBUG
-	    printCommand(getpid(), **command);
+        if((*command) != NULL) {
+	        printCommand(getpid(), **command);
+        }
     #endif
 }
 

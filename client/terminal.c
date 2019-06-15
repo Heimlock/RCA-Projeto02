@@ -36,7 +36,16 @@ void    initTerminal() {
     fgets(userId, (UserId_Len + 1) * sizeof(char), stdin);
     __fpurge(stdin);
 
+    fprintf(stdout, "Launch logIn\n");
+    fflush(stdout);
     noResponse(logIn, NULL);
+    fprintf(stdout, "Going to Sleep for 15s\n");
+    fflush(stdout);
+    sleep(15);
+    fprintf(stdout, "Launch logOut\n");
+    fflush(stdout);
+    waitResponse(logOut, NULL);
+    return;
     do {
         option = Error;
         option = mainMenu();

@@ -11,6 +11,16 @@
  */
 
 #include "./TCP.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 /*
  *  Função que Inicializa a Comunicação via Socket (Cliente)
@@ -77,7 +87,7 @@ int     init_Server(commFacade_t* commData, int port ) {
         perror("[init_Socket] | listen()");
         return -4;
     }
-   fprintf(stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(commData->socketAddr.sin_port));
+   fprintf(stdout,"[%d] | Server Socket at %s:%d was Initialized\n", getpid(), inet_ntoa(commData->socketAddr.sin_addr), ntohs(commData->socketAddr.sin_port) );
    fflush(stdout);
    return 0;
 }
@@ -102,9 +112,10 @@ void    close_Socket(commFacade_t* commData) {
  *      < 0         ==  Numero de Bytes Enviados
  */
 int  sendData(commFacade_t* commData, void *data, size_t size) {
-    int numbytes;
+    int numbytes = 0;
     //  send: Socket Remoto, data, Tam Esperado, Flags
-    if((numbytes = send((commData->socketDesc), data, size, 0)) < 0) {
+    numbytes = send((commData->socketDesc), data, size, 0);
+    if(numbytes < 0) {
         perror("send()");
         return -1;
     }
