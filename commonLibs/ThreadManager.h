@@ -16,20 +16,13 @@
 
 #include <pthread.h>
 
-void* waitResponse(void* function, void* args);
-
-int noResponse(void* function, void* args);
-
-void threadExit(void* rtnValue);
+void*   waitResponse(void* function, void* args);
+int     noResponse(void* function, void* args);
+void    threadExit(void* rtnValue);
 
 pthread_mutex_t* mutexInit();
-
-int mutexDestroy(pthread_mutex_t* mutex);
-
-int mutexLock(pthread_mutex_t *mutex);
-
-int mutexTryLock(pthread_mutex_t *mutex);
-
-int mutexUnlock(pthread_mutex_t *mutex);
-
+int     mutexDestroy(pthread_mutex_t* mutex);
+int     mutexLock(pthread_mutex_t *mutex);
+int     mutexTryLock(pthread_mutex_t *mutex);
+int     mutexUnlock(pthread_mutex_t *mutex);
 #endif

@@ -32,7 +32,6 @@ typedef struct commFacade_t {
 } commFacade_t;
 
 typedef struct commOps_t {
-    // int     (*initClient)   (commFacade_t*, int);
     int	    (*initServer)   (commFacade_t*, int);
     void    (*close)        (commFacade_t*);
 
@@ -44,7 +43,6 @@ typedef struct commOps_t {
 } commOps_t;
 
 
-// int     init_Client(commFacade_t* commData, int port );
 int     init_Server(commFacade_t* commData, int port );
 void    close_Socket(commFacade_t* commData);
 int     sendData(commFacade_t* commData, void *data, size_t size);
@@ -55,7 +53,6 @@ int     connectRemote(commFacade_t* local, commFacade_t* remote, int localPort, 
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 static struct commOps_t commOps = {
-    // .initClient =init_Client,
     .initServer =init_Server,
     .close      =close_Socket,
     .send       =sendData,

@@ -91,12 +91,13 @@ void addNode(LinkedListHead** head, char* key, int length, void* data) {
 
 	(*actual)->next = NULL;
 
-    // #ifdef  DEBUG
+    #ifdef  DEBUG
         fprintf(stdout, "[addNode] | Node Added!\n");
-        fprintf(stdout, "[addNode] | Key...: %s\n", (*actual)->key);
-        fprintf(stdout, "[addNode] | Length: %d\n", (*actual)->length);
+        fprintf(stdout, "[addNode] | Head.Size: %d\n", (*head)->size);
+        fprintf(stdout, "[addNode] | Key......: %s\n", (*actual)->key);
+        fprintf(stdout, "[addNode] | Length...: %d\n", (*actual)->length);
         fflush(stdout);
-    // #endif
+    #endif
 }
 
 /*
@@ -150,8 +151,10 @@ LinkedListNode* getNode(LinkedListHead head, char* key) {
     LinkedListNode** actual;
     int equals = 0;
 
+    #ifdef  DEBUG
     fprintf(stdout, "[getNode] | Init\n");
     fflush(stdout);
+    #endif
 
     if(head.initialNode != NULL || head.size != 0) {
         actual = &head.initialNode;
@@ -243,7 +246,6 @@ int compareKeys(char* keyOne, char* keyTwo) {
     #endif
 
     int key_1, key_2;
-
     for(int i = 0; i < KEY_LEN; i++) {
         key_1 = (int)keyOne[i];
         key_2 = (int)keyTwo[i];

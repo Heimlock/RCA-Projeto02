@@ -25,12 +25,11 @@ void newConnection() {
         fprintf(stderr, "[%.4d] | Error! Server couldn't accept connection.\n", getpid());
         fflush(stderr);
         perror("newConnection");
-        exit(-4);
+        exit(-1);
     }
 
     fprintf(stdout, "[%.4d] | NewConnection Accepted!\n", getpid());
     fflush(stdout);
-
     if(allowNewConnections) {
         fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
         fflush(stdout);
@@ -59,7 +58,6 @@ void *attendClient(void *arg) {
     mutexUnlock(mutex_remote);
 
     receiveCommand(&innerRemote, &command);
-
     if(command == NULL) {
         fprintf(stderr, "[%.4d] | Error! Command is NULL.\n", threadId);
         fflush(stderr);
@@ -166,7 +164,7 @@ void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in)
         } else {
             newUser(&user, userId, *clientAddr, Online);
 			if(user != NULL) {
-                fprintf(stdout, "[%d] | New User Added\n", getpid());
+                fprintf(stdout, "[%d] | User Added\n", getpid());
                 fflush(stdout);
                 addNode(&users, user->id, UserData_Len, user);
                 free(user);
@@ -239,7 +237,7 @@ void	requestClient(struct commFacade_t commData, struct SPDT_Command *requestCom
     }
     mutexUnlock(mutex_list_users);
   } else {
-	  fprintf(stderr, "[%d] | Error! Client ID not received.\n", getpid());
+    fprintf(stderr, "[%d] | Error! Client ID not received.\n", getpid());
     fflush(stderr);
 	}
 }

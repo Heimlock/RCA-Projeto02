@@ -26,7 +26,6 @@
 /*
  *  Logic
  */
-
 void    initTerminal() {
     MenuItem option = -1;
 
@@ -39,14 +38,11 @@ void    initTerminal() {
     fprintf(stdout, "Launch logIn\n");
     fflush(stdout);
     noResponse(logIn, NULL);
-    fprintf(stdout, "Going to Sleep for 15s\n");
-    fflush(stdout);
-    sleep(15);
-    fprintf(stdout, "Launch logOut\n");
-    fflush(stdout);
-    waitResponse(logOut, NULL);
-    return;
+    __fpurge(stdin);
     do {
+        fprintf(stdout, "Sleep for 2s\n");
+        fflush(stdout);
+        sleep(2);
         option = Error;
         option = mainMenu();
         switch (option) {
@@ -58,14 +54,14 @@ void    initTerminal() {
                 void* vars = malloc(size);
 
                 directMessage(userId, &peerId, &msg);
-                ///*
+                /*
                 offset = 0;
                 memcpy(vars + offset, peerId, (UserId_Len + 1) * sizeof(char));
                 offset = (UserId_Len + 1) * sizeof(char);
                 memcpy(vars + offset, msg, sizeof(Message_t));
 
                 noResponse(sendMessagePeer, vars);
-                //*/
+                // */
                 enter2Continue();
                 break;
             }
@@ -75,7 +71,7 @@ void    initTerminal() {
                 LinkedListNode* groupNode;
 
                 groupMessage(userId, &groupId, &msg);
-                ///*
+                /*
                 groupNode = getNode(*groups, groupId);
 
                 if(groupNode != NULL) {
@@ -96,7 +92,7 @@ void    initTerminal() {
                 File_t *file;
 
                 directFile(userId, &peerId, &file);
-                ///*
+                /*
                 int offset;
                 int size = (UserId_Len + 1) * sizeof(char) + sizeof(File_t);
                 void* vars = malloc(size);
@@ -117,7 +113,7 @@ void    initTerminal() {
                 LinkedListNode* groupNode;
 
                 groupFile(userId, &groupId, &file);
-                ///*
+                /*
                 //  Send File Message
                 groupNode = getNode(*groups, groupId);
                 if(groupNode != NULL) {

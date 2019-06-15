@@ -92,7 +92,6 @@ void bytes2commandHeader(char* data, SPDT_Command** command) {
 
 void printCommand(int id, SPDT_Command command) {
     fprintf(stdout,"[%.4d] | Command -- Type: %d\n", id, command.type);
-    fflush(stdout);
     fprintf(stdout,"[%.4d] | Command -- Length: %d\n", id, command.length);
     fflush(stdout);
 

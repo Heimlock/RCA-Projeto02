@@ -162,7 +162,6 @@ int sendMessage(struct commFacade_t* commData, struct Message_t message) {
  *  FileData Related
  */
 
-
 /*
  *  Funcao que envia um File_t via socket
  *  Argumentos:

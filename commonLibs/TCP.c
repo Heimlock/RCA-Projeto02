@@ -23,50 +23,13 @@
 #include <netdb.h>
 
 /*
- *  Função que Inicializa a Comunicação via Socket (Cliente)
- *  Argumentos:
- *      @port       ==  Numero da Porta
- *  Retornos:
- *      > 0         ==  Erro
- *      = 0         ==  Sucesso
- *
-int     init_Client(commFacade_t* commData, int port ) {
-    int socket_len;
-
-    if (((commData->socketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("[init_Socket] | socket()");
-        return -1;
-    }
-    if (setsockopt((commData->socketDesc), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
-        perror("[init_Socket] | setsockopt(SO_REUSEADDR) failed");
-        return -2;
-    }
-    commData->socketAddr.sin_family      = AF_INET;
-    commData->socketAddr.sin_port        = htons(port);
-    commData->socketAddr.sin_addr.s_addr = INADDR_ANY;
-    if (bind((commData->socketDesc), (struct sockaddr*)&(commData->socketAddr), sizeof(commData->socketAddr)) < 0) {
-        perror("[init_Socket] | bind()");
-        return -3;
-    }
-
-    socket_len   =   sizeof(commData->socketAddr);
-    getsockname(commData->socketDesc, (struct sockaddr *)&(commData->socketAddr), (socklen_t *)&socket_len);
-
-    fprintf(stdout,"[%d] | Socket at Port %d was Initialized!\n", getpid(), ntohs(commData->socketAddr.sin_port));
-    fflush(stdout);
-    return 0;
-}
-*/
-
-/*
- *  Função que Inicializa a Comunicação via Socket (Servidor)
+ *  Função que Inicializa um Socket Servidor
  *  Argumentos:
  *      @port       ==  Numero da Porta
  *  Retornos:
  *      > 0         ==  Erro
  *      = 0         ==  Sucesso
  */
-
 int     init_Server(commFacade_t* commData, int port ) {
     if (((commData->socketDesc) = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("[init_Socket] | socket()");
@@ -157,10 +120,12 @@ int     acceptConnection(commFacade_t* local, commFacade_t* remote) {
         perror("accept()");
         return -1;
     }
+    #ifdef  DEBUG
     fprintf( stdout, "\n\n========================================\n");
     fprintf( stdout, "[%d] | Connection Accepted\n", getpid());
     fprintf( stdout, "[%d] | Connected with %s:%d\n", getpid(), inet_ntoa(remote->socketAddr.sin_addr), ntohs(remote->socketAddr.sin_port) );
     fflush(stdout);
+    #endif
     return 0;
 }
 
@@ -216,9 +181,10 @@ int     connectRemote(commFacade_t* local, commFacade_t* remote, int localPort, 
         return -5;
     }
 
+    #ifdef  DEBUG
     fprintf( stdout, "\n\n========================================\n");
-    fprintf( stdout, "[%d] | Connection Concluded\n", getpid());
     fprintf( stdout, "[%d] | Connected with %s:%d\n", getpid(), inet_ntoa(remote->socketAddr.sin_addr), ntohs(remote->socketAddr.sin_port) );
     fflush(stdout);
+    #endif
     return 0;
 }

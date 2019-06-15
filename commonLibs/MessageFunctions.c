@@ -24,7 +24,9 @@ void newMessage(Message_t** message, char* senderId, int length, void* data) {
     (*message)->data = malloc(length);
     memcpy((*message)->data, data, length);
     #ifdef DEBUG
+    if((*message) != NULL) {
         printMsg(*(*message));
+    }
     #endif
 }
 

@@ -10,10 +10,6 @@
  *  Biblioteca de Recursos Referentes as Mensagens
  */
 
-/*
- *  #define SENDERID_LEN 9  //  Implementar Aonde for Usado  
- */
-
 #include "./FileData.h"
 #include "./UserData.h"
 
@@ -59,7 +55,9 @@ void bytes2File(File_t** newFile, char* data) {
     memcpy((*newFile)->data, data + offset, (*newFile)->length);
 
     #ifdef DEBUG
+    if((*newFile) != NULL) {
         printFile(*(*newFile));
+    }
     #endif
 }
 
@@ -122,7 +120,9 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
 
     fclose(fp);
     #ifdef  DEBUG
+    if((*newFile) != NULL) {
         printFile(*(*newFile));
+    }
     #endif
 }
 

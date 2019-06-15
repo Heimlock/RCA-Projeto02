@@ -25,7 +25,9 @@ void newUser(User_t** user, char* id, struct sockaddr_in addr, enum UserState st
     (*user)->addr = addr;
     (*user)->state= state;
     #ifdef DEBUG
+    if((*user) != NULL) {
         printUser(*(*user));
+    }
     #endif
 }
 
@@ -45,7 +47,9 @@ void bytes2User(User_t** user, char* data) {
     memcpy(&(*user)->addr, data + 9, sizeof(struct sockaddr_in));
     memcpy(&(*user)->state, data + 25, 1 * sizeof(char));
     #ifdef DEBUG
+    if((*user) != NULL) {
         printUser(*(*user));
+    }
     #endif
 }
 
@@ -57,13 +61,13 @@ void printUser(User_t user) {
     fflush(stdout);
 }
 
-char* getState(int stateCode) {
+char* getState(UserState stateCode) {
     switch (stateCode) {
-    case 0x00:
+    case Offline:
         return "Offline";
-    case 0x01:
+    case Online:
         return "Online";
-    case 0x02:
+    case Away:
         return "Away";
     default:
         return "Not Defined";
