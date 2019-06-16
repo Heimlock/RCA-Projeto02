@@ -38,7 +38,11 @@ int main(int argc, char *argv[]) {
     state = Online;
 
     //  Command Handler
-    noResponse(serverThread, NULL);
+    // noResponse(serverThread, NULL);
+    if( fork() == 0 ) {
+        Log.debug(getpid(), "Server Process Started.\n");
+        serverThread();
+    }
     //  Terminal
     initTerminal();
     return 0;

@@ -13,6 +13,7 @@
 #include "./client.h"
 #include "../commonLibs/MessageData.h"
 #include "../commonLibs/CustomStreams.h"
+#include "../commonLibs/IPC.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,8 +22,8 @@
 #include <netinet/in.h>
 
 void serverThread() {
-    mutexLock(mutex_ServerSocket);
-    mutexLock(mutex_ServerSocket);
+    IPC.semLock(&sem_ServerSocket);
+    IPC.semLock(&sem_ServerSocket);
 
     Log.debug(getpid(), "Client Server Thead Initialized!\n");
     do {
@@ -40,18 +41,6 @@ void    logIn() {
         exit(-1);
     }
 
-    int auxRtn, count = 0;
-    do {
-        if(count > 10) {
-            Log.error(getpid(), "Error! Client couldn't Create a Server Socket.\n");
-            exit(-1);
-        } else {
-            count++;
-            auxRtn = 0;
-            auxRtn = init_Server(&local, rand() % 10000);
-        }
-    } while(auxRtn < 0);
-
     int commandSize = (UserId_Len * sizeof(char)) + sizeof(int);
     void* dataOut = malloc(commandSize);
     int offset = 0;
@@ -68,8 +57,8 @@ void    logIn() {
     }
     commOps.close(&sendSocket);
     commOps.close(&serverConnectionSckt);
-    //   MutexUnlock
-    mutexUnlock(mutex_ServerSocket);
+    //   Unlock
+    IPC.semUnlock(&sem_ServerSocket);
 }
 
 void    logOut() {
@@ -142,11 +131,13 @@ User_t* requestClient(char* peerId) {
 
 int    canContinue() {
     int rtnValue;
+    IPC.semLock(&sem_CanContinue);
     if(allowNewConnections) {
         rtnValue = 1;
     } else {
         rtnValue = 0;
     }
+    IPC.semUnlock(&sem_CanContinue);
     return rtnValue;
 }
 
@@ -192,7 +183,9 @@ void    attendClientPeer(void *arg) {
                 #ifdef  DEBUG
                     printMsg(*message);
                 #endif
+                IPC.semLock(&sem_list_messages);
 				addNode(&messages, message->senderId, message->length, message);
+                IPC.semUnlock(&sem_list_messages);
 				break;
             }
 	    	case SendFile: {
@@ -287,8 +280,26 @@ void    printGroup(LinkedListNode* group) {
 void  initSharedData() {
     userId = (char*) malloc(UserId_Len * sizeof(char));
 
-    mutex_list_messages = mutexInit();
-    mutex_ServerSocket = mutexInit();
+    int auxRtn, count = 0;
+    do {
+        if(count > 10) {
+            Log.error(getpid(), "Error! Client couldn't Create a Server Socket.\n");
+            exit(-1);
+        } else {
+            count++;
+            basePort = rand() % 10000;
+            auxRtn = 0;
+            auxRtn = init_Server(&local, basePort);
+        }
+    } while(auxRtn < 0);
+
+    IPC.semOpen(&sem_list_messages, basePort);
+    IPC.semOpen(&sem_CanContinue, basePort + 1);
+    IPC.semOpen(&sem_ServerSocket, basePort + 2);
+
+    IPC.memOpen(&shMem_messages, basePort + 3, sizeof(struct LinkedListHead));
+    messages = (Message_t *)shMem_messages.data;
+
     mutex_RemoteSocket = mutexInit();
 
     initList(&messages);
@@ -297,10 +308,4 @@ void  initSharedData() {
 
     threadCount = 0;
     allowNewConnections = 1;
-
-    //TODO free nas listas
-    if(mutex_list_messages == NULL) {
-        mutexDestroy(mutex_list_messages);
-        exit(-1);
-    }
 }

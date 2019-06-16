@@ -29,7 +29,7 @@
  *  Logic
  */
 void    initTerminal() {
-    MenuItem option = -1;
+    int option = -1;
 
     Log.plain("Enter with your 9 digit ID\n");
     Input.getStr("UserId: ", &userId, (UserId_Len + 1) * sizeof(char));
@@ -39,7 +39,8 @@ void    initTerminal() {
     logIn();
     do {
         option = Error;
-        option = mainMenu();
+        mainMenu();
+        Input.getInt("Option: ", &option);
         switch (option) {
             case DirectMessage: { 
                 char* peerId = (char*) malloc((1 + UserId_Len) * sizeof(char));
@@ -126,7 +127,7 @@ void    initTerminal() {
             case Inbox: {
                 LinkedListNode* msgNode;
                 Message_t* auxMsg;
-                mutexLock(mutex_list_messages);
+                IPC.semLock(&sem_list_messages);
                 if(messages->size > 0) {
                     do {
                         msgNode = llOps.getFirst(messages);
@@ -141,7 +142,7 @@ void    initTerminal() {
                     Log.plain("No Messages to Read.\n");
                     enter2Continue();
                 }
-                mutexUnlock(mutex_list_messages);
+                IPC.semUnlock(&sem_list_messages);
                 break;
             }
             case Contacts: { /*
@@ -245,13 +246,12 @@ void    printHeader() {
     Log.plain("========================================\n");
     Log.plain("UserId: %s\n", userId);
 
-    mutexLock(mutex_list_messages);
+    IPC.semLock(&sem_list_messages);
     Log.plain("Inbox.: %d\n", messages->size);
-    mutexUnlock(mutex_list_messages);
+    IPC.semUnlock(&sem_list_messages);
 }
 
 int     mainMenu() {
-    int option;
     printHeader();
 
     Log.plain("\nMenu\n");
@@ -262,8 +262,6 @@ int     mainMenu() {
     Log.plain("[%.2d] - Inbox\n", Inbox);
     Log.plain("[%.2d] - Contacts\n", Contacts);
     Log.plain("[%.2d] - Exit\n", Exit);
-    Input.getInt("Option: ", &option);
-    return option;
 }
 
 int     displayContactsMenu() {

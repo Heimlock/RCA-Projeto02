@@ -14,6 +14,7 @@
 #include "../commonLibs/Communication.h"
 #include "../commonLibs/LinkedList.h"
 #include "../commonLibs/ThreadManager.h"
+#include "../commonLibs/IPC.h"
 
 #ifndef VARS_INIT
 #define VARS_INIT
@@ -24,13 +25,17 @@
     int  threadCount;
     int allowNewConnections;
 
+    int basePort;
+
+    struct shMemControl_t   shMem_messages;
     struct LinkedListHead   *messages;
     struct LinkedListHead   *contacts;
     struct LinkedListHead   *groups;
 
-    pthread_mutex_t  *mutex_list_messages;
-    pthread_mutex_t  *mutex_ServerSocket;
-    pthread_mutex_t  *mutex_RemoteSocket;
+    struct semControl_t     sem_list_messages;
+    struct semControl_t     sem_CanContinue;
+    struct semControl_t     sem_ServerSocket;
+    struct pthread_mutex_t  *mutex_RemoteSocket;
 
     struct commFacade_t local;
     struct commFacade_t remote;
@@ -42,13 +47,17 @@
     extern int threadCount;
     extern int allowNewConnections;
 
+    extern int basePort;
+
+    extern struct shMemControl_t   shMem_messages;
     extern struct LinkedListHead   *messages;
     extern struct LinkedListHead   *contacts;
     extern struct LinkedListHead   *groups;
 
-    extern pthread_mutex_t  *mutex_list_messages;
-    extern pthread_mutex_t  *mutex_ServerSocket;
-    extern pthread_mutex_t  *mutex_RemoteSocket;
+    extern struct semControl_t     sem_list_messages;
+    extern struct semControl_t     sem_CanContinue;
+    extern struct semControl_t     sem_ServerSocket;
+    extern struct pthread_mutex_t  *mutex_RemoteSocket;
 
     extern struct commFacade_t local;
     extern struct commFacade_t remote;
