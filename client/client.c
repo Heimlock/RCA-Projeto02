@@ -21,6 +21,7 @@
 #include "../commonLibs/CustomStreams.h"
 
 int main(int argc, char *argv[]) {
+    Log.setLevel(Log_Debug);
     Log.info(getpid(), "Client Module Initialized!\n");
 
    if(argc != 3) {

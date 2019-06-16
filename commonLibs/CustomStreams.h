@@ -20,7 +20,19 @@
 #include <string.h>
 #include <unistd.h>
 
+/*
+ *  Log Related Definitions
+ */
+typedef enum LogLevel {
+    Log_Debug   = 0x00,
+    Log_Fine    = 0x01,
+    Log_Info    = 0x02,
+    Log_Error   = 0x99,
+    Log_Plain   = 0xFF,
+} LogLevel;
+
 typedef struct LogOps {
+    void (*setLevel)(enum LogLevel level);
     void (*error)   (int origin, const char *format, ...);
     void (*fine)    (int origin, const char *format, ...);
     void (*info)    (int origin, const char *format, ...);

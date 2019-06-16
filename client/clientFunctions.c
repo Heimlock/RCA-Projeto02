@@ -162,7 +162,7 @@ void  	newReceiver() {
     if(allowNewConnections) {
         Log.debug(getpid(), "New Connection!\n");
         mutexLock(mutex_RemoteSocket);
-        if(noResponse(attendClientPeer, threadCount) < 0) {
+        if(waitResponse(attendClientPeer, threadCount) < 0) {
             Log.error(getpid(), "Error! Thread couldn't attend.\n");
             perror("newReceiver");
         }
@@ -189,8 +189,10 @@ void    attendClientPeer(void *arg) {
 		switch(dataType) {
 	    	case SendText: {
 				message = (Message_t *) dataReceived;
-				addNode(&messages, message->senderId, message->length, message->data);
-				free(message);
+                #ifdef  DEBUG
+                    printMsg(*message);
+                #endif
+				addNode(&messages, message->senderId, message->length, message);
 				break;
             }
 	    	case SendFile: {
@@ -211,19 +213,21 @@ void    attendClientPeer(void *arg) {
 	threadExit(NULL);
 }
 
-void 	sendMessagePeer(void* vars) { //(struct sockaddr_in address, struct Message_t message){
+void 	sendMessagePeer(char* peerId, struct Message_t message) { //(void* vars) {
     struct commFacade_t localPeer, remotePeer;
     char *ipPeer;
     int portPeer;
+
+    /*
     struct Message_t message;
     char *peerId = (char*) malloc((UserId_Len + 1) * sizeof(char));
     int offset;
-
     offset = 0;
     memcpy(peerId, vars + offset, (UserId_Len + 1) * sizeof(char));
     offset = (UserId_Len + 1) * sizeof(char);
     memcpy(&message, vars + offset, sizeof(Message_t));
     free(vars);
+    //*/
 
     User_t  *user;
     user = requestClient(peerId);

@@ -61,7 +61,7 @@ User_t* requestClient(char*);
 
 void    newReceiver();
 void    attendClientPeer(void *arg);
-void    sendMessagePeer(void* vars);// (struct sockaddr_in, struct Message_t);
+void 	sendMessagePeer(char* peerId, struct Message_t message); //(void* vars);
 void 	sendFilePeer(void* vars);//(struct sockaddr_in, struct File_t);
 void    printGroup(LinkedListNode* group);
 

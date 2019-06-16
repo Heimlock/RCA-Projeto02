@@ -63,7 +63,7 @@ int     init_Server(commFacade_t* commData, int port ) {
         perror("[init_Socket] | listen()");
         return -4;
     }
-   Log.fine(getpid(), "Server Socket at %s : %d was Initialized\n", inet_ntoa(commData->socketAddr.sin_addr), ntohs(commData->socketAddr.sin_port) );
+   Log.fine(getpid(), "Server Socket at %s:%d was Initialized\n", inet_ntoa(commData->socketAddr.sin_addr), ntohs(commData->socketAddr.sin_port) );
    return 0;
 }
 
@@ -134,7 +134,7 @@ int     acceptConnection(commFacade_t* local, commFacade_t* remote) {
 
     Log.fine(getpid(), "\n\n========================================\n");
     Log.fine(getpid(), "Connection Accepted\n");
-    Log.fine(getpid(), "Connected with %s : %d\n", inet_ntoa(remote->socketAddr.sin_addr), ntohs(remote->socketAddr.sin_port) );
+    Log.fine(getpid(), "Connected with %s:%d\n", inet_ntoa(remote->socketAddr.sin_addr), ntohs(remote->socketAddr.sin_port) );
     return 0;
 }
 
@@ -190,6 +190,6 @@ int     connectRemote(commFacade_t* local, commFacade_t* remote, int localPort, 
     }
 
     Log.fine(getpid(), "\n\n========================================\n");
-    Log.fine(getpid(), "Connected with %s : %d\n", inet_ntoa(remote->socketAddr.sin_addr), ntohs(remote->socketAddr.sin_port) );
+    Log.fine(getpid(), "Connected with %s:%d\n", inet_ntoa(remote->socketAddr.sin_addr), ntohs(remote->socketAddr.sin_port) );
     return 0;
 }

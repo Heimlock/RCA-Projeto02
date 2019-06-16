@@ -31,35 +31,32 @@
 void    initTerminal() {
     MenuItem option = -1;
 
-    Log.plain("%s", "Enter with your 9 digit ID\n");
+    Log.plain("Enter with your 9 digit ID\n");
     Input.getStr("UserId: ", &userId, (UserId_Len + 1) * sizeof(char));
     Log.debug(getpid(), "Launch logIn\n");
 
-    noResponse(logIn, NULL);
+    // noResponse(logIn, NULL);
+    logIn();
     do {
-        #ifdef  DEBUG
-            Log.debug(getpid(), "Sleep for 2s\n");
-            sleep(2);
-        #endif
-
         option = Error;
         option = mainMenu();
         switch (option) {
             case DirectMessage: { 
                 char* peerId = (char*) malloc((1 + UserId_Len) * sizeof(char));
                 Message_t *msg;
-                int offset;
-                int size = (UserId_Len + 1) * sizeof(char) + sizeof(Message_t);
-                void* vars = malloc(size);
 
                 directMessage(userId, &peerId, &msg);
-                /*
-                offset = 0;
-                memcpy(vars + offset, peerId, (UserId_Len + 1) * sizeof(char));
-                offset = (UserId_Len + 1) * sizeof(char);
-                memcpy(vars + offset, msg, sizeof(Message_t));
+                // /*
+                // int offset;
+                // int size = (UserId_Len + 1) * sizeof(char) + sizeof(Message_t);
+                // void* vars = malloc(size);
+                // offset = 0;
+                // memcpy(vars + offset, peerId, (UserId_Len + 1) * sizeof(char));
+                // offset = (UserId_Len + 1) * sizeof(char);
+                // memcpy(vars + offset, msg, sizeof(Message_t));
 
-                noResponse(sendMessagePeer, vars);
+                // noResponse(sendMessagePeer, vars);
+                sendMessagePeer(peerId, *msg);
                 // */
                 enter2Continue();
                 free(peerId);
@@ -141,7 +138,7 @@ void    initTerminal() {
                         }
                     } while(msgNode != NULL);
                 } else {
-                    Log.plain("%s", "No Messages to Read.\n");
+                    Log.plain("No Messages to Read.\n");
                     enter2Continue();
                 }
                 mutexUnlock(mutex_list_messages);
@@ -156,11 +153,15 @@ void    initTerminal() {
                 break;
             }
             default: {
-                Log.plain("%s", "Not a Valid Option!\n");
+                Log.plain("Not a Valid Option! Option: %s, Code: %d\n", getOption(option), option);
                 enter2Continue();
                 break;
             }
         }
+        #ifdef  DEBUG
+            Log.debug(getpid(), "Sleep for 2s\n");
+            sleep(2);
+        #endif
     }while(option != Exit);
     waitResponse(logOut, NULL);
     state = Offline;
@@ -188,8 +189,8 @@ void    contactsSubMenu () {
             }
             case NewContact: {
                 char* userId = (char*) malloc((1 + UserId_Len) * sizeof(char));
-                Log.plain("%s", "New Contact\n");
-                Log.plain("%s", "Enter the new userId.\n");
+                Log.plain("New Contact\n");
+                Log.plain("Enter the new userId.\n");
                 Input.getStr("UserId: \n", &userId, (UserId_Len + 1) * sizeof(char));
                 llOps.add(contacts, userId, userId);
                 enter2Continue();
@@ -198,8 +199,8 @@ void    contactsSubMenu () {
             }
             case DeleteContact: {
                 char* userId = (char*) malloc((1 + UserId_Len) * sizeof(char));
-                Log.plain("%s", "Delete Contact\n");
-                Log.plain("%s", "Enter the userId to Delete.\n");
+                Log.plain("Delete Contact\n");
+                Log.plain("Enter the userId to Delete.\n");
 
                 Input.getStr("UserId: \n", &userId, (UserId_Len + 1) * sizeof(char));
                 llOps.remove(contacts, userId);
@@ -212,13 +213,13 @@ void    contactsSubMenu () {
                 //  Do
                 //  Receive UserId
                 //  While True
-                Log.plain("%s", "Not yet Implemented!\n");
+                Log.plain("Not yet Implemented!\n");
                 break;
             }
             case DeleteGroup: {
                 char* groupId = (char*) malloc((1 + UserId_Len) * sizeof(char));
-                Log.plain("%s", "Delete Contact\n");
-                Log.plain("%s", "Enter the GroupId to Delete.\n");
+                Log.plain("Delete Contact\n");
+                Log.plain("Enter the GroupId to Delete.\n");
                 Input.getStr("GroupId: \n", &groupId, (UserId_Len + 1) * sizeof(char));
                 llOps.remove(groups, groupId);
                 enter2Continue();
@@ -226,7 +227,7 @@ void    contactsSubMenu () {
                 break;
             }
             default: {
-                Log.plain("%s", "Not a Valid Option!\n");
+                Log.plain("Not a Valid Option!\n");
                 break;
             }
         }
@@ -238,10 +239,10 @@ void    contactsSubMenu () {
  */
 
 void    printHeader() {
-    system("clear");
-    Log.plain("%s", "========================================\n");
-    Log.plain("%s", "----------------WhatsP2P----------------\n");
-    Log.plain("%s", "========================================\n");
+    // system("clear");
+    Log.plain("========================================\n");
+    Log.plain("----------------WhatsP2P----------------\n");
+    Log.plain("========================================\n");
     Log.plain("UserId: %s\n", userId);
 
     mutexLock(mutex_list_messages);
@@ -253,7 +254,7 @@ int     mainMenu() {
     int option;
     printHeader();
 
-    Log.plain("%s", "\nMenu\n");
+    Log.plain("\nMenu\n");
     Log.plain("[%.2d] - Direct Message\n", DirectMessage);
     Log.plain("[%.2d] - Direct File\n", DirectFile);
     Log.plain("[%.2d] - Group Message\n", GroupMessage);
@@ -269,7 +270,7 @@ int     displayContactsMenu() {
     printHeader();
     int option;
 
-    Log.plain("%s", "\nMenu de Contatos\n");
+    Log.plain("\nMenu de Contatos\n");
     Log.plain("[%.2d] - List Users\n", ListUsers);
     Log.plain("[%.2d] - List Groups\n", ListGroups);
     Log.plain("[%.2d] - New Contact\n", NewContact);
@@ -328,4 +329,39 @@ void enter2Continue() {
     Log.plain("Press Enter to continue.\n");
     getchar();
     __fpurge(stdin);
+}
+
+char* getOption(enum MenuItem option) {
+    switch (option) {
+    case DirectMessage: 
+        return "DirectMessage";
+    case DirectFile: 
+        return "DirectFile";
+    case GroupMessage: 
+        return "GroupMessage";
+    case GroupFile: 
+        return "GroupFile";
+    case Inbox: 
+        return "Inbox";
+    case Contacts: 
+        return "Contacts";
+    case ListUsers: 
+        return "ListUsers";
+    case ListGroups: 
+        return "ListGroups";
+    case NewContact: 
+        return "NewContact";
+    case DeleteContact: 
+        return "DeleteContact";
+    case NewGroup: 
+        return "NewGroup";
+    case DeleteGroup: 
+        return "DeleteGroup";
+    case Exit: 
+        return "Exit";
+    case Error: 
+        return "Error";
+    default:
+        return "Not Defined";
+    }
 }

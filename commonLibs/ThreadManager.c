@@ -32,6 +32,7 @@
 void* waitResponse(void* function, void* args) {
     pthread_t thread;
     void* retValue = malloc(sizeof(void*));
+    Log.debug(getpid(), "Launching a waitResponse Thread\n");
     if (pthread_create(&thread, NULL, function, args)) {
         Log.error(getpid(), "Error! Thread couldn't be Created.\n");
         perror("pthread_create");
@@ -42,6 +43,7 @@ void* waitResponse(void* function, void* args) {
         perror("pthread_join");
         return NULL;
     }
+    Log.debug(getpid(), "waitResponse Thread Terminated\n");
     return retValue;
 }
 
@@ -56,6 +58,7 @@ void* waitResponse(void* function, void* args) {
  */
 int noResponse(void* function, void* args) {
     pthread_t thread;
+    Log.debug(getpid(), "Launching a noResponse Thread\n");
     if (pthread_create(&thread, NULL, function, args)) {
         Log.error(getpid(), "Error! Thread couldn't be Created.\n");
         perror("pthread_create");

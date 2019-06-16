@@ -21,25 +21,15 @@
 #include <stdarg.h>
 #include <string.h>
 
-/*
- *  Log Related Definitions
- */
-typedef enum LogLevel {
-    Debug   = 0x00,
-    Fine    = 0x01,
-    Info    = 0x02,
-    Error   = 0x99,
-} LogLevel;
-
 
 /*
  *  Log General Configs
  */
 #ifdef  DEBUG
-    static const LogLevel LogCurrentLevel = Debug;
+    static LogLevel LogCurrentLevel = Log_Debug;
 #else
     #ifndef LogLevel
-        static const LogLevel LogCurrentLevel = Info;
+        static LogLevel LogCurrentLevel = Log_Info;
     #endif
 #endif
 
@@ -57,15 +47,19 @@ static char *LogLevel_Colors[] = {
  *  Log Related Functions
  */
 
+void setLogLevel(enum LogLevel level) {
+    LogCurrentLevel = level;
+}
+
 char* pickCollor(enum LogLevel level) {
     switch (level) {
-        case Debug:
+        case Log_Debug:
             return LogLevel_Colors[1];
-        case Fine:
+        case Log_Fine:
             return LogLevel_Colors[2];
-        case Info:
+        case Log_Info:
             return LogLevel_Colors[3];
-        case Error:
+        case Log_Error:
             return LogLevel_Colors[5];
         default:
             return "\x1b[0m";   //  Reset
@@ -98,11 +92,11 @@ void stdPrint(LogLevel level, int collored, FILE *file, const char *format, ...)
 
 void printError(int origin, const char *format, ...) {
     va_list args;
-    if(Error < LogCurrentLevel) {
+    if(Log_Error < LogCurrentLevel) {
         return;
     } else {
-        stdPrint(Error, 0, (FILE *)stderr, "[%.4d] | ", origin);
-        stdPrint(Error, 1, (FILE *)stderr, "ERROR - ", origin);
+        stdPrint(Log_Error, 0, (FILE *)stderr, "[%.4d] | ", origin);
+        stdPrint(Log_Error, 1, (FILE *)stderr, "ERROR - ", origin);
         flockfile(stderr);
         va_start(args, format);
         vfprintf(stderr, format, args);
@@ -114,11 +108,11 @@ void printError(int origin, const char *format, ...) {
 
 void printFine(int origin, const char *format, ...) {
     va_list args;
-    if(Fine < LogCurrentLevel) {
+    if(Log_Fine < LogCurrentLevel) {
         return;
     } else {
-        stdPrint(Fine, 0, (FILE *)stdout, "[%.4d] | ", origin);
-        stdPrint(Fine, 1, (FILE *)stdout, "FINE  - ", origin);
+        stdPrint(Log_Fine, 0, (FILE *)stdout, "[%.4d] | ", origin);
+        stdPrint(Log_Fine, 1, (FILE *)stdout, "FINE  - ", origin);
         flockfile(stdout);
         va_start(args, format);
         vfprintf(stdout, format, args);
@@ -130,11 +124,11 @@ void printFine(int origin, const char *format, ...) {
 
 void printInfo(int origin, const char *format, ...) {
     va_list args;
-    if(Info < LogCurrentLevel) {
+    if(Log_Info < LogCurrentLevel) {
         return;
     } else {
-        stdPrint(Info, 0, (FILE *)stdout, "[%.4d] | ", origin);
-        stdPrint(Info, 1, (FILE *)stdout, "INFO  - ", origin);
+        stdPrint(Log_Info, 0, (FILE *)stdout, "[%.4d] | ", origin);
+        stdPrint(Log_Info, 1, (FILE *)stdout, "INFO  - ", origin);
         flockfile(stdout);
         va_start(args, format);
         vfprintf(stdout, format, args);
@@ -146,11 +140,11 @@ void printInfo(int origin, const char *format, ...) {
 
 void printDebug(int origin, const char *format, ...) {
     va_list args;
-    if(Debug < LogCurrentLevel) {
+    if(Log_Debug < LogCurrentLevel) {
         return;
     } else {
-        stdPrint(Debug, 0, (FILE *)stdout, "[%.4d] | ", origin);
-        stdPrint(Debug, 1, (FILE *)stdout, "DEBUG - ", origin);
+        stdPrint(Log_Debug, 0, (FILE *)stdout, "[%.4d] | ", origin);
+        stdPrint(Log_Debug, 1, (FILE *)stdout, "DEBUG - ", origin);
         flockfile(stdout);
         va_start(args, format);
         vfprintf(stdout, format, args);
@@ -162,16 +156,12 @@ void printDebug(int origin, const char *format, ...) {
 
 void printPlain(const char *format, ...) {
     va_list args;
-    if(Info < LogCurrentLevel) {
-        return;
-    } else {
-        flockfile(stdout);
-        va_start(args, format);
-        vfprintf(stdout, format, args);
-        va_end(args);
-        fflush(stdout);
-        funlockfile(stdout);
-    }
+    flockfile(stdout);
+    va_start(args, format);
+    vfprintf(stdout, format, args);
+    va_end(args);
+    fflush(stdout);
+    funlockfile(stdout);
 }
 
 /*
@@ -179,41 +169,42 @@ void printPlain(const char *format, ...) {
  */
 
 void getIntFunction(char* message, int* value) {
-    stdPrint(Info, 0, (FILE *)stdout, "%s", message);
+    stdPrint(Log_Plain, 0, (FILE *)stdout, "%s", message);
 
     flockfile(stdin);
-    printPlain(message);
+    __fpurge(stdin);
     fscanf(stdin,"%d", value);
     __fpurge(stdin);
     funlockfile(stdin);
 }
 
 void getCharFunction(char* message, char* value) {
-    stdPrint(Info, 0, (FILE *)stdout, "%s", message);
+    stdPrint(Log_Plain, 0, (FILE *)stdout, "%s", message);
 
     flockfile(stdin);
-    printPlain(message);
+    __fpurge(stdin);
     fscanf(stdin,"%c", value);
     __fpurge(stdin);
     funlockfile(stdin);
 }
 
 void getStringFunction(char* message, char** value, int maxStrLen) {
-    stdPrint(Info, 0, (FILE *)stdout, "%s", message);
+    stdPrint(Log_Plain, 0, (FILE *)stdout, "%s", message);
 
     flockfile(stdin);
-    printPlain(message);
+    __fpurge(stdin);
     fgets(*value, maxStrLen, stdin);
     __fpurge(stdin);
     funlockfile(stdin);
 }
 
 void getGeneric(char* message, const char *format, ...) {
-    stdPrint(Info, 0, (FILE *)stdout, "%s", message);
+    stdPrint(Log_Plain, 0, (FILE *)stdout, "%s", message);
 
     flockfile(stdin);
     va_list args;
     va_start (args, format);
+    __fpurge(stdin);
     vfscanf (stdin, format, args);
     __fpurge(stdin);
     va_end (args);
@@ -226,11 +217,12 @@ void getGeneric(char* message, const char *format, ...) {
  */
 
 struct LogOps Log = {
-    .error  =   printError,
-    .fine   =   printFine,
-    .info   =   printInfo,
-    .debug  =   printDebug,
-    .plain  =   printPlain
+    .setLevel=   setLogLevel,
+    .error   =   printError,
+    .fine    =   printFine,
+    .info    =   printInfo,
+    .debug   =   printDebug,
+    .plain   =   printPlain
 };
 
 struct UserInput Input = {

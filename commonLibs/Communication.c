@@ -179,6 +179,6 @@ int sendFile(struct commFacade_t* commData, struct File_t file) {
 void printBytes(int id, void *bytes, int length) {
     char* auxValue = bytes;
     for( int i = 0; i< length; i++ ) {
-        Log.debug(id,"Value[%d]: 0x%02hhX\n", id, i, auxValue[i]);
+        Log.debug(id,"Value[%d]: 0x%02hhX\n", i, auxValue[i]);
     }
 }
