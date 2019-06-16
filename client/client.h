@@ -20,7 +20,7 @@
     char* ip;
     int port;
     UserState state;
-    char userId[10];
+    char* userId;
     int  threadCount;
     int allowNewConnections;
 
@@ -38,7 +38,7 @@
     extern char* ip;
     extern int port;
     extern UserState state;
-    extern char userId[10];
+    extern char* userId;
     extern int threadCount;
     extern int allowNewConnections;
 

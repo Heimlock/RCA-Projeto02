@@ -11,24 +11,23 @@
  *	 Desenvolvimento Lógico Referente ao Servidor
  */
 
+#include "./server.h"
+#include "../commonLibs/CustomStreams.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "./server.h"
 
 int main(int argc, char const *argv[]) {
-    fprintf(stdout, "[%d] | Central Server Initialized!\n", getpid());
-    fflush(stdout);
+    Log.info(getpid(), "Central Server Initialized!\n");
 
     if(argc != 2) {
-        fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
-        fprintf(stderr, "[%d] | Usage: ./server <port> \n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Not a Valid Input!\n");
+        Log.error(getpid(), "Usage: ./server <port> \n");
         exit(-1);
     }
     if((commOps.initServer(&local, atoi(argv[1]))) < 0) {
-        fprintf(stderr, "[%d] | Error! Init Socket Server!\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Init Socket Server!\n");
         exit(-2);
     }
 

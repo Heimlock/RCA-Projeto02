@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "SPDT.h"
+#include "CustomStreams.h"
 
 void newCommand(SPDT_Command** command, ActionType type, int length, void* data) {
     (*command) = (SPDT_Command*) malloc(sizeof(SPDT_Command));
@@ -91,13 +92,12 @@ void bytes2commandHeader(char* data, SPDT_Command** command) {
 }
 
 void printCommand(int id, SPDT_Command command) {
-    fprintf(stdout,"[%.4d] | Command -- Type: %d\n", id, command.type);
-    fprintf(stdout,"[%.4d] | Command -- Length: %d\n", id, command.length);
-    fflush(stdout);
+    Log.info(id, "Type.....: %d\n", command.type);
+    Log.info(id, "Length...: %d\n", command.length);
 
     char* auxValue = command.value;
     for( int i = 0; i< command.length; i++ ) {
-        fprintf(stdout,"[%.4d] | Command -- Value[%d]: 0x%02hhX\n", id, i, auxValue[i]);
+        Log.info(id, "Value[%.2d]: 0x%02hhX\n", i, auxValue[i]);
         fflush(stdout);
     }
 }

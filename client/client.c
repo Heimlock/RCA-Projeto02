@@ -18,15 +18,14 @@
 #include "./terminal.h"
 #include "../commonLibs/ThreadManager.h"
 #include "../commonLibs/UserData.h"
+#include "../commonLibs/CustomStreams.h"
 
-int main(int argc, char const *argv[]) {
-    fprintf(stdout, "[%d] | Client Module Initialized!\n", getpid());
-    fflush(stdout);
+int main(int argc, char *argv[]) {
+    Log.info(getpid(), "Client Module Initialized!\n");
 
    if(argc != 3) {
-        fprintf(stderr, "[%d] | Error! Not a Valid Input!\n", getpid());
-        fprintf(stderr, "[%d] | Usage: ./client <ServerIP> <Port>\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Not a Valid Input!\n");
+        Log.error(getpid(), "Usage: ./client <ServerIP> <Port>\n");
         exit(-1);
     }
 

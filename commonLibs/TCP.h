@@ -50,20 +50,12 @@ int     receiveData(commFacade_t* commData, void **data, size_t size);
 int	    acceptConnection(commFacade_t* local, commFacade_t* remote);
 int     connectRemote(commFacade_t* local, commFacade_t* remote, int localPort, char *remoteAddr, int remotePort);
 
-#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
-#pragma GCC diagnostic ignored "-Wunused-variable"
-static struct commOps_t commOps = {
-    .initServer =init_Server,
-    .close      =close_Socket,
-    .send       =sendData,
-    .receive    =receiveData,
-    .accept     =acceptConnection,
-    .connect    =connectRemote,
-};
+extern const struct commOps_t commOps;
 
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #ifdef  DEBUG
-    static int enable = 1;
+    const static int enable = 1;
 #else
-    static int enable = 0;
+    const static int enable = 0;
 #endif
 #endif

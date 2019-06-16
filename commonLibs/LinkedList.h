@@ -51,17 +51,7 @@ int  removeNode(struct LinkedListHead* head, char* key);
 struct LinkedListNode* getNode(LinkedListHead head, char* key);
 struct LinkedListNode* getFirst(struct LinkedListHead* head);
 void    printAllKeys(LinkedListHead* head);
-void    forEach(LinkedListHead* head, void (*function)(LinkedListNode*));
+void    forEach(LinkedListHead* head, void (*function)(void*));
 
-#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
-#pragma GCC diagnostic ignored "-Wunused-variable"
-static struct LinkedListOps llOps = {
-    .initHead   =   initList,
-    .add        =   addNode,
-    .remove     =   removeNode,
-    .get        =   getNode,
-    .getFirst   =   getFirst,
-    .destroyHead=   destroyHead,
-    .destroyNode=   destroyNode
-};
+extern const struct LinkedListOps llOps;
 #endif

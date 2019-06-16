@@ -11,11 +11,25 @@
  *  manipulacao de Listas Ligadas
  */
 
+#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+
 #include "LinkedList.h"
+#include "CustomStreams.h"
+
+const struct LinkedListOps llOps = {
+    .initHead   =   initList,
+    .add        =   addNode,
+    .remove     =   removeNode,
+    .get        =   getNode,
+    .getFirst   =   getFirst,
+    .destroyHead=   destroyHead,
+    .destroyNode=   destroyNode
+};
 
 /*
  *  Função que Inicia Corretamente um LinkedListHead
@@ -91,13 +105,10 @@ void addNode(LinkedListHead** head, char* key, int length, void* data) {
 
 	(*actual)->next = NULL;
 
-    #ifdef  DEBUG
-        fprintf(stdout, "[addNode] | Node Added!\n");
-        fprintf(stdout, "[addNode] | Head.Size: %d\n", (*head)->size);
-        fprintf(stdout, "[addNode] | Key......: %s\n", (*actual)->key);
-        fprintf(stdout, "[addNode] | Length...: %d\n", (*actual)->length);
-        fflush(stdout);
-    #endif
+    Log.debug(getpid(), "Node Added!\n");
+    Log.debug(getpid(), "Head.Size: %d\n", (*head)->size);
+    Log.debug(getpid(), "Key......: %s\n", (*actual)->key);
+    Log.debug(getpid(), "Length...: %d\n", (*actual)->length);
 }
 
 /*
@@ -114,7 +125,7 @@ int removeNode(LinkedListHead* head, char* key) {
     LinkedListNode** last;
     int running = 1;
     if(head->initialNode == NULL) {
-        perror("[removeNode] | Initial Node is Null.");
+        Log.error(getpid(), "Initial Node is Null.");
         return -1;
     } else {
         node = head->initialNode;
@@ -133,9 +144,51 @@ int removeNode(LinkedListHead* head, char* key) {
                 running = 0;
             }
         } while(running);
-        perror("[removeNode] | Node not Found");
+        Log.error(getpid(), "Node not Found");
         return -2;
     }
+}
+
+/*
+ *  Função que Itera a Lista executando um Procedimento sobre cada Node
+ *  Argumentos:
+ *      @head       ==  Header da Lista Ligada
+ *      @function   ==  Ponteiro do Procedimento
+ */
+void    forEach(LinkedListHead* head, void (*function)(void*)) {
+    LinkedListNode** actual;
+    if(head->initialNode != NULL || head->size != 0) {
+        actual = &head->initialNode;
+        while (*actual) {
+            function((void*)*actual);
+            actual = &(*actual)->next;
+        }
+    } else {
+        Log.error(getpid(), "Head is Empty\n");
+    }
+}
+
+/*
+ *  Função que Compara 2 Chaves
+ *  Argumentos:
+ *      @keyOne     ==  Chave 1
+ *      @keyTwo     ==  Chave 2
+ *  Retornos:
+ *      1           ==  Iguais
+ *      0           ==  Diferentes
+ */
+int compareKeys(char* keyOne, char* keyTwo) {
+    int key_1, key_2;
+    Log.debug(getpid(), "Comparing: %s & %s\n", keyOne, keyTwo);
+
+    for(int i = 0; i < KEY_LEN; i++) {
+        key_1 = (int)keyOne[i];
+        key_2 = (int)keyTwo[i];
+        if(key_1 != key_2) {
+            return 0;
+        }
+    }
+    return 1;
 }
 
 /*
@@ -151,10 +204,7 @@ LinkedListNode* getNode(LinkedListHead head, char* key) {
     LinkedListNode** actual;
     int equals = 0;
 
-    #ifdef  DEBUG
-    fprintf(stdout, "[getNode] | Init\n");
-    fflush(stdout);
-    #endif
+    Log.debug(getpid(), "getNode Init\n");
 
     if(head.initialNode != NULL || head.size != 0) {
         actual = &head.initialNode;
@@ -165,8 +215,7 @@ LinkedListNode* getNode(LinkedListHead head, char* key) {
             }
             actual = &(*actual)->next;
         }
-        fprintf(stderr, "[getNode] | Node not Found\n");
-        fflush(stderr);
+        Log.error(getpid(), "Node not Found\n");
     }
     return NULL;
 }
@@ -181,7 +230,7 @@ LinkedListNode* getNode(LinkedListHead head, char* key) {
  */
 LinkedListNode* getFirst(LinkedListHead* head) {
     if(head->initialNode == NULL) {
-        perror("Initial Node is Null.");
+        Log.error(getpid(), "Initial Node is Null.");
         return NULL;
     } else {
         return head->initialNode;
@@ -200,58 +249,10 @@ void    printAllKeys(LinkedListHead* head) {
     if(head->initialNode != NULL || head->size != 0) {
         actual = &head->initialNode;
         while (*actual) {
-            fprintf(stdout, "[%.4d] | Key: %s\n", nodeCount++, (*actual)->key);
-            fflush(stdout);
+            Log.plain("[%.4d] | Key: %s\n", nodeCount++, (*actual)->key);
             actual = &(*actual)->next;
         }
     } else {
-        fprintf(stderr, "Head is Empty\n");
-        fflush(stderr);
+        Log.error(getpid(), "Head is Empty\n");
     }
-}
-
-/*
- *  Função que Itera a Lista executando um Procedimento sobre cada Node
- *  Argumentos:
- *      @head       ==  Header da Lista Ligada
- *      @function   ==  Ponteiro do Procedimento
- */
-void    forEach(LinkedListHead* head, void (*function)(LinkedListNode*)) {
-    LinkedListNode** actual;
-    if(head->initialNode != NULL || head->size != 0) {
-        actual = &head->initialNode;
-        while (*actual) {
-            function(*actual);
-            actual = &(*actual)->next;
-        }
-    } else {
-        fprintf(stderr, "Head is Empty\n");
-        fflush(stderr);
-    }
-}
-
-/*
- *  Função que Compara 2 Chaves
- *  Argumentos:
- *      @keyOne     ==  Chave 1
- *      @keyTwo     ==  Chave 2
- *  Retornos:
- *      1           ==  Iguais
- *      0           ==  Diferentes
- */
-int compareKeys(char* keyOne, char* keyTwo) {
-    #ifdef  DEBUG
-        fprintf(stdout, "[compareKeys] | Comparing: %s & %s\n", keyOne, keyTwo);
-        fflush(stdout);
-    #endif
-
-    int key_1, key_2;
-    for(int i = 0; i < KEY_LEN; i++) {
-        key_1 = (int)keyOne[i];
-        key_2 = (int)keyTwo[i];
-        if(key_1 != key_2) {
-            return 0;
-        }
-    }
-    return 1;
 }
