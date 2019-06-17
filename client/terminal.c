@@ -326,9 +326,9 @@ void    groupFile(char* userId, char** groupId, File_t** file) {
 }
 
 void enter2Continue() {
+    char c;
     Log.plain("Press Enter to continue.\n");
-    getchar();
-    __fpurge(stdin);
+    Input.get("", "%c", &c);
 }
 
 char* getOption(enum MenuItem option) {
