@@ -149,7 +149,7 @@ int sendUser(struct commFacade_t* commData, struct User_t user) {
  */
 int sendMessage(struct commFacade_t* commData, struct Message_t message) {
     void*   dataOut = message2Bytes(message);
-    int messageLength = UserId_Len + 2 + message.length;
+    int messageLength = UserId_Len + sizeof(int) + message.length;
     struct SPDT_Command* msgCommand;
     newCommand(&msgCommand, SendText, messageLength, dataOut);
     return sendCommand(commData, *msgCommand);
@@ -170,7 +170,7 @@ int sendMessage(struct commFacade_t* commData, struct Message_t message) {
  */
 int sendFile(struct commFacade_t* commData, struct File_t file) {
     void*   dataOut = file2Bytes(file);
-    int     fileLength = UserId_Len + 2 + file.nameLength + 2 + file.length;
+    int     fileLength = UserId_Len + sizeof(int) + file.nameLength + sizeof(int) + file.length;
     struct SPDT_Command* fileCommand;
     newCommand(&fileCommand, SendFile, fileLength, dataOut);
     return sendCommand(commData, *fileCommand);

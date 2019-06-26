@@ -41,6 +41,7 @@ BUILD_CLIENT: clean
 	$(CMP) -c $(FLAGS) $(LIB_CLIENT)
 	$(CMP) -c $(FLAGS) $(SRC_CLIENT)
 	$(CMP) -o $(ClIENT) $(OBJECTS) $(FLAGS)
+	@cp ./client/client ./Files/client
 	@rm -Rf ./client/*.o ./client/*.gch
 	@rm -Rf *.o *.gch ./commonLibs/*.o ./commonLibs/*.gch
 	@echo
@@ -54,5 +55,5 @@ BUILD_TEST: clean
 
 clean:
 	@rm -Rf ./server/*.o ./server/*.gch $(SERVER)
-	@rm -Rf ./client/*.o ./client/*.gch $(ClIENT)
+	@rm -Rf ./client/*.o ./client/*.gch $(ClIENT) ./Files/client
 	@rm -Rf *.o *.gch ./commonLibs/*.o ./commonLibs/*.gch

@@ -148,7 +148,7 @@ int memory2Disk(File_t file) {
         perror("memory2Disk");
         return -1;
     }
-    if (fwrite(file.data, sizeof(char), file.length, fp) != 1) {
+    if (fwrite(file.data, file.length, sizeof(char), fp) != 1) {
         Log.error(getpid(), "Error! Can't Write File, File.Name: %s\n", file.name);
         perror("memory2Disk");
         return -2;
