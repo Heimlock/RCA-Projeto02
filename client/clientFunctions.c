@@ -28,6 +28,7 @@ void serverThread() {
     do {
         newReceiver();
     } while(canContinue());
+    mutexUnlock(mutex_ServerSocket);
 }
 
 void    logIn() {
@@ -67,7 +68,7 @@ void    logIn() {
         exit(-2);
     }
     commOps.close(&sendSocket);
-    commOps.close(&serverConnectionSckt);
+    // commOps.close(&serverConnectionSckt);
     //   MutexUnlock
     mutexUnlock(mutex_ServerSocket);
 }
@@ -90,7 +91,7 @@ void    logOut() {
         exit(-1);
     }
     commOps.close(&local);
-    commOps.close(&remote);
+    // commOps.close(&remote);
 }
 
 User_t* requestClient(char* peerId) {
@@ -124,7 +125,7 @@ User_t* requestClient(char* peerId) {
                     exit(-1);
                 }
                 commOps.close(&local);
-                commOps.close(&remote);
+                // commOps.close(&remote);
                 return user;
             }
             default:{
@@ -136,17 +137,19 @@ User_t* requestClient(char* peerId) {
         Log.error(getpid(), "Error! Couldn't Receive User.\n");
     }
     commOps.close(&local);
-    commOps.close(&remote);
+    // commOps.close(&remote);
     return NULL;
 }
 
 int    canContinue() {
     int rtnValue;
+    mutexLock(mutex_canContinue);
     if(allowNewConnections) {
         rtnValue = 1;
     } else {
         rtnValue = 0;
     }
+    mutexUnlock(mutex_canContinue);
     return rtnValue;
 }
 
@@ -190,9 +193,11 @@ void    attendClientPeer(void *arg) {
 	    	case SendText: {
 				message = (Message_t *) dataReceived;
                 #ifdef  DEBUG
+                    Log.debug(threadId, "attendClientPeer\n");
                     printMsg(*message);
                 #endif
-				addNode(&messages, message->senderId, message->length, message);
+				// addNode(&messages, message->senderId, message->length, message);
+				addNode(&messages, message->senderId, sizeof(Message_t), message);
 				break;
             }
 	    	case SendFile: {
@@ -244,22 +249,23 @@ void 	sendMessagePeer(char* peerId, struct Message_t message) { //(void* vars) {
         exit(-2);
     }
     commOps.close(&localPeer);
-    commOps.close(&remotePeer);
+    // commOps.close(&remotePeer);
 }
 
-void 	sendFilePeer(void* vars) { //(struct sockaddr_in address, struct File_t file){
+void 	sendFilePeer(char *peerId, struct File_t file) { //(struct sockaddr_in address, struct File_t file){
     struct commFacade_t localPeer, remotePeer;
     char *ipPeer;
     int portPeer;
-    struct File_t file;
-    char *peerId = (char*) malloc((UserId_Len + 1) * sizeof(char));
-    int offset;
 
-    offset = 0;
-    memcpy(peerId, vars + offset, (UserId_Len + 1) * sizeof(char));
-    offset = (UserId_Len + 1) * sizeof(char);
-    memcpy(&file, vars + offset, sizeof(File_t));
-    free(vars);
+
+    // struct File_t file;
+    // char *peerId = (char*) malloc((UserId_Len + 1) * sizeof(char));
+    // int offset;
+    // offset = 0;
+    // memcpy(peerId, vars + offset, (UserId_Len + 1) * sizeof(char));
+    // offset = (UserId_Len + 1) * sizeof(char);
+    // memcpy(&file, vars + offset, sizeof(File_t));
+    // free(vars);
 
     User_t  *user;
     user = requestClient(peerId);
@@ -276,7 +282,7 @@ void 	sendFilePeer(void* vars) { //(struct sockaddr_in address, struct File_t fi
         exit(-2);
     }
     commOps.close(&localPeer);
-    commOps.close(&remotePeer);
+    // commOps.close(&remotePeer);
 }
 
 void    printGroup(LinkedListNode* group) {
@@ -290,6 +296,7 @@ void  initSharedData() {
     mutex_list_messages = mutexInit();
     mutex_ServerSocket = mutexInit();
     mutex_RemoteSocket = mutexInit();
+    mutex_canContinue = mutexInit();
 
     initList(&messages);
     initList(&contacts);

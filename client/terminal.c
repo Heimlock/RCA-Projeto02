@@ -129,14 +129,21 @@ void    initTerminal() {
                 mutexLock(mutex_list_messages);
                 if(messages->size > 0) {
                     do {
+                        msgNode = NULL;
                         msgNode = llOps.getFirst(messages);
                         if(msgNode) {
-                            llOps.remove(messages, msgNode->key);
                             auxMsg = msgNode->data;
-                            printMsg(*auxMsg);
-                            enter2Continue();
+                            if(auxMsg->length != 0) {
+                                printMsg(*auxMsg);
+                                enter2Continue();
+                                llOps.remove(messages, msgNode->key);
+                            } else {
+                                Log.error(getpid(), "Node With Length == 0\n");
+                                msgNode = NULL;
+                                enter2Continue();
+                            }
                         }
-                    } while(msgNode != NULL);
+                    } while(msgNode != NULL && messages->size != 0);
                 } else {
                     Log.plain("No Messages to Read.\n");
                     enter2Continue();
@@ -286,12 +293,13 @@ int     displayContactsMenu() {
  *  User Input
  */
 void    directMessage(char* userId, char** peerId, Message_t** msg) {
-    char* messageText = (char*) malloc(80 * sizeof(char));
+    int msgSize = MessageMaxSize * sizeof(char);
+    char* messageText = (char*) malloc(msgSize);
 
     Input.getStr("PeerId: ", peerId, (UserId_Len + 1) * sizeof(char));
-    Input.getStr("Message: ", &messageText, MessageMaxSize * sizeof(char));
+    Input.getStr("Message: ", &messageText, msgSize);
 
-    newMessage(msg, userId, sizeof(messageText), messageText);
+    newMessage(msg, userId, msgSize, messageText);
     free(messageText);
 }
 

@@ -31,6 +31,7 @@
     pthread_mutex_t  *mutex_list_messages;
     pthread_mutex_t  *mutex_ServerSocket;
     pthread_mutex_t  *mutex_RemoteSocket;
+    pthread_mutex_t  *mutex_canContinue;
 
     struct commFacade_t local;
     struct commFacade_t remote;
@@ -49,6 +50,7 @@
     extern pthread_mutex_t  *mutex_list_messages;
     extern pthread_mutex_t  *mutex_ServerSocket;
     extern pthread_mutex_t  *mutex_RemoteSocket;
+    extern pthread_mutex_t  *mutex_canContinue;
 
     extern struct commFacade_t local;
     extern struct commFacade_t remote;
@@ -62,7 +64,7 @@ User_t* requestClient(char*);
 void    newReceiver();
 void    attendClientPeer(void *arg);
 void 	sendMessagePeer(char* peerId, struct Message_t message); //(void* vars);
-void 	sendFilePeer(void* vars);//(struct sockaddr_in, struct File_t);
+void 	sendFilePeer(char *peerId, struct File_t file);
 void    printGroup(LinkedListNode* group);
 
 int     canContinue();

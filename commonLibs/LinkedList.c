@@ -87,6 +87,7 @@ void destroyNode(LinkedListNode* node) {
  */
 void addNode(LinkedListHead** head, char* key, int length, void* data) {
     LinkedListNode** actual;
+    Log.debug(getpid(), "addNode Init\n");
 
     (*head)->size++;
 	actual = &((*head)->initialNode);
@@ -95,20 +96,24 @@ void addNode(LinkedListHead** head, char* key, int length, void* data) {
     }
 
 	(*actual) = (LinkedListNode *)malloc(sizeof(LinkedListNode));
-	(*actual)->key = (char *)malloc((KEY_LEN + 1) * sizeof(char));
-    memcpy((*actual)->key, key, KEY_LEN);
-    (*actual)->key[KEY_LEN] = '\0';
-    (*actual)->length = length;
+    if(*actual != NULL) {
+        (*actual)->key = (char *)malloc((KEY_LEN + 1) * sizeof(char));
+        memcpy((*actual)->key, key, KEY_LEN);
+        (*actual)->key[KEY_LEN] = '\0';
+        (*actual)->length = length;
 
-	(*actual)->data = malloc(length);
-    memcpy((*actual)->data, data, length);
+        (*actual)->data = malloc(length);
+        memcpy((*actual)->data, data, length);
 
-	(*actual)->next = NULL;
+        (*actual)->next = NULL;
 
-    Log.debug(getpid(), "Node Added!\n");
-    Log.debug(getpid(), "Head.Size: %d\n", (*head)->size);
-    Log.debug(getpid(), "Key......: %s\n", (*actual)->key);
-    Log.debug(getpid(), "Length...: %d\n", (*actual)->length);
+        Log.debug(getpid(), "Node Added!\n");
+        Log.debug(getpid(), "Head.Size: %d\n", (*head)->size);
+        Log.debug(getpid(), "Key......: %s\n", (*actual)->key);
+        Log.debug(getpid(), "Length...: %d\n", (*actual)->length);
+    } else {
+        Log.error(getpid(), "Cannot Allocate %d Bytes (addNode).\n", (KEY_LEN + 1) * sizeof(char));
+    }
 }
 
 /*
@@ -120,26 +125,29 @@ void addNode(LinkedListHead** head, char* key, int length, void* data) {
  *      > 0         ==  Erro
  *      = 0         ==  Successo
  */
-int removeNode(LinkedListHead* head, char* key) {
-    LinkedListNode*  node;
+int removeNode(LinkedListHead *head, char* key) {
+    LinkedListNode**  node;
     LinkedListNode** last;
     int running = 1;
+
     if(head->initialNode == NULL) {
         Log.error(getpid(), "Initial Node is Null.");
         return -1;
     } else {
-        node = head->initialNode;
-        last = &(head->initialNode);
+        node = &head->initialNode;
+        last = &head->initialNode;
         do {
-            if(strcmp(node->key, key) == 0) {
-                (*last)->next = node->next;
-                llOps.destroyNode(node);
+            if(strcmp((*node)->key, key) == 0) {
+                (*last)->next = (*node)->next;
+                // destroyNode(*node);
+                free((*node)->data);
+                free(*node);
                 head->size--;
                 //  Success
                 return 0;
-            } else if (node->next != NULL) {
-                (*last) = node;
-                node = node->next;
+            } else if ((*node)->next != NULL) {
+                (*last) = &(*node);
+                node = &(*node)->next;
             } else {
                 running = 0;
             }
