@@ -98,7 +98,10 @@ void    initTerminal() {
                 memcpy(vars + offset, file, sizeof(File_t));
 
                 //  Send File Message
-                noResponse(sendFilePeer, vars);
+                // noResponse(sendFilePeer, vars);*/
+                if(file != NULL) {
+                    sendFilePeer(peerId, *file);
+                }
                 //*/
                 enter2Continue();
                 free(peerId);

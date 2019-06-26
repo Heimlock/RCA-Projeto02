@@ -19,7 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define FileName_Len    9
+#define FileName_Len    20
 
 typedef struct File_t {
     char*   senderId;

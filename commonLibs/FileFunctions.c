@@ -87,15 +87,23 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
     (*newFile)->senderId[UserId_Len] = '\0';
 
     //  File Name
-    (*newFile)->nameLength = FileName_Len;
-    (*newFile)->name = (char *)malloc(((*newFile)->nameLength + 1) * sizeof(char));
-    memcpy((*newFile)->name, basename(filePath), (*newFile)->nameLength);
+
+    for(int i = 0; i < strlen(filePath); i++) {
+        if(filePath[i] == '\n') {
+            filePath[i] = '\0';
+        }
+    }
+
+    (*newFile)->nameLength = FileName_Len + 1;
+    (*newFile)->name = (char *)malloc(((*newFile)->nameLength) * sizeof(char));
+    memcpy((*newFile)->name, filePath, (*newFile)->nameLength);
     (*newFile)->name[(*newFile)->nameLength] = '\0';
 
     //  Open File
     FILE *fp = fopen((*newFile)->name, "rb");
     if (fp == NULL) {
-        Log.error(getpid(), "Error! Can't open file\n");
+        Log.error(getpid(), "Error! Can't open file, FilePath: %s\n", filePath);
+        perror("disk2Memory");
         (*newFile) =  NULL;
         //Destroy file
         return;
@@ -108,8 +116,9 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
 
     //  File Data
     (*newFile)->data = malloc((*newFile)->length);
-    if(fread((*newFile)->data, (*newFile)->length, 1, fp) != (*newFile)->length) {
-        Log.error(getpid(), "Error! Can't Read File\n");
+    if(fread((*newFile)->data, sizeof(char), (*newFile)->length, fp) != (*newFile)->length) {
+        Log.error(getpid(), "Error! Can't Read File, FilePath: %s\n", filePath);
+        perror("disk2Memory");
         fclose(fp);
         (*newFile) =  NULL;
         //Destroy file
@@ -135,11 +144,13 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
 int memory2Disk(File_t file) {
     FILE *fp = fopen(file.name, "wb");
     if (fp == NULL) {
-        Log.error(getpid(), "Error! Can't open file\n");
+        Log.error(getpid(), "Error! Can't open file, File.Name: %s\n", file.name);
+        perror("memory2Disk");
         return -1;
     }
-    if (fwrite(file.data, file.length, 1, fp) != 1) {
-        Log.error(getpid(), "Error! Can't Write File\n");
+    if (fwrite(file.data, sizeof(char), file.length, fp) != 1) {
+        Log.error(getpid(), "Error! Can't Write File, File.Name: %s\n", file.name);
+        perror("memory2Disk");
         return -2;
     }
     fclose(fp);
