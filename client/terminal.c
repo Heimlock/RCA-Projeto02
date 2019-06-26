@@ -126,7 +126,9 @@ void    initTerminal() {
             case Inbox: {
                 LinkedListNode* msgNode;
                 Message_t* auxMsg;
+                int msgCount;
                 mutexLock(mutex_list_messages);
+                msgCount = messages->size;
                 if(messages->size > 0) {
                     do {
                         msgNode = NULL;
@@ -134,6 +136,7 @@ void    initTerminal() {
                         if(msgNode) {
                             auxMsg = msgNode->data;
                             if(auxMsg->length != 0) {
+                                Log.info(getpid(), "Message #%d of %d\n", (msgCount - messages->size) + 1, msgCount);
                                 printMsg(*auxMsg);
                                 enter2Continue();
                                 llOps.remove(messages, msgNode->key);

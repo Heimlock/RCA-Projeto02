@@ -126,28 +126,26 @@ void addNode(LinkedListHead** head, char* key, int length, void* data) {
  *      = 0         ==  Successo
  */
 int removeNode(LinkedListHead *head, char* key) {
-    LinkedListNode**  node;
-    LinkedListNode** last;
+    LinkedListNode**  actual;
+    LinkedListNode* toDelete;
     int running = 1;
 
     if(head->initialNode == NULL) {
-        Log.error(getpid(), "Initial Node is Null.");
+        Log.error(getpid(), "Initial Node is Null.\n");
         return -1;
     } else {
-        node = &head->initialNode;
-        last = &head->initialNode;
+        actual = &head->initialNode;
         do {
-            if(strcmp((*node)->key, key) == 0) {
-                (*last)->next = (*node)->next;
-                // destroyNode(*node);
-                free((*node)->data);
-                free(*node);
+            if(strcmp((*actual)->key, key) == 0) {
+                toDelete = (*actual);
+                (*actual) = (*actual)->next;
+                destroyNode(toDelete);
                 head->size--;
                 //  Success
                 return 0;
-            } else if ((*node)->next != NULL) {
-                (*last) = &(*node);
-                node = &(*node)->next;
+            }
+            if ((*actual)->next != NULL) {
+                actual = &(*actual)->next;
             } else {
                 running = 0;
             }
@@ -238,7 +236,7 @@ LinkedListNode* getNode(LinkedListHead head, char* key) {
  */
 LinkedListNode* getFirst(LinkedListHead* head) {
     if(head->initialNode == NULL) {
-        Log.error(getpid(), "Initial Node is Null.");
+        Log.error(getpid(), "Initial Node is Null.\n");
         return NULL;
     } else {
         return head->initialNode;
