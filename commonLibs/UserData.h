@@ -41,5 +41,5 @@ void newUser(User_t** user, char* id, struct sockaddr_in addr, enum UserState st
 char*  user2Bytes(User_t user);
 void bytes2User(User_t** user, char* data);
 void printUser(User_t user);
-char* getState(int stateCode);
+char* getState(enum UserState stateCode);
 #endif

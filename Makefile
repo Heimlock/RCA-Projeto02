@@ -25,6 +25,10 @@ SERVER 		= ./server/server
 LIB_SERVER	= ./commonLibs/*.h ./server/*.h
 SRC_SERVER	= ./commonLibs/*.c ./server/*.c
 
+TEST 		= ./CustomLogExample
+LIB_TEST	= ./commonLibs/*.h
+SRC_TEST	= ./commonLibs/*.c ./CustomLogExample.c
+
 all: clean BUILD_SERVER BUILD_CLIENT clean
 
 BUILD_SERVER: clean
@@ -39,11 +43,19 @@ BUILD_CLIENT: clean
 	$(CMP) -c $(FLAGS) $(LIB_CLIENT)
 	$(CMP) -c $(FLAGS) $(SRC_CLIENT)
 	$(CMP) -o $(ClIENT) $(OBJECTS) $(FLAGS)
+	@cp ./client/client ./Files/client
 	@rm -Rf ./client/*.o ./client/*.gch
+	@rm -Rf *.o *.gch ./commonLibs/*.o ./commonLibs/*.gch
+	@echo
+
+BUILD_TEST: clean
+	$(CMP) -c $(FLAGS) $(LIB_TEST)
+	$(CMP) -c $(FLAGS) $(SRC_TEST)
+	$(CMP) -o $(TEST) $(OBJECTS) $(FLAGS)
 	@rm -Rf *.o *.gch ./commonLibs/*.o ./commonLibs/*.gch
 	@echo
 
 clean:
 	@rm -Rf ./server/*.o ./server/*.gch $(SERVER)
-	@rm -Rf ./client/*.o ./client/*.gch $(ClIENT)
+	@rm -Rf ./client/*.o ./client/*.gch $(ClIENT) ./Files/client
 	@rm -Rf *.o *.gch ./commonLibs/*.o ./commonLibs/*.gch

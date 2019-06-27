@@ -14,6 +14,7 @@
  */
 
 #include "./Communication.h"
+#include "./CustomStreams.h"
 
 /*
  *  SPDT Related
@@ -31,11 +32,10 @@
  */
 int sendCommand(struct commFacade_t* commData, struct SPDT_Command command) {
     void*   dataOut = command2bytes(command);
-    #ifdef DEBUG
-        fprintf(stdout, "[sendCommand] | Type: %d, Length: %d\n", command.type, command.length);
-        fflush(stdout);
-        printBytes(getpid(), dataOut, (3+command.length));
-    #endif
+
+    Log.debug(getpid(), "Type: %d, Length: %d\n", command.type, command.length);
+    printBytes(getpid(), dataOut, (3+command.length));
+
     return sendData(commData, dataOut, (3+command.length));
 }
 
@@ -48,8 +48,6 @@ int sendCommand(struct commFacade_t* commData, struct SPDT_Command command) {
  *     SPDT_Command*==  Ponteiro para um SPDT_Command
  */
 void receiveCommand(struct commFacade_t* commData, struct SPDT_Command** command) {
-    int     type;
-    int     length;
     int     offset;
     void*   header = malloc(3*sizeof(char));
     void*   value;
@@ -80,7 +78,9 @@ void receiveCommand(struct commFacade_t* commData, struct SPDT_Command** command
         (*command) = NULL;
     }
     #ifdef DEBUG
-	    printCommand(getpid(), **command);
+        if((*command) != NULL) {
+	        printCommand(getpid(), **command);
+        }
     #endif
 }
 
@@ -100,17 +100,16 @@ int receiveStruct(struct commFacade_t* commData, void** outputData) {
 
     switch (dataReceived->type) {
     case RequestClient:
-        bytes2User(outputData, dataReceived->value);
+        bytes2User((User_t **)outputData, dataReceived->value);
         return RequestClient;
     case SendText:
-        bytes2Message(outputData, dataReceived->value);
+        bytes2Message((Message_t **)outputData, dataReceived->value);
         return SendText;
     case SendFile:
-        bytes2File(outputData, dataReceived->value);
+        bytes2File((File_t **)outputData, dataReceived->value);
         return SendFile;
     default:
-        fprintf(stderr, "[receiveStruct] | Not a Valid Type.\n");
-        fflush(stderr);
+        Log.error(getpid(), "Not a Valid Type.\n");
         return -1;
     }
 }
@@ -153,7 +152,7 @@ int sendUser(struct commFacade_t* commData, struct User_t user) {
  */
 int sendMessage(struct commFacade_t* commData, struct Message_t message) {
     void*   dataOut = message2Bytes(message);
-    int messageLength = UserId_Len + 2 + message.length;
+    int messageLength = UserId_Len + sizeof(int) + message.length;
     struct SPDT_Command* msgCommand;
     newCommand(&msgCommand, SendText, messageLength, dataOut);
     return sendCommand(commData, *msgCommand);
@@ -162,7 +161,6 @@ int sendMessage(struct commFacade_t* commData, struct Message_t message) {
 /*
  *  FileData Related
  */
-
 
 /*
  *  Funcao que envia um File_t via socket
@@ -175,7 +173,7 @@ int sendMessage(struct commFacade_t* commData, struct Message_t message) {
  */
 int sendFile(struct commFacade_t* commData, struct File_t file) {
     void*   dataOut = file2Bytes(file);
-    int     fileLength = UserId_Len + 2 + file.nameLength + 2 + file.length;
+    int     fileLength = UserId_Len + sizeof(int) + file.nameLength + sizeof(int) + file.length;
     struct SPDT_Command* fileCommand;
     newCommand(&fileCommand, SendFile, fileLength, dataOut);
     return sendCommand(commData, *fileCommand);
@@ -184,7 +182,6 @@ int sendFile(struct commFacade_t* commData, struct File_t file) {
 void printBytes(int id, void *bytes, int length) {
     char* auxValue = bytes;
     for( int i = 0; i< length; i++ ) {
-        fprintf(stdout,"[%.4d] | Value[%d]: 0x%02hhX\n", id, i, auxValue[i]);
-        fflush(stdout);
+        Log.debug(id,"Value[%d]: 0x%02hhX\n", i, auxValue[i]);
     }
 }

@@ -13,12 +13,14 @@
  *  Desenvolvimento de Recursos Referentes as Threads
  */
 
+#include "./ThreadManager.h"
+#include "./CustomStreams.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include "./ThreadManager.h"
 
 /*
  *  Função que Lança uma Thread e espera por sua Resposta
@@ -32,19 +34,18 @@
 void* waitResponse(void* function, void* args) {
     pthread_t thread;
     void* retValue = malloc(sizeof(void*));
+    Log.debug(getpid(), "Launching a waitResponse Thread\n");
     if (pthread_create(&thread, NULL, function, args)) {
-        fprintf(stderr, "[%d] | Error! Thread couldn't be Created.\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Thread couldn't be Created.\n");
         perror("pthread_create");
         return NULL;
     }
     if ((pthread_join(thread, &retValue)) != 0) {
-        perror("Error Joining a Thread.");
-        fprintf(stderr, "[%d] | Error! Thread couldn't be Joined.\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Thread couldn't be Joined.\n");
         perror("pthread_join");
         return NULL;
     }
+    Log.debug(getpid(), "waitResponse Thread Terminated\n");
     return retValue;
 }
 
@@ -59,15 +60,14 @@ void* waitResponse(void* function, void* args) {
  */
 int noResponse(void* function, void* args) {
     pthread_t thread;
+    Log.debug(getpid(), "Launching a noResponse Thread\n");
     if (pthread_create(&thread, NULL, function, args)) {
-        fprintf(stderr, "[%d] | Error! Thread couldn't be Created.\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Thread couldn't be Created.\n");
         perror("pthread_create");
         return -1;
     }
     if ((pthread_detach(thread)) < 0) {
-        fprintf(stderr, "[%d] | Error! Thread couldn't be Detached.\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Thread couldn't be Detached.\n");
         perror("pthread_detach");
         return -2;
     }
@@ -92,8 +92,7 @@ void threadExit(void* rtnValue) {
 pthread_mutex_t* mutexInit() {
     pthread_mutex_t* newMutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
     if ((pthread_mutex_init(newMutex, NULL)) < 0) {
-        fprintf(stderr, "[%d] | Error! Mutex couldn't be Created.\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Mutex couldn't be Created.\n");
         perror("pthread_mutex_init");
         return NULL;
     }
@@ -111,8 +110,7 @@ pthread_mutex_t* mutexInit() {
 int mutexDestroy(pthread_mutex_t* mutex) {
     int rtnValue;
     if ((rtnValue = pthread_mutex_destroy(mutex)) < 0) {
-        fprintf(stderr, "[%d] | Error! Mutex couldn't be Destroyed.\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Mutex couldn't be Destroyed.\n");
         perror("pthread_mutex_destroy");
     }
     return rtnValue;
@@ -129,8 +127,7 @@ int mutexDestroy(pthread_mutex_t* mutex) {
 int mutexLock(pthread_mutex_t *mutex) {
     int rtnValue;
     if ((rtnValue = pthread_mutex_lock(mutex)) < 0) {
-        fprintf(stderr, "[%d] | Error! Mutex couldn't be Locked.\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Mutex couldn't be Locked.\n");
         perror("pthread_mutex_lock");
     }
     return rtnValue;
@@ -150,8 +147,7 @@ int mutexTryLock(pthread_mutex_t *mutex) {
     int rtnValue;
     if ((rtnValue = pthread_mutex_trylock(mutex)) < 0) {
         if(rtnValue != EBUSY) {
-            fprintf(stderr, "[%d] | Error! Mutex couldn't perform a TryLock.\n", getpid());
-            fflush(stderr);
+            Log.error(getpid(), "Error! Mutex couldn't perform a TryLock.\n");
             perror("pthread_mutex_trylock");
         }
     }
@@ -170,8 +166,7 @@ int mutexUnlock(pthread_mutex_t *mutex) {
     int rtnValue;
     if ((rtnValue = pthread_mutex_unlock(mutex)) < 0) {
         if(rtnValue != EBUSY) {
-            fprintf(stderr, "[%d] | Error! Mutex couldn't be Unlocked.\n", getpid());
-            fflush(stderr);
+            Log.error(getpid(), "Error! Mutex couldn't be Unlocked.\n");
             perror("pthread_mutex_unlock");
         }
     }

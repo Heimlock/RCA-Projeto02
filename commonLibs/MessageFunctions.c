@@ -15,6 +15,7 @@
 
 #include "./UserData.h"
 #include "./MessageData.h"
+#include "./CustomStreams.h"
 
 void newMessage(Message_t** message, char* senderId, int length, void* data) {
     (*message) = (Message_t*) malloc(sizeof(Message_t));
@@ -27,7 +28,9 @@ void newMessage(Message_t** message, char* senderId, int length, void* data) {
     (*message)->data = malloc(length);
     memcpy((*message)->data, data, length);
     #ifdef DEBUG
+    if((*message) != NULL) {
         printMsg(*(*message));
+    }
     #endif
 }
 
@@ -65,13 +68,14 @@ void bytes2Message(Message_t**  message, char* data) {
     memcpy((*message)->data,  data + offset, (*message)->length);
 
     #ifdef DEBUG
+    if((*message) != NULL) {
         printMsg(*(*message));
+    }
     #endif
 }
 
 void printMsg(Message_t message) {
-    fprintf(stdout, "[%d] | Sender Id: %s\n", getpid(), message.senderId);
-    fprintf(stdout, "[%d] | Length...: %d\n", getpid(), message.length);
-    fprintf(stdout, "[%d] | Data.....: %s\n", getpid(), (char*) message.data);
-    fflush(stdout);
+    Log.info(getpid(), "Sender Id: %s\n", message.senderId);
+    Log.info(getpid(), "Length...: %d\n", message.length);
+    Log.info(getpid(), "Data.....: %s\n", (char*) message.data);
 }

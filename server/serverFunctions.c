@@ -13,31 +13,33 @@
  *	 Desenvolvimento dos Recursos Referentes ao Servidor
  */
 
- #include "./server.h"
- #include "../commonLibs/LinkedList.h"
+#include "./server.h"
+#include "../commonLibs/LinkedList.h"
+#include "../commonLibs/CustomStreams.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <netinet/in.h>
 
 void newConnection() {
-    fprintf(stdout, "[%.4d] | NewConnection Init!\n", getpid());
-    fflush(stdout);
+    Log.debug(getpid(), "NewConnection Init!\n");
+
     if((commOps.accept(&local, &remote)) < 0){
-        fprintf(stderr, "[%.4d] | Error! Server couldn't accept connection.\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Server couldn't accept connection.\n");
         perror("newConnection");
-        exit(-4);
+        exit(-1);
     }
 
-    fprintf(stdout, "[%.4d] | NewConnection Accepted!\n", getpid());
-    fflush(stdout);
-
+    Log.debug(getpid(), "NewConnection Accepted!\n");
     if(allowNewConnections) {
-        fprintf(stdout, "[%.4d] | New Connection!\n", getpid());
-        fflush(stdout);
+        Log.debug(getpid(), "New Connection!\n");
 
         childCount++;
         mutexLock(mutex_remote);
         if(noResponse(attendClient, childCount) < 0) {
-            fprintf(stderr, "[%.4d] | Error! Thread couldn't attend.\n", getpid());
-            fflush(stderr);
+            Log.error(getpid(), "Error! Thread couldn't attend.\n");
             perror("newConnection");
         }
     } else {
@@ -50,17 +52,14 @@ void *attendClient(void *arg) {
     struct SPDT_Command  *command;
 	struct commFacade_t  innerRemote;
 
-    fprintf(stdout, "[%.4d] | Attend Client Init\n", threadId);
-    fflush(stdout);
+    Log.debug(threadId, "Attend Client Init\n");
 
 	memcpy(&innerRemote, &remote, sizeof(commFacade_t));
     mutexUnlock(mutex_remote);
 
     receiveCommand(&innerRemote, &command);
-
     if(command == NULL) {
-        fprintf(stderr, "[%.4d] | Error! Command is NULL.\n", threadId);
-        fflush(stderr);
+        Log.error(threadId, "Error! Command is NULL.\n");
     } else {
         switch(command->type) {
             case LogIn:
@@ -73,13 +72,13 @@ void *attendClient(void *arg) {
                 requestClient(innerRemote, command);
                 break;
             default:
-                fprintf(stderr, "[%.4d] | Error! Not a Valid Type. Type = %d\n", threadId, command->type);
-                fflush(stderr);
+                Log.error(threadId, "Error! Not a Valid Type. Type = %d\n", command->type);
                 break;
         }
     }
     close_Socket(&innerRemote);
 	threadExit(NULL);
+    return NULL;
 }
 
 int canContinue() {
@@ -97,8 +96,7 @@ void exitServer() {
     do {
         sleep(1);
         if(childCount == 0) {
-            fprintf(stdout, "[%d] | Exiting Server\n", getpid());
-            fflush(stdout);
+            Log.info(getpid(), "Exiting Server\n");
             commOps.close(&local);
             done = 1;
         }
@@ -123,45 +121,54 @@ void  initSharedData() {
     }
 }
 
+void parseLogin(void* dataIn, char** userId, int** clientSocketPort) {
+    (*userId) = (char*) malloc(UserId_Len * sizeof(char));
+    (*clientSocketPort) = (int*) malloc(sizeof(int));
+
+    int offset = 0;
+    memcpy((*clientSocketPort), dataIn + offset, sizeof(int));
+    offset = sizeof(int);
+    memcpy((*userId), dataIn + offset, (UserId_Len * sizeof(char)));
+}
+
 void  logIn(struct commFacade_t communication_data, struct SPDT_Command *log_in) {
-	struct User_t* user;
+    struct User_t* user;
     struct LinkedListNode *userNode;
+    char* userId;
+    struct sockaddr_in* clientAddr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+    int* clientServerPort;
 
+    Log.debug(getpid(), "LogIn Function Init\n");
     #ifdef  DEBUG
-        fprintf(stdout, "[%d] | LogIn Function Init\n", getpid());
-        fflush(stdout);
-
         printCommand(getpid(), *log_in);
     #endif
 
     if(log_in->value != NULL) {
+	    parseLogin(log_in->value, &userId, &clientServerPort);
+        memcpy(clientAddr, &communication_data.socketAddr, sizeof(struct sockaddr_in));
+        clientAddr->sin_port        = htons(*clientServerPort);
+
         mutexLock(mutex_list_users);
-        userNode = getNode(*users, (char *) log_in->value);
+        userNode = getNode(*users, (char *) userId);
         if(userNode != NULL) {
-            fprintf(stdout, "[%d] | Update User\n", getpid());
-            fflush(stdout);
+            Log.info(getpid(), "User Updated\n");
             user = (User_t *) userNode->data;
             user->state = Online;
-            user->addr = communication_data.socketAddr;
+            user->addr = *clientAddr;
             printUser(*user);
         } else {
-            newUser(&user, (char*) log_in->value, communication_data.socketAddr, Online);
+            newUser(&user, userId, *clientAddr, Online);
 			if(user != NULL) {
-                fprintf(stdout, "[%d] | New User Added\n", getpid());
-                fflush(stdout);
+                Log.info(getpid(), "User Added\n");
                 addNode(&users, user->id, UserData_Len, user);
                 free(user);
             } else {
-                fprintf(stderr, "[%d] | Couln't create new user.\n", getpid());
-				fflush(stderr);
-				perror("logIn");
+                Log.error(getpid(), "Couln't create new user.\n");
             }
         }
         mutexUnlock(mutex_list_users);
     } else {
-        fprintf(stderr, "[%d] | Error! Client ID not received.\n", getpid());
-        fflush(stderr);
-        perror("logIn");
+        Log.error(getpid(), "Error! Client ID not received.\n");
     }
 }
 
@@ -173,21 +180,16 @@ void    logOut(struct commFacade_t communication_data, struct SPDT_Command *log_
         mutexLock(mutex_list_users);
         userNode = getNode(*users, (char *) log_out->value);
         if(userNode != NULL) {
-            fprintf(stdout, "[%d] | User Offline\n", getpid());
-            fflush(stdout);
+            Log.info(getpid(), "User Offline\n");
             user = (User_t *) userNode->data;
             user->state = Offline;
             printUser(*user);
         } else {
-            fprintf(stderr, "[%d] | Error! User doens't exist.\n", getpid());
-            fflush(stderr);
-            perror("logOut");
+            Log.error(getpid(), "Error! User doens't exist.\n");
         }
         mutexUnlock(mutex_list_users);
     } else {
-        fprintf(stderr, "[%d] | Error! User couldn't log out.\n", getpid());
-        fflush(stderr);
-        perror("logOut");
+        Log.error(getpid(), "Error! User couldn't log out.\n");
     }
 }
 
@@ -197,30 +199,25 @@ void	requestClient(struct commFacade_t commData, struct SPDT_Command *requestCom
 
 	if(requestCommand->value != NULL) {
     mutexLock(mutex_list_users);
-		userNode = getNode(*users, (char*) requestCommand->value);
+    userNode = getNode(*users, (char*) requestCommand->value);
     if(userNode != NULL) {
       user = (User_t *) userNode->data;
-      if(user != NULL){
+      if(user != NULL) {
         if(user->state == Online) {
           if((sendUser(&commData, (*user))) < 0) {
-            fprintf(stderr, "[%d] | Error! Failed to send user requested.\n", getpid());
-            fflush(stderr);
+            Log.error(getpid(), "Error! Failed to send user requested.\n");
           }
         } else {
-          fprintf(stderr, "[%d] | Error! User not online.\n", getpid());
-          fflush(stderr);
+          Log.error(getpid(), "Error! User not online.\n");
         }
       } else {
-        fprintf(stderr, "[%d] | Error! Coundn't get user data.\n", getpid());
-        fflush(stderr);
+        Log.error(getpid(), "Error! Coundn't get user data.\n");
       }
     } else {
-      fprintf(stderr, "[%d] | Error! User doens't exist.\n", getpid());
-      fflush(stderr);
+      Log.error(getpid(), "Error! User doens't exist.\n");
     }
     mutexUnlock(mutex_list_users);
   } else {
-	  fprintf(stderr, "[%d] | Error! Client ID not received.\n", getpid());
-    fflush(stderr);
+    Log.error(getpid(), "Error! Client ID not received.\n");
 	}
 }

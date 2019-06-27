@@ -13,12 +13,9 @@
  *  Biblioteca de Recursos Referentes as Mensagens
  */
 
-/*
- *  #define SENDERID_LEN 9  //  Implementar Aonde for Usado  
- */
-
 #include "./FileData.h"
 #include "./UserData.h"
+#include "./CustomStreams.h"
 
 char* file2Bytes(File_t file) {
     int     dataSize = UserId_Len + sizeof(int) + file.nameLength + sizeof(int) + file.length;
@@ -62,16 +59,17 @@ void bytes2File(File_t** newFile, char* data) {
     memcpy((*newFile)->data, data + offset, (*newFile)->length);
 
     #ifdef DEBUG
+    if((*newFile) != NULL) {
         printFile(*(*newFile));
+    }
     #endif
 }
 
 void printFile(File_t file) {
-    fprintf(stdout, "[%d] | Sender Id.: %s\n", getpid(), file.senderId);
-    fprintf(stdout, "[%d] | NameLength: %d\n", getpid(), file.nameLength);
-    fprintf(stdout, "[%d] | Name......: %s\n", getpid(), file.name);
-    fprintf(stdout, "[%d] | Length....: %d\n", getpid(), file.length);
-    fflush(stdout);
+    Log.info(getpid(), "Sender Id.: %s\n", file.senderId);
+    Log.info(getpid(), "NameLength: %d\n", file.nameLength);
+    Log.info(getpid(), "Name......: %s\n", file.name);
+    Log.info(getpid(), "Length....: %d\n", file.length);
 }
 
 /*
@@ -92,16 +90,23 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
     (*newFile)->senderId[UserId_Len] = '\0';
 
     //  File Name
-    (*newFile)->nameLength = FileName_Len;
-    (*newFile)->name = (char *)malloc(((*newFile)->nameLength + 1) * sizeof(char));
-    memcpy((*newFile)->name, basename(filePath), (*newFile)->nameLength);
+
+    for(int i = 0; i < strlen(filePath); i++) {
+        if(filePath[i] == '\n') {
+            filePath[i] = '\0';
+        }
+    }
+
+    (*newFile)->nameLength = FileName_Len + 1;
+    (*newFile)->name = (char *)malloc(((*newFile)->nameLength) * sizeof(char));
+    memcpy((*newFile)->name, filePath, (*newFile)->nameLength);
     (*newFile)->name[(*newFile)->nameLength] = '\0';
 
     //  Open File
     FILE *fp = fopen((*newFile)->name, "rb");
     if (fp == NULL) {
-        fprintf(stderr, "[disk2Memory] | Error! Can't open file\n");
-        fflush(stderr);
+        Log.error(getpid(), "Error! Can't open file, FilePath: %s\n", filePath);
+        perror("disk2Memory");
         (*newFile) =  NULL;
         //Destroy file
         return;
@@ -114,9 +119,9 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
 
     //  File Data
     (*newFile)->data = malloc((*newFile)->length);
-    if(fread((*newFile)->data, (*newFile)->length, 1, fp) != (*newFile)->length) {
-        fprintf(stderr, "[disk2Memory] | Error! Can't Read File\n");
-        fflush(stderr);
+    if(fread((*newFile)->data, sizeof(char), (*newFile)->length, fp) != (*newFile)->length) {
+        Log.error(getpid(), "Error! Can't Read File, FilePath: %s\n", filePath);
+        perror("disk2Memory");
         fclose(fp);
         (*newFile) =  NULL;
         //Destroy file
@@ -125,7 +130,9 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
 
     fclose(fp);
     #ifdef  DEBUG
+    if((*newFile) != NULL) {
         printFile(*(*newFile));
+    }
     #endif
 }
 
@@ -140,13 +147,13 @@ void disk2Memory(File_t** newFile, char* filePath, char* userId) {
 int memory2Disk(File_t file) {
     FILE *fp = fopen(file.name, "wb");
     if (fp == NULL) {
-        fprintf(stderr, "[disk2Memory] | Error! Can't open file\n");
-        fflush(stderr);
+        Log.error(getpid(), "Error! Can't open file, File.Name: %s\n", file.name);
+        perror("memory2Disk");
         return -1;
     }
-    if (fwrite(file.data, file.length, 1, fp) != 1) {
-        fprintf(stderr, "[disk2Memory] | Error! Can't Write File\n");
-        fflush(stderr);
+    if (fwrite(file.data, file.length, sizeof(char), fp) != 1) {
+        Log.error(getpid(), "Error! Can't Write File, File.Name: %s\n", file.name);
+        perror("memory2Disk");
         return -2;
     }
     fclose(fp);

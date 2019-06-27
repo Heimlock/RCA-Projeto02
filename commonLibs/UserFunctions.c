@@ -13,11 +13,13 @@
  *  Desenvolvimento dos Recursos Referentes ao Usuario
  */
 
+#include"./UserData.h"
+#include"./CustomStreams.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include"./UserData.h"
 
 void newUser(User_t** user, char* id, struct sockaddr_in addr, enum UserState state) {
     (*user) = (User_t*) malloc(sizeof(User_t));
@@ -28,7 +30,9 @@ void newUser(User_t** user, char* id, struct sockaddr_in addr, enum UserState st
     (*user)->addr = addr;
     (*user)->state= state;
     #ifdef DEBUG
+    if((*user) != NULL) {
         printUser(*(*user));
+    }
     #endif
 }
 
@@ -48,25 +52,26 @@ void bytes2User(User_t** user, char* data) {
     memcpy(&(*user)->addr, data + 9, sizeof(struct sockaddr_in));
     memcpy(&(*user)->state, data + 25, 1 * sizeof(char));
     #ifdef DEBUG
+    if((*user) != NULL) {
         printUser(*(*user));
+    }
     #endif
 }
 
 void printUser(User_t user) {
-    fprintf(stdout, "[%d] | User Id...: %s\n", getpid(), user.id);
-    fprintf(stdout, "[%d] | User Ip...: %s\n", getpid(), inet_ntoa(user.addr.sin_addr));
-    fprintf(stdout, "[%d] | User Port.: %d\n", getpid(), ntohs(user.addr.sin_port));
-    fprintf(stdout, "[%d] | User State: %s\n", getpid(), getState(user.state));
-    fflush(stdout);
+    Log.info(getpid(), "User Id...: %s\n", user.id);
+    Log.info(getpid(), "User Ip...: %s\n", inet_ntoa(user.addr.sin_addr));
+    Log.info(getpid(), "User Port.: %d\n", ntohs(user.addr.sin_port));
+    Log.info(getpid(), "User State: %s\n", getState(user.state));
 }
 
-char* getState(int stateCode) {
+char* getState(enum UserState stateCode) {
     switch (stateCode) {
-    case 0x00:
+    case Offline:
         return "Offline";
-    case 0x01:
+    case Online:
         return "Online";
-    case 0x02:
+    case Away:
         return "Away";
     default:
         return "Not Defined";

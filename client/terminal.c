@@ -18,8 +18,10 @@
 #include "../commonLibs/ThreadManager.h"
 #include "../commonLibs/MessageData.h"
 #include "../commonLibs/FileData.h"
+#include "../commonLibs/CustomStreams.h"
 
 #include <stdio.h>
+#include <stdio_ext.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -29,58 +31,67 @@
 /*
  *  Logic
  */
-
 void    initTerminal() {
     MenuItem option = -1;
 
+    Log.plain("Enter with your 9 digit ID\n");
+    Input.getStr("UserId: ", &userId, (UserId_Len + 1) * sizeof(char));
+    Log.debug(getpid(), "Launch logIn\n");
+
+    // noResponse(logIn, NULL);
+    logIn();
     do {
         option = Error;
         option = mainMenu();
         switch (option) {
-            case DirectMessage: {
-                char peerId[10];
+            case DirectMessage: { 
+                char* peerId = (char*) malloc((1 + UserId_Len) * sizeof(char));
                 Message_t *msg;
-                int offset;
-                int size = (UserId_Len + 1) * sizeof(char) + sizeof(Message_t);
-                void* vars = malloc(size);
 
                 directMessage(userId, &peerId, &msg);
+                // /*
+                // int offset;
+                // int size = (UserId_Len + 1) * sizeof(char) + sizeof(Message_t);
+                // void* vars = malloc(size);
+                // offset = 0;
+                // memcpy(vars + offset, peerId, (UserId_Len + 1) * sizeof(char));
+                // offset = (UserId_Len + 1) * sizeof(char);
+                // memcpy(vars + offset, msg, sizeof(Message_t));
 
-                offset = 0;
-                memcpy(vars + offset, peerId, (UserId_Len + 1) * sizeof(char));
-                offset = (UserId_Len + 1) * sizeof(char);
-                memcpy(vars + offset, msg, sizeof(Message_t));
-
-                noResponse(sendMessagePeer, vars);
+                // noResponse(sendMessagePeer, vars);
+                sendMessagePeer(peerId, *msg);
+                // */
                 enter2Continue();
+                free(peerId);
                 break;
             }
             case GroupMessage: {
-                char groupId[10];
+                char* groupId = (char*) malloc((1 + UserId_Len) * sizeof(char));
                 Message_t *msg;
                 LinkedListNode* groupNode;
 
                 groupMessage(userId, &groupId, &msg);
+                /*
                 groupNode = getNode(*groups, groupId);
 
                 if(groupNode != NULL) {
                     //  Send Message For Each Node
-                    fprintf(stdout, "Send Message For Each Node\n");
-                    fflush(stdout);
+                    Log.info(getpid(), "Send Message For Each Node\n");
                     enter2Continue();
                 } else {
-                    fprintf(stderr, "Group not Found.\n");
-                    fflush(stderr);
+                    Log.error(getpid(), "Group not Found.\n");
                 }
+                //*/
                 enter2Continue();
+                free(groupId);
                 break;
             }
             case DirectFile: {
-                char peerId[10];
+                char* peerId = (char*) malloc((1 + UserId_Len) * sizeof(char));
                 File_t *file;
 
                 directFile(userId, &peerId, &file);
-                
+                /*
                 int offset;
                 int size = (UserId_Len + 1) * sizeof(char) + sizeof(File_t);
                 void* vars = malloc(size);
@@ -90,69 +101,89 @@ void    initTerminal() {
                 memcpy(vars + offset, file, sizeof(File_t));
 
                 //  Send File Message
-                noResponse(sendFilePeer, vars);
+                // noResponse(sendFilePeer, vars);*/
+                if(file != NULL) {
+                    sendFilePeer(peerId, *file);
+                }
+                //*/
                 enter2Continue();
+                free(peerId);
                 break;
             }
             case GroupFile: {
-                char groupId[10];
+                char* groupId = (char*) malloc((1 + UserId_Len) * sizeof(char));
                 File_t *file;
                 LinkedListNode* groupNode;
 
                 groupFile(userId, &groupId, &file);
+                /*
                 //  Send File Message
                 groupNode = getNode(*groups, groupId);
                 if(groupNode != NULL) {
                     //  Send File For Each Node
                 } else {
-                    fprintf(stderr, "Group not Found.\n");
-                    fflush(stderr);
+                    Log.error(getpid(), "Group not Found.\n");
                 }
+                //*/
                 enter2Continue();
+                free(groupId);
                 break;
             }
             case Inbox: {
                 LinkedListNode* msgNode;
                 Message_t* auxMsg;
+                int msgCount;
                 mutexLock(mutex_list_messages);
+                msgCount = messages->size;
                 if(messages->size > 0) {
                     do {
+                        msgNode = NULL;
                         msgNode = llOps.getFirst(messages);
                         if(msgNode) {
-                            llOps.remove(messages, msgNode->key);
                             auxMsg = msgNode->data;
-                            printMsg(*auxMsg);
-                            enter2Continue();
+                            if(auxMsg->length != 0) {
+                                Log.info(getpid(), "Message #%d of %d\n", (msgCount - messages->size) + 1, msgCount);
+                                printMsg(*auxMsg);
+                                enter2Continue();
+                                llOps.remove(messages, msgNode->key);
+                            } else {
+                                Log.error(getpid(), "Node With Length == 0\n");
+                                msgNode = NULL;
+                                enter2Continue();
+                            }
                         }
-                    } while(msgNode != NULL);
+                    } while(msgNode != NULL && messages->size != 0);
                 } else {
-                    fprintf(stderr, "No Messages to Read.\n");
-                    fflush(stderr);
+                    Log.plain("No Messages to Read.\n");
                     enter2Continue();
                 }
                 mutexUnlock(mutex_list_messages);
                 break;
             }
-            case Contacts: {
+            case Contacts: { /*
                 contactsSubMenu();
+                 */
                 break;
             }
             case Exit: {
                 break;
             }
             default: {
-                fprintf(stderr, "Not a Valid Option!\n");
-                fflush(stderr);
-                __fpurge(stdin);
+                Log.plain("Not a Valid Option! Option: %s, Code: %d\n", getOption(option), option);
                 enter2Continue();
                 break;
             }
         }
+        #ifdef  DEBUG
+            Log.debug(getpid(), "Sleep for 2s\n");
+            sleep(2);
+        #endif
     }while(option != Exit);
     waitResponse(logOut, NULL);
     state = Offline;
 }
 
+/*
 void    contactsSubMenu () {
     MenuItem option;
     do {
@@ -173,23 +204,24 @@ void    contactsSubMenu () {
                 break;
             }
             case NewContact: {
-                char userId[10];
-                fprintf(stdout, "New Contact\n");
-                fprintf(stdout, "Enter the new userId.\n");
-                fflush(stdout);
-                getString("UserId: \n", &userId, (UserId_Len + 1) * sizeof(char));
+                char* userId = (char*) malloc((1 + UserId_Len) * sizeof(char));
+                Log.plain("New Contact\n");
+                Log.plain("Enter the new userId.\n");
+                Input.getStr("UserId: \n", &userId, (UserId_Len + 1) * sizeof(char));
                 llOps.add(contacts, userId, userId);
                 enter2Continue();
+                free(userId);
                 break;
             }
             case DeleteContact: {
-                char userId[10];
-                fprintf(stdout, "Delete Contact\n");
-                fprintf(stdout, "Enter the userId to Delete.\n");
-                fflush(stdout);
-                getString("UserId: \n", &userId, (UserId_Len + 1) * sizeof(char));
+                char* userId = (char*) malloc((1 + UserId_Len) * sizeof(char));
+                Log.plain("Delete Contact\n");
+                Log.plain("Enter the userId to Delete.\n");
+
+                Input.getStr("UserId: \n", &userId, (UserId_Len + 1) * sizeof(char));
                 llOps.remove(contacts, userId);
                 enter2Continue();
+                free(userId);
                 break;
             }
             case NewGroup: {
@@ -197,82 +229,72 @@ void    contactsSubMenu () {
                 //  Do
                 //  Receive UserId
                 //  While True
-                fprintf(stdout, "Not yet Implemented!\n");
-                fflush(stdout);
+                Log.plain("Not yet Implemented!\n");
                 break;
             }
             case DeleteGroup: {
-                char groupId[10];
-                fprintf(stdout, "Delete Contact\n");
-                fprintf(stdout, "Enter the GroupId to Delete.\n");
-                fflush(stdout);
-                getString("GroupId: \n", &groupId, (UserId_Len + 1) * sizeof(char));
+                char* groupId = (char*) malloc((1 + UserId_Len) * sizeof(char));
+                Log.plain("Delete Contact\n");
+                Log.plain("Enter the GroupId to Delete.\n");
+                Input.getStr("GroupId: \n", &groupId, (UserId_Len + 1) * sizeof(char));
                 llOps.remove(groups, groupId);
                 enter2Continue();
+                free(groupId);
                 break;
             }
             default: {
-                fprintf(stderr, "Not a Valid Option!\n");
-                fflush(stderr);
+                Log.plain("Not a Valid Option!\n");
                 break;
             }
         }
     } while(option != Exit);
 }
-
+ */
 /*
  *  Text
  */
 
 void    printHeader() {
-    system("clear");
-    fprintf(stdout, "========================================\n");
-    fprintf(stdout, "----------------WhatsP2P----------------\n");
-    fprintf(stdout, "========================================\n");
-    fprintf(stdout, "UserId: %s\n", userId);
+    // system("clear");
+    Log.plain("========================================\n");
+    Log.plain("----------------WhatsP2P----------------\n");
+    Log.plain("========================================\n");
+    Log.plain("UserId: %s\n", userId);
+
     mutexLock(mutex_list_messages);
-    fprintf(stdout, "Inbox.: %d\n", messages->size);
+    Log.plain("Inbox.: %d\n", messages->size);
     mutexUnlock(mutex_list_messages);
-    fflush(stdout);
 }
 
 int     mainMenu() {
-    printHeader();
-    fprintf(stdout, "\nMenu\n");
-    fprintf(stdout, "[%.2d] - Direct Message\n", DirectMessage);
-    fprintf(stdout, "[%.2d] - Direct File\n", DirectFile);
-    fprintf(stdout, "[%.2d] - Group Message\n", GroupMessage);
-    fprintf(stdout, "[%.2d] - Group File\n", GroupFile);
-    fprintf(stdout, "[%.2d] - Inbox\n", Inbox);
-    fprintf(stdout, "[%.2d] - Contacts\n", Contacts);
-    fprintf(stdout, "[%.2d] - Exit\n", Exit);
-    fprintf(stdout, "Option: ");
-    fflush(stdout);
-
     int option;
-    __fpurge(stdin);
-    scanf("%d", &option);
-    __fpurge(stdin);
+    printHeader();
+
+    Log.plain("\nMenu\n");
+    Log.plain("[%.2d] - Direct Message\n", DirectMessage);
+    Log.plain("[%.2d] - Direct File\n", DirectFile);
+    Log.plain("[%.2d] - Group Message\n", GroupMessage);
+    Log.plain("[%.2d] - Group File\n", GroupFile);
+    Log.plain("[%.2d] - Inbox\n", Inbox);
+    Log.plain("[%.2d] - Contacts\n", Contacts);
+    Log.plain("[%.2d] - Exit\n", Exit);
+    Input.getInt("Option: ", &option);
     return option;
 }
 
 int     displayContactsMenu() {
     printHeader();
-    fprintf(stdout, "\nMenu\n");
-    fprintf(stdout, "[%.2d] - List Users\n", ListUsers);
-    fprintf(stdout, "[%.2d] - List Groups\n", ListGroups);
-    fprintf(stdout, "[%.2d] - New Contact\n"), NewContact;
-    fprintf(stdout, "[%.2d] - Delete Contact\n", NewGroup);
-    fprintf(stdout, "[%.2d] - New Group\n", DeleteGroup);
-    fprintf(stdout, "[%.2d] - Delete Group\n", DeleteGroup);
-    fprintf(stdout, "[%.2d] - Exit\n", Exit);
-    fprintf(stdout, "Option: ");
-    fflush(stdout);
-
     int option;
-    __fpurge(stdin);
-    scanf("%d", &option);
-    __fpurge(stdin);
+
+    Log.plain("\nMenu de Contatos\n");
+    Log.plain("[%.2d] - List Users\n", ListUsers);
+    Log.plain("[%.2d] - List Groups\n", ListGroups);
+    Log.plain("[%.2d] - New Contact\n", NewContact);
+    Log.plain("[%.2d] - Delete Contact\n", NewGroup);
+    Log.plain("[%.2d] - New Group\n", DeleteGroup);
+    Log.plain("[%.2d] - Delete Group\n", DeleteGroup);
+    Log.plain("[%.2d] - Exit\n", Exit);
+    Input.getInt("Option: ", &option);
     return option;
 }
 
@@ -280,75 +302,83 @@ int     displayContactsMenu() {
  *  User Input
  */
 void    directMessage(char* userId, char** peerId, Message_t** msg) {
-    char messageText[80];
+    int msgSize = MessageMaxSize * sizeof(char);
+    char* messageText = (char*) malloc(msgSize);
 
-    __fpurge(stdin);
-    getString("PeerId: ", peerId, (UserId_Len + 1) * sizeof(char));
+    Input.getStr("PeerId: ", peerId, (UserId_Len + 1) * sizeof(char));
+    Input.getStr("Message: ", &messageText, msgSize);
 
-    fprintf(stdout, "Message: ");
-    fflush(stdout);
-
-    __fpurge(stdin);
-    fgets(messageText, MessageMaxSize * sizeof(char), stdin);
-    __fpurge(stdin);
-
-    newMessage(msg, userId, sizeof(messageText), messageText);
+    newMessage(msg, userId, msgSize, messageText);
+    free(messageText);
 }
 
 void    directFile(char* userId, char** peerId, File_t** file) {
-    char filePath[FileName_Len];
+    char* filePath = (char*) malloc(FileName_Len * sizeof(char));
 
-    getString("PeerId: ", peerId, (UserId_Len + 1) * sizeof(char));
-
-    fprintf(stdout, "File Path: ");
-    fflush(stdout);
-
-    fgets(filePath, FileName_Len * sizeof(char), stdin);
-    __fpurge(stdin);
+    Input.getStr("PeerId...: ", peerId, (UserId_Len + 1) * sizeof(char));
+    Input.getStr("File Path: ", &filePath, FileName_Len * sizeof(char));
 
     disk2Memory(file, filePath, userId);
+    free(filePath);
 }
 
 void    groupMessage(char* userId, char** groupId, Message_t** msg) {
-    char messageText[80];
+    char* messageText = (char*) malloc(80 * sizeof(char));
 
-    getString("GroupId: ", groupId, (UserId_Len + 1) * sizeof(char));
-
-    fprintf(stdout, "Message: ");
-    fflush(stdout);
-
-    fgets(messageText, MessageMaxSize * sizeof(char), stdin);
-    __fpurge(stdin);
+    Input.getStr("GroupId: ", groupId, (UserId_Len + 1) * sizeof(char));
+    Input.getStr("Message: ", &messageText, MessageMaxSize * sizeof(char));
 
     newMessage(msg, userId, sizeof(messageText), messageText);
+    free(messageText);
 }
 
 void    groupFile(char* userId, char** groupId, File_t** file) {
-    char filePath[FileName_Len];
+    char* filePath = (char*) malloc(FileName_Len * sizeof(char));
 
-    getString("GroupId: ", groupId, (UserId_Len + 1) * sizeof(char));
-
-    fprintf(stdout, "File Path: ");
-    fflush(stdout);
-
-    fgets(filePath, FileName_Len * sizeof(char), stdin);
-    __fpurge(stdin);
+    Input.getStr("GroupId..: ", groupId, (UserId_Len + 1) * sizeof(char));
+    Input.getStr("File Path: ", &filePath, FileName_Len * sizeof(char));
 
     disk2Memory(file, filePath, userId);
-}
-
-void    getString(char* inputStr, char** id, int maxStrLen) {
-    fprintf(stdout, inputStr);
-    fflush(stdout);
-
-    __fpurge(stdin);
-    fgets(*id, maxStrLen, stdin);
-    __fpurge(stdin);
+    free(filePath);
 }
 
 void enter2Continue() {
-    fprintf(stdout, "Press Enter to continue.\n");
-    fflush(stdout);
-    getchar();
-    __fpurge(stdin);
+    char c;
+    Log.plain("Press Enter to continue.\n");
+    Input.get("", "%c", &c);
+}
+
+char* getOption(enum MenuItem option) {
+    switch (option) {
+    case DirectMessage: 
+        return "DirectMessage";
+    case DirectFile: 
+        return "DirectFile";
+    case GroupMessage: 
+        return "GroupMessage";
+    case GroupFile: 
+        return "GroupFile";
+    case Inbox: 
+        return "Inbox";
+    case Contacts: 
+        return "Contacts";
+    case ListUsers: 
+        return "ListUsers";
+    case ListGroups: 
+        return "ListGroups";
+    case NewContact: 
+        return "NewContact";
+    case DeleteContact: 
+        return "DeleteContact";
+    case NewGroup: 
+        return "NewGroup";
+    case DeleteGroup: 
+        return "DeleteGroup";
+    case Exit: 
+        return "Exit";
+    case Error: 
+        return "Error";
+    default:
+        return "Not Defined";
+    }
 }

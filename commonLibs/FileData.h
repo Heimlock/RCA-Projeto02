@@ -22,7 +22,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define FileName_Len    9
+#define FileName_Len    20
 
 typedef struct File_t {
     char*   senderId;
@@ -32,11 +32,11 @@ typedef struct File_t {
     void*   data;
 } File_t;
 
-char* file2Bytes(File_t file);
-void bytes2File(File_t** newFile, char* data);
-void printFile(File_t file);
+char*   file2Bytes(File_t file);
+void    bytes2File(File_t** newFile, char* data);
+void    printFile(File_t file);
 
-void disk2Memory(File_t** newFile, char* filePath, char* userId);
-int memory2Disk(File_t file);
+void    disk2Memory(File_t** newFile, char* filePath, char* userId);
+int     memory2Disk(File_t file);
 #endif
 

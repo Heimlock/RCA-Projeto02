@@ -51,6 +51,7 @@ void    groupMessage(char* userId, char** groupId, Message_t** msg);
 void    groupFile(char* userId, char** groupId, File_t** file);
 void    getString(char* inputStr, char** id, int maxStrLen);
 void    enter2Continue();
+char*   getOption(enum MenuItem option);
 
 void    *sendDirectMessage();
 void    *sendGroupMessage();
